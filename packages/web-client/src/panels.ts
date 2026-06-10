@@ -282,3 +282,34 @@ export function handleResearchEvents(root: HTMLElement, getWorld: () => World): 
     getWorld().enqueueCommand(CMD_START_RESEARCH, { techId });
   });
 }
+
+// ── Lunarpedia (M7): every entity links to its real-world source notes ──
+
+export function renderLunarpedia(root: HTMLElement, pack: ContentPack, filter: string): void {
+  const needle = filter.toLowerCase();
+  const input = document.createElement("input");
+  input.type = "search";
+  input.placeholder = "Search the Lunarpedia…";
+  input.value = filter;
+  input.addEventListener("input", () => {
+    root.dispatchEvent(new CustomEvent("lunaris-pedia", { bubbles: true, detail: input.value }));
+  });
+  const list = document.createElement("div");
+  let html = "";
+  for (const entry of pack.encyclopedia) {
+    if (
+      needle !== "" &&
+      !entry.title.toLowerCase().includes(needle) &&
+      !entry.body.toLowerCase().includes(needle)
+    ) {
+      continue;
+    }
+    html += `<details class="pedia"><summary>${entry.title}</summary>
+      <p>${entry.body}</p>
+      <p class="pedia-real"><strong>Real world:</strong> ${entry.realWorld}</p>
+      <p class="panel-hint">Sources: ${entry.sources.join(" · ")}</p>
+    </details>`;
+  }
+  list.innerHTML = html === "" ? `<div class="panel-hint">No matches</div>` : html;
+  root.replaceChildren(input, list);
+}

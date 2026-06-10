@@ -400,6 +400,205 @@
         color: var(--dim);
         font-size: 11px;
       }
+      /* ── M6/M7: start screen, observer, resource bar, night theme ── */
+      #start-screen[hidden] {
+        display: none;
+      }
+      #start-screen {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 7, 11, 0.94);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #start-card {
+        max-width: 720px;
+        padding: 28px;
+        text-align: center;
+      }
+      #start-card h1 {
+        letter-spacing: 0.45em;
+        font-weight: 300;
+        margin: 0;
+      }
+      .start-tag {
+        color: var(--dim);
+      }
+      .start-modes {
+        display: flex;
+        gap: 16px;
+        margin-top: 18px;
+        text-align: left;
+      }
+      .start-mode {
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        background: var(--panel);
+      }
+      .start-mode h2 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+      .start-mode p {
+        color: var(--dim);
+        font-size: 12.5px;
+        min-height: 70px;
+      }
+      .start-mode label {
+        display: block;
+        font-size: 12px;
+        color: var(--dim);
+        margin: 6px 0;
+      }
+      .start-mode select,
+      .start-mode input {
+        width: 100%;
+        background: #0b0d12;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 4px;
+        margin-top: 2px;
+      }
+      .start-mode button {
+        width: 100%;
+        margin-top: 10px;
+        padding: 8px;
+        background: var(--accent);
+        color: #0b0d12;
+        font-weight: 600;
+      }
+      .start-keys {
+        color: var(--dim);
+        font-size: 11px;
+        margin-top: 18px;
+      }
+      #resbar {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0;
+        font-size: 12px;
+        max-width: 948px;
+      }
+      .chip {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 2px 9px;
+        color: var(--dim);
+      }
+      .chip strong {
+        color: var(--text);
+      }
+      .chip-i {
+        color: var(--accent);
+        margin-right: 3px;
+      }
+      .chip-pause {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      #observer {
+        width: 240px;
+        flex-shrink: 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      #take-command {
+        width: 100%;
+        padding: 7px;
+        margin-bottom: 8px;
+        background: var(--accent);
+        color: #0b0d12;
+        font-weight: 600;
+      }
+      #take-command.ai-off {
+        background: var(--warn);
+      }
+      .chart-cell {
+        margin-bottom: 8px;
+      }
+      .chart-label {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+      }
+      .chart-value {
+        color: var(--text);
+        float: right;
+      }
+      .chart-cell canvas {
+        width: 100%;
+        height: 48px;
+        background: rgba(11, 13, 18, 0.6);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        display: block;
+      }
+      #timeline {
+        margin-top: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 11.5px;
+      }
+      #timeline h4 {
+        color: var(--accent);
+        margin: 4px 0;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+      .tl-row {
+        display: flex;
+        gap: 8px;
+        color: var(--dim);
+        padding: 1px 0;
+      }
+      .tl-row span:first-child {
+        color: var(--accent);
+        min-width: 44px;
+      }
+      .tl-phase {
+        color: var(--good);
+        font-weight: 600;
+      }
+      .pedia summary {
+        cursor: pointer;
+        padding: 3px 0;
+        font-size: 13px;
+      }
+      .pedia p {
+        font-size: 12px;
+        color: var(--dim);
+        margin: 4px 0;
+      }
+      .pedia-real {
+        color: var(--text) !important;
+      }
+      #pedia-panel input {
+        width: 100%;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 4px;
+        margin-bottom: 6px;
+      }
+      /* "Ops at night" theme (ART-DIRECTION): the UI dims warm-red after sunset. */
+      body.night {
+        --accent: #e8a87c;
+      }
+      body.night #topbar,
+      body.night #side-panel,
+      body.night #observer {
+        background: #171210;
+      }
     </style>
   </head>
   <body>
@@ -420,9 +619,56 @@
           <div class="sub" id="storage-line">—</div>
         </div>
       </div>
+      <div id="start-screen">
+        <div id="start-card">
+          <h1>LUNARIS</h1>
+          <p class="start-tag">
+            A hard-realism lunar colonization simulator. Every number has a citation.
+          </p>
+          <div class="start-modes">
+            <div class="start-mode">
+              <h2>🧑‍🚀 Game</h2>
+              <p>
+                Command the outpost yourself. The First Night tutorial teaches power, heat, air, and
+                ice — in that order, because that is the order the Moon kills you in.
+              </p>
+              <button id="start-game">Play the First Night</button>
+            </div>
+            <div class="start-mode">
+              <h2>🛰 Simulation</h2>
+              <p>
+                Watch a policy AI run a 2026-era program. Intervene whenever you disagree with
+                mission control.
+              </p>
+              <label
+                >Preset
+                <select id="scenario-select"></select
+              ></label>
+              <label
+                >Failures
+                <select id="failure-select">
+                  <option value="realistic">Realistic (history's odds)</option>
+                  <option value="ideal">Ideal (the brochure)</option>
+                </select>
+              </label>
+              <label>Seed <input id="seed-input" type="text" placeholder="preset default" /></label>
+              <button id="start-sim">Run Simulation</button>
+            </div>
+          </div>
+          <p class="start-keys">
+            Space pause · 1-4 speed · R/B/T/C/S/F/P tabs · Esc cancel placement
+          </p>
+        </div>
+      </div>
+      <div id="resbar"></div>
       <div id="main-row">
         <div id="map-wrap">
           <div id="tutorial"></div>
+        </div>
+        <div id="observer" hidden>
+          <button id="take-command">🧑‍🚀 Take Command</button>
+          <div id="charts"></div>
+          <div id="timeline"></div>
         </div>
         <div id="side-panel">
           <div id="tabs"></div>
@@ -433,6 +679,7 @@
             <div id="colony-panel" hidden></div>
             <div id="supply-panel" hidden></div>
             <div id="flows-panel" hidden></div>
+            <div id="pedia-panel" hidden></div>
           </div>
           <h3 style="margin-top: 12px">Inspector</h3>
           <div id="inspector"><em style="color: var(--dim)">Click a building</em></div>
