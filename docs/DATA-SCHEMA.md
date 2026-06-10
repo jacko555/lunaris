@@ -1,6 +1,6 @@
 # DATA-SCHEMA.md — JSON Content Schemas
 
-All game content is JSON in `data/`, validated by zod schemas in `sim-core/src/schema/`. ids are kebab-case, globally unique. Every real-world figure carries `source` and `as_of`. Mods are packs merged by id (`override: true` replaces; otherwise duplicate id = validation error).
+All game content is JSON in `data/`, validated by zod schemas in `sim-core/src/schema/`. ids are lower-case and globally unique across all categories; the convention is snake_case for constants (matching SDD table ids) and kebab-case for everything else — the schema accepts both separators. Every real-world figure carries `source` and `as_of`. Mods are packs merged by id (`override: true` replaces; otherwise duplicate id = validation error). Mod packs that reference base-pack content are loaded with `partial: true` (schema + id checks only); full referential validation re-runs on the merged result.
 
 ## Constant
 
