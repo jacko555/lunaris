@@ -10,6 +10,7 @@ import {
 } from "../game/components.js";
 import { colonyConsume } from "../game/pool.js";
 import { R_MEDKITS } from "../game/resource-ids.js";
+import { farmCoverage } from "./food.js";
 
 /**
  * Health & morale system (docs/SDD.md §9 + the §6 failure cascades).
@@ -47,7 +48,8 @@ export function createHealthSystem(pack: ContentPack, ids: HealthSystemIds): Sys
   const clinicHealPerTick = pack.number("clinic_heal_per_day") / 24;
   const medkitPerTreatmentDay = pack.number("clinic_medkit_per_patient_day");
   const medicalEventPerTick = pack.number("medical_event_rate_per_year_per_crew") / 8760;
-  const moraleBaseline = pack.number("morale_baseline");
+  const moraleBaselineDefault = pack.number("morale_baseline");
+  const freshFoodBonus = pack.number("fresh_food_morale_bonus");
   const moraleRecoveryPerTick = pack.number("morale_recovery_per_day") / 24;
   const crowdingMoralePerTick = pack.number("crowding_morale_per_day") / 24;
 
@@ -79,6 +81,10 @@ export function createHealthSystem(pack: ContentPack, ids: HealthSystemIds): Sys
         }
       }
       const crowded = living.length > housing && housing >= 0;
+      // Crop-variety morale (M7): fresh food for ≥half the diet lifts the
+      // baseline everyone recovers toward.
+      const coverage = farmCoverage(buildings.entries(), pack, living.length);
+      const moraleBaseline = moraleBaselineDefault + (coverage >= 0.5 ? freshFoodBonus : 0);
 
       let exerciseUsed = 0;
       for (const [, crew] of living) {

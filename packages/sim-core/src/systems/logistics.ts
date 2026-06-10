@@ -138,7 +138,7 @@ export function createLogisticsSystem(
             const tile = tileAt(map, mission.targetX, mission.targetY);
             if (tile.iceFrac > 0.01 && phase.iceCharacterized === 0) {
               phase.iceCharacterized = 1;
-              phase.milestones.push("ice-characterized");
+              phase.milestones.push({ tick: world.tickCount, id: "ice-characterized" });
               pushAlert(
                 world,
                 ids.alertsEntity,
@@ -158,7 +158,10 @@ export function createLogisticsSystem(
           } else if (mission.kind === "sortie") {
             phase.sortiesCompleted += 1;
             research.sciencePoints += sortieScience;
-            phase.milestones.push(`sortie-${phase.sortiesCompleted}`);
+            phase.milestones.push({
+              tick: world.tickCount,
+              id: `sortie-${phase.sortiesCompleted}`,
+            });
             pushAlert(
               world,
               ids.alertsEntity,

@@ -5,11 +5,15 @@ import type { EntityId, JsonObject } from "../types.js";
 import { pushAlert } from "../game/alerts.js";
 import {
   BUILDING_COMPONENT,
+  ECONOMY_COMPONENT,
   PENDING_HAZARD_COMPONENT,
   PHASE_COMPONENT,
+  RESUPPLY_COMPONENT,
   type BuildingComponent,
+  type EconomyComponent,
   type PendingHazardComponent,
   type PhaseComponent,
+  type ResupplyComponent,
 } from "../game/components.js";
 import { colonyConsume } from "../game/pool.js";
 import { R_SPARE_PARTS } from "../game/resource-ids.js";
@@ -88,6 +92,64 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
           event.id,
           "Shallow moonquake — structural stress check across the base (minor wear; printed/rigid structures shrug it off)",
         );
+      } else if (type === "budget-delta") {
+        const economy = world.store<EconomyComponent>(ECONOMY_COMPONENT).get(ids.colonyEntity);
+        if (economy !== undefined) {
+          const range = (effect["fraction"] as [number, number] | undefined) ?? [-0.2, -0.1];
+          const fraction = range[0] + world.rng.next() * (range[1] - range[0]);
+          const deltaUsd = economy.annualBudgetUsd * fraction;
+          economy.balanceUsd += deltaUsd;
+          pushAlert(
+            world,
+            ids.alertsEntity,
+            deltaUsd < 0 ? "warning" : "info",
+            event.id,
+            `${deltaUsd < 0 ? "Budget cut" : "Budget boost"}: ${(fraction * 100).toFixed(0)}% of the annual appropriation (${(deltaUsd / 1e9).toFixed(2)}B)`,
+          );
+        }
+      } else if (type === "mission-delay") {
+        const missions = world.store<ResupplyComponent>(RESUPPLY_COMPONENT);
+        const range = (effect["ticks"] as [number, number] | undefined) ?? [336, 1008];
+        let delayed = 0;
+        for (const [, mission] of missions.entries()) {
+          if (mission.arrivalTick > world.tickCount) {
+            mission.arrivalTick += world.rng.nextInt(range[0], range[1]);
+            delayed++;
+          }
+        }
+        if (delayed > 0) {
+          pushAlert(
+            world,
+            ids.alertsEntity,
+            "warning",
+            event.id,
+            `Launch slip: ${delayed} mission(s) delayed 2-6 weeks — check your consumable runways`,
+          );
+        }
+      } else if (type === "eclss-outage") {
+        // One unit fails, not the fleet — redundancy is the counterplay.
+        const eclssUnits = [...buildings.entries()].filter(
+          ([, b]) => pack.building(b.defId).eclss !== undefined,
+        );
+        if (eclssUnits.length > 0) {
+          const ticksRange = (effect["ticks"] as [number, number] | undefined) ?? [24, 72];
+          const ticks = world.rng.nextInt(ticksRange[0], ticksRange[1]);
+          const [, target] = eclssUnits[world.rng.nextInt(0, eclssUnits.length - 1)] as [
+            number,
+            BuildingComponent,
+          ];
+          target.offlineUntilTick = world.tickCount + ticks;
+          pushAlert(
+            world,
+            ids.alertsEntity,
+            "critical",
+            event.id,
+            `${pack.building(target.defId).name} component failure — offline ~${ticks} h. ${eclssUnits.length > 1 ? "Backup units carry the load." : "The CO₂ grace window is now your deadline — redundancy next time."}`,
+          );
+        }
+      } else if (type === "flavor") {
+        // Narrative-only deck entries (Accords disputes, the autonomy arc).
+        pushAlert(world, ids.alertsEntity, "info", event.id, event.alertTemplate ?? event.id);
       } else if (type === "power-outage") {
         const ticksRange = (effect["ticks"] as [number, number] | undefined) ?? [24, 72];
         const ticks = world.rng.nextInt(ticksRange[0], ticksRange[1]);

@@ -72,6 +72,15 @@ export const TEST_CONSTANTS = [
   constant("sortie_stay_days", 6.5, "days"),
   constant("probe_payload_kg", 100, "kg"),
   constant("sortie_payload_kg", 5000, "kg"),
+  // ── M6/M7 ──
+  constant("crop_area_per_person", 45, "m2"),
+  constant("immigration_wave_days", 30, "days"),
+  constant("immigration_wave_size", 8, "settlers"),
+  constant("birth_rate_per_year_per_10_crew", 0.5, "births/yr/10 crew"),
+  constant("fresh_food_morale_bonus", 5, "morale"),
+  constant("he3_price_usd_per_kg", 20000000, "USD/kg"),
+  constant("he3_demand_kg_per_day", 0.01, "kg/day"),
+  constant("mass_driver_demand_multiplier", 5, "factor"),
   {
     id: "vehicle_clps",
     value: {
@@ -336,6 +345,46 @@ export const TEST_BUILDINGS = [
     commsRelay: true,
   }),
   building({
+    id: "farm",
+    massKg: 4000,
+    powerKw: -15,
+    heatKw: 3,
+    radiatorKw: 5,
+    priorityTier: 2,
+    farm: { areaM2: 90 }, // 2 diets at 45 m²/person
+  }),
+  building({
+    id: "workshop",
+    crewOps: { engineer: 1 },
+    massKg: 3000,
+    powerKw: -10,
+    heatKw: 2,
+    radiatorKw: 3,
+    priorityTier: 3,
+    reactions: ["r-parts"],
+    reactionKgPerDay: { "r-parts": 40 },
+  }),
+  building({
+    id: "driver",
+    massKg: 50000,
+    powerKw: -500,
+    heatKw: 80,
+    radiatorKw: 120,
+    priorityTier: 3,
+    massDriver: true,
+  }),
+  building({
+    id: "combine",
+    crewOps: { engineer: 1 },
+    massKg: 40000,
+    powerKw: -300,
+    heatKw: 60,
+    radiatorKw: 90,
+    priorityTier: 3,
+    reactions: ["r-he3"],
+    reactionKgPerDay: { "r-he3": 0.036 },
+  }),
+  building({
     id: "solar",
     massKg: 1000,
     powerKw: 10,
@@ -421,6 +470,8 @@ export const TEST_RESOURCES = [
   resource("printed-structure", "ambient"),
   resource("spare-parts", "ambient"),
   resource("machine-components", "ambient"),
+  resource("iron", "bulk"),
+  resource("he-3", "pressurized"),
 ];
 
 function reaction(overrides: Record<string, unknown>): Record<string, unknown> {
@@ -490,6 +541,27 @@ export const TEST_REACTIONS = [
     inputs: [{ resource: "regolith", kg: 1 }],
     outputs: [{ resource: "printed-structure", kg: 1 }],
     primaryOutput: "printed-structure",
+  }),
+  reaction({
+    id: "r-parts",
+    building: "workshop",
+    inputs: [
+      { resource: "iron", kg: 1 },
+      { resource: "machine-components", kg: 0.1 },
+    ],
+    outputs: [{ resource: "spare-parts", kg: 1.1 }],
+    primaryOutput: "spare-parts",
+  }),
+  reaction({
+    id: "r-he3",
+    building: "combine",
+    inputs: [{ resource: "regolith", kg: 100000 }],
+    outputs: [
+      { resource: "he-3", kg: 0.0015 },
+      { resource: "water", kg: 50 },
+      { resource: "tailings", kg: 99949.9985 },
+    ],
+    primaryOutput: "he-3",
   }),
 ];
 

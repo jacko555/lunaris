@@ -72,6 +72,8 @@ export {
   GRID_COMPONENT,
   PENDING_HAZARD_COMPONENT,
   PHASE_COMPONENT,
+  POLICY_COMPONENT,
+  RIVAL_COMPONENT,
   RESEARCH_COMPONENT,
   RESUPPLY_COMPONENT,
   SITE_COMPONENT,
@@ -90,8 +92,10 @@ export type {
   GridComponent,
   PendingHazardComponent,
   PhaseComponent,
+  PolicyComponent,
   ResearchComponent,
   ResupplyComponent,
+  RivalComponent,
   SiteComponent,
   StatsComponent,
   StorageComponent,
@@ -103,6 +107,8 @@ export {
   R_CO2,
   R_FOOD,
   R_H2,
+  R_HE3,
+  R_IRON,
   R_LOX,
   R_MACHINE_COMPONENTS,
   R_MEDKITS,
@@ -125,6 +131,8 @@ export {
 } from "./game/pool.js";
 export {
   ALERTS_ENTITY,
+  CMD_SET_POLICY,
+  findPolicyAnchors,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
   CMD_CANCEL_BUILD,
@@ -196,3 +204,12 @@ export { createEconomySystem } from "./systems/economy.js";
 export type { EconomySystemIds } from "./systems/economy.js";
 export { createPhaseSystem } from "./systems/phase.js";
 export type { PhaseSystemIds } from "./systems/phase.js";
+export { createPolicySystem } from "./systems/policy.js";
+export type { PolicySystemIds } from "./systems/policy.js";
+export { createFoodSystem, farmCoverage } from "./systems/food.js";
+export type { FoodSystemIds } from "./systems/food.js";
+export { createPopulationSystem } from "./systems/population.js";
+export type { PopulationSystemIds } from "./systems/population.js";
+export { createRivalSystem } from "./systems/rival.js";
+export type { RivalSystemIds } from "./systems/rival.js";
+export { POLICY_PROFILES, scenarioSeed, scenarioToConfig } from "./game/scenario.js";

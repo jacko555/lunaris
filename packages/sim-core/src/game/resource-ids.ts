@@ -20,3 +20,5 @@ export const R_TAILINGS = "tailings";
 export const R_PRINTED = "printed-structure";
 export const R_SPARE_PARTS = "spare-parts";
 export const R_MACHINE_COMPONENTS = "machine-components";
+export const R_IRON = "iron";
+export const R_HE3 = "he-3";

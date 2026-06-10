@@ -129,7 +129,11 @@ export function createEclssSystem(pack: ContentPack, ids: EclssSystemIds): Syste
       for (const [entity, building] of buildings.entries()) {
         const def = pack.building(building.defId);
         const eclss = def.eclss;
-        if (eclss === undefined || building.condition <= 0) {
+        if (
+          eclss === undefined ||
+          building.condition <= 0 ||
+          world.tickCount < building.offlineUntilTick // hazard-forced outage
+        ) {
           continue;
         }
         const duty = building.poweredFraction * building.condition;

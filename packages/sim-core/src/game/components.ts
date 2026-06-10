@@ -162,6 +162,10 @@ export type StatsComponent = {
   cumulativeImportedKg: number;
   /** 1 once the ≥50% local O₂+water milestone has been hit (v0.1 MVP goal). */
   isru50Milestone: number;
+  /** Mass-closure across ALL imports vs local creation (SDD §6 closure%). */
+  cycleAllLocalKg: number;
+  cycleAllImportedKg: number;
+  lastCycleClosure: number;
 };
 
 /** Research state (TECH-TREE.md). */
@@ -183,7 +187,7 @@ export type EconomyComponent = {
   totalRevenueUsd: number;
 };
 
-/** Phase progression flags (PHASES.md, phases 0–3 in v0.5 scope). */
+/** Phase progression flags (PHASES.md). */
 export type PhaseComponent = {
   phase: number;
   successfulLandings: number;
@@ -197,7 +201,35 @@ export type PhaseComponent = {
   /** Ticks of night endured so far with crew alive (resets at dawn/death). */
   nightTicksWithCrew: number;
   isruDemo: number;
-  milestones: string[];
+  /** Tick at which the current phase was entered (export-economy timing). */
+  phaseEnteredTick: number;
+  /** Timestamped milestone log — the observer-mode timeline. */
+  milestones: { tick: number; id: string }[];
+};
+
+export const POLICY_COMPONENT = "policy";
+export const RIVAL_COMPONENT = "rival";
+
+/** Policy AI state (MODES.md §2.2) — the simulation-mode decision maker. */
+export type PolicyComponent = {
+  enabled: number; // 0 = manual (game mode), 1 = AI plays
+  /** Growth-pass weights: infrastructure / isru / science / population. */
+  weights: Record<string, number>;
+  /** Site anchor for AI construction (chosen at scenario start). */
+  baseX: number;
+  baseY: number;
+  mineX: number;
+  mineY: number;
+  /** Throttles so daily passes don't spam commands. */
+  lastResupplyTick: number;
+  lastCrewTick: number;
+};
+
+/** Rival-program ticker (international competition flavor). */
+export type RivalComponent = {
+  name: string;
+  /** Remaining scheduled milestones, [tick, label] sorted ascending. */
+  upcoming: { tick: number; label: string }[];
 };
 
 /** A hazard rolled by the engine, waiting out its warning lead time. */

@@ -48,21 +48,25 @@ export function createStatsSystem(pack: ContentPack, ids: StatsSystemIds): Syste
       const stats = world.store<StatsComponent>(STATS_COMPONENT).require(ids.colonyEntity);
       const report = world.ledgerReport();
       if (report !== null) {
-        for (const resource of TRACKED) {
-          const byTag = report.createdByResource[resource];
-          if (byTag === undefined) {
-            continue;
-          }
+        for (const resource of Object.keys(report.createdByResource)) {
+          const byTag = report.createdByResource[resource] as Record<string, number>;
+          const tracked = TRACKED.includes(resource);
           for (const tag of Object.keys(byTag)) {
             const kg = byTag[tag] as number;
             if (tag === "earth-resupply" || tag === "initial-stock") {
-              stats.cycleImportedKg += kg;
-              stats.cumulativeImportedKg += kg;
-            } else if (!RECIRCULATION.has(tag)) {
-              // Mining and ISRU reaction output (ice-extraction water,
-              // MRE/electrolysis O₂ from locally produced feed).
-              stats.cycleLocalKg += kg;
-              stats.cumulativeLocalKg += kg;
+              stats.cycleAllImportedKg += kg;
+              if (tracked) {
+                stats.cycleImportedKg += kg;
+                stats.cumulativeImportedKg += kg;
+              }
+            } else if (!RECIRCULATION.has(tag) && tag !== "regolith-excavation") {
+              // Mining and ISRU/manufacturing output. Raw regolith scooped
+              // straight into a reaction is feed, not a closure win.
+              stats.cycleAllLocalKg += kg;
+              if (tracked) {
+                stats.cycleLocalKg += kg;
+                stats.cumulativeLocalKg += kg;
+              }
             }
           }
         }
@@ -74,6 +78,10 @@ export function createStatsSystem(pack: ContentPack, ids: StatsSystemIds): Syste
         stats.lastCycleLocalShare = total > 0 ? stats.cycleLocalKg / total : 0;
         stats.cycleLocalKg = 0;
         stats.cycleImportedKg = 0;
+        const allTotal = stats.cycleAllLocalKg + stats.cycleAllImportedKg;
+        stats.lastCycleClosure = allTotal > 0 ? stats.cycleAllLocalKg / allTotal : 0;
+        stats.cycleAllLocalKg = 0;
+        stats.cycleAllImportedKg = 0;
         if (stats.lastCycleLocalShare >= 0.5 && stats.isru50Milestone === 0) {
           stats.isru50Milestone = 1;
           pushAlert(

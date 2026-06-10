@@ -16,8 +16,12 @@ import { createEnvironmentSystem } from "../systems/environment.js";
 import { createHazardSystem } from "../systems/hazards.js";
 import { createHealthSystem } from "../systems/health.js";
 import { chargeLaunch, createLogisticsSystem, vehicleClass } from "../systems/logistics.js";
+import { createFoodSystem } from "../systems/food.js";
 import { createPhaseSystem } from "../systems/phase.js";
+import { createPolicySystem } from "../systems/policy.js";
+import { createPopulationSystem } from "../systems/population.js";
 import { createPowerSystem } from "../systems/power.js";
+import { createRivalSystem } from "../systems/rival.js";
 import { applySpeDose, createRadiationSystem } from "../systems/radiation.js";
 import { createReactionSystem } from "../systems/reactions.js";
 import { createResearchSystem, hardPrereqsMet } from "../systems/research.js";
@@ -34,7 +38,9 @@ import {
   GRID_COMPONENT,
   PENDING_HAZARD_COMPONENT,
   PHASE_COMPONENT,
+  POLICY_COMPONENT,
   RESEARCH_COMPONENT,
+  RIVAL_COMPONENT,
   RESUPPLY_COMPONENT,
   SITE_COMPONENT,
   STATS_COMPONENT,
@@ -49,7 +55,9 @@ import {
   type GridComponent,
   type PendingHazardComponent,
   type PhaseComponent,
+  type PolicyComponent,
   type ResearchComponent,
+  type RivalComponent,
   type ResupplyComponent,
   type SiteComponent,
   type StatsComponent,
@@ -91,6 +99,7 @@ export const CMD_START_RESEARCH = "cmd-start-research";
 export const CMD_LAUNCH_PROBE = "cmd-launch-probe";
 export const CMD_LAUNCH_SORTIE = "cmd-launch-sortie";
 export const CMD_TRIGGER_SPE = "cmd-trigger-spe";
+export const CMD_SET_POLICY = "cmd-set-policy";
 
 export interface CmdPlaceBuildingPayload {
   defId: string;
@@ -141,6 +150,8 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       const economyStore = world.registerComponent<EconomyComponent>(ECONOMY_COMPONENT);
       const phaseStore = world.registerComponent<PhaseComponent>(PHASE_COMPONENT);
       world.registerComponent<PendingHazardComponent>(PENDING_HAZARD_COMPONENT);
+      const policyStore = world.registerComponent<PolicyComponent>(POLICY_COMPONENT);
+      const rivalStore = world.registerComponent<RivalComponent>(RIVAL_COMPONENT);
 
       const envEntity = world.createEntity();
       const gridEntity = world.createEntity();
@@ -183,6 +194,9 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         cumulativeLocalKg: 0,
         cumulativeImportedKg: 0,
         isru50Milestone: 0,
+        cycleAllLocalKg: 0,
+        cycleAllImportedKg: 0,
+        lastCycleClosure: 0,
       });
       const startTechs = (configValue(world, "startTechs") as string[] | undefined) ?? [];
       researchStore.set(COLONY_ENTITY, {
@@ -209,8 +223,36 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         nightSurvived: 0,
         nightTicksWithCrew: 0,
         isruDemo: 0,
+        phaseEnteredTick: 0,
         milestones: [],
       });
+      // Simulation-mode decision maker (MODES.md §2.2), enabled by scenario.
+      if ((configValue(world, "policyEnabled") as number | undefined) === 1) {
+        const anchors = findPolicyAnchors(map);
+        policyStore.set(COLONY_ENTITY, {
+          enabled: 1,
+          weights: (configValue(world, "policyWeights") as Record<string, number> | undefined) ?? {
+            infrastructure: 1,
+            isru: 1,
+            science: 1,
+            population: 1,
+          },
+          baseX: anchors.baseX,
+          baseY: anchors.baseY,
+          mineX: anchors.mineX,
+          mineY: anchors.mineY,
+          lastResupplyTick: -10000,
+          lastCrewTick: -10000,
+        });
+      }
+      const rivalName = configValue(world, "rivalName") as string | undefined;
+      if (rivalName !== undefined) {
+        rivalStore.set(COLONY_ENTITY, {
+          name: rivalName,
+          upcoming:
+            (configValue(world, "rivalMilestones") as { tick: number; label: string }[]) ?? [],
+        });
+      }
 
       const ids = {
         envEntity: ENV_ENTITY,
@@ -224,8 +266,10 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       world.registerSystem(createReactionSystem(pack, map, ids));
       world.registerSystem(createConstructionSystem(pack, ids));
       world.registerSystem(createEclssSystem(pack, ids));
+      world.registerSystem(createFoodSystem(pack, ids));
       world.registerSystem(createRadiationSystem(pack, ids));
       world.registerSystem(createHealthSystem(pack, ids));
+      world.registerSystem(createPopulationSystem(pack, ids));
       world.registerSystem(createLogisticsSystem(pack, map, ids));
       world.registerSystem(createResearchSystem(pack, ids));
       world.registerSystem(createHazardSystem(pack, ids));
@@ -233,6 +277,8 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       world.registerSystem(createPhaseSystem(pack, ids));
       world.registerSystem(createEconomySystem(pack, ids));
       world.registerSystem(createStatsSystem(pack, ids));
+      world.registerSystem(createRivalSystem(pack, ids));
+      world.registerSystem(createPolicySystem(pack, map, ids));
 
       const reject = (w: World, code: string, message: string): void => {
         pushAlert(w, ALERTS_ENTITY, "warning", code, message);
@@ -308,8 +354,29 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
 
       // ── crew commands ──
 
+      /** -1 sentinel → first housing building at execution time (robust for
+       * scripted scenarios where stochastic entities shift id arithmetic). */
+      const resolveHousing = (location: number): number => {
+        if (location !== -1) {
+          return location;
+        }
+        for (const [entity, building] of buildings.entries()) {
+          if ((pack.building(building.defId).services.housing ?? 0) > 0) {
+            return entity;
+          }
+        }
+        return -1;
+      };
+      const resolveTarget = (target: number): number => {
+        if (target !== -1) {
+          return target;
+        }
+        return (buildings.entities()[0] as number | undefined) ?? -1;
+      };
+
       world.registerCommandHandler(CMD_ADD_CREW, (w, payload) => {
-        const { name, skills, location } = payload as CmdAddCrewPayload;
+        const { name, skills } = payload as CmdAddCrewPayload;
+        const location = resolveHousing((payload as CmdAddCrewPayload).location);
         const home = buildings.get(location);
         if (home === undefined || (pack.building(home.defId).services.housing ?? 0) <= 0) {
           reject(
@@ -425,8 +492,9 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       };
 
       world.registerCommandHandler(CMD_SCHEDULE_RESUPPLY, (w, payload) => {
-        const { manifest, arrivalTick, repeatTicks, targetEntity, vehicle } =
+        const { manifest, arrivalTick, repeatTicks, vehicle } =
           payload as CmdScheduleResupplyPayload;
+        const targetEntity = resolveTarget((payload as CmdScheduleResupplyPayload).targetEntity);
         if (!buildings.has(targetEntity)) {
           reject(
             w,
@@ -531,6 +599,76 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         const { mSv } = payload as { mSv: number };
         applySpeDose(w, pack, ids, mSv);
       });
+
+      // `Take Command` / advisor handoff (MODES.md §2.4): same world, the
+      // only thing that changes is who issues commands.
+      world.registerCommandHandler(CMD_SET_POLICY, (w, payload) => {
+        const { enabled } = payload as { enabled: number };
+        const policy = policyStore.get(COLONY_ENTITY);
+        if (policy === undefined) {
+          // Manual game that turns the AI on mid-run.
+          const anchors = findPolicyAnchors(map);
+          policyStore.set(COLONY_ENTITY, {
+            enabled: enabled === 1 ? 1 : 0,
+            weights: { infrastructure: 1, isru: 1, science: 1, population: 1 },
+            baseX: anchors.baseX,
+            baseY: anchors.baseY,
+            mineX: anchors.mineX,
+            mineY: anchors.mineY,
+            lastResupplyTick: -10000,
+            lastCrewTick: -10000,
+          });
+        } else {
+          policy.enabled = enabled === 1 ? 1 : 0;
+        }
+        pushAlert(
+          w,
+          ALERTS_ENTITY,
+          "info",
+          "policy-toggle",
+          enabled === 1 ? "Policy AI engaged — observer mode" : "You have command.",
+        );
+      });
     },
   };
+}
+
+/** Deterministic site selection for the Policy AI: flat plains + icy PSR. */
+export function findPolicyAnchors(map: LunarMap): {
+  baseX: number;
+  baseY: number;
+  mineX: number;
+  mineY: number;
+} {
+  let baseX = 4;
+  let baseY = 4;
+  outer: for (let y = 2; y < map.height - 10; y++) {
+    for (let x = 2; x < map.width - 14; x++) {
+      let ok = true;
+      for (let dy = 0; dy < 8 && ok; dy++) {
+        for (let dx = 0; dx < 12 && ok; dx++) {
+          const tile = tileAt(map, x + dx, y + dy);
+          ok = tile.illumClass === "B" && tile.slopeDeg <= 5;
+        }
+      }
+      if (ok) {
+        baseX = x + 4;
+        baseY = y + 4;
+        break outer;
+      }
+    }
+  }
+  let mineX = baseX;
+  let mineY = baseY;
+  outer2: for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const tile = tileAt(map, x, y);
+      if (tile.illumClass === "C" && tile.iceFrac > 0.03 && tile.slopeDeg <= 15) {
+        mineX = x;
+        mineY = y;
+        break outer2;
+      }
+    }
+  }
+  return { baseX, baseY, mineX, mineY };
 }

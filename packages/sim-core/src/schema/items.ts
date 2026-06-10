@@ -205,6 +205,10 @@ export const buildingSchema = z
     propellantDepot: z.boolean().default(false),
     /** Satisfies the Phase-0 comms-relay criterion (comms towers/relays). */
     commsRelay: z.boolean().default(false),
+    /** Crop area (greenhouses/agri-domes): feeds areaM2/crop_area_per_person. */
+    farm: z.object({ areaM2: z.number().positive() }).strict().optional(),
+    /** Counts toward the export-infrastructure criteria (mass driver segments). */
+    massDriver: z.boolean().default(false),
     techRequired: idSchema.nullable(),
     encyclopedia: idSchema.optional(),
     ...overrideField,
@@ -322,6 +326,16 @@ export const scenarioSchema = z
     policyWeights: z.record(z.string(), z.number()).optional(),
     autopause: z.array(z.string()).default([]),
     seed: z.number().int().nullable(),
+    /** Rival-program ticker (MODES.md international layer). */
+    rival: z
+      .object({
+        name: z.string().min(1),
+        milestones: z
+          .array(z.object({ year: z.number(), label: z.string().min(1) }).strict())
+          .default([]),
+      })
+      .strict()
+      .optional(),
     ...overrideField,
   })
   .strict();

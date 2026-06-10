@@ -13,7 +13,7 @@ import {
   type PhaseComponent,
 } from "../game/components.js";
 import { colonyConsume } from "../game/pool.js";
-import { R_LOX } from "../game/resource-ids.js";
+import { R_HE3, R_LOX } from "../game/resource-ids.js";
 
 /**
  * Budget & economy (TASKS.md M5, ECONOMY.md §4). Income: the scenario's
@@ -34,6 +34,9 @@ export function createEconomySystem(pack: ContentPack, ids: EconomySystemIds): S
   const opsUsdPerCrewDay = pack.number("crew_ops_usd_per_day");
   const loxPriceUsdPerKg = pack.number("lox_price_usd_per_kg");
   const loxDemandKgPerDay = pack.number("lox_demand_kg_per_day");
+  const he3PriceUsdPerKg = pack.number("he3_price_usd_per_kg");
+  const he3DemandKgPerDay = pack.number("he3_demand_kg_per_day");
+  const massDriverMultiplier = pack.number("mass_driver_demand_multiplier");
 
   return {
     name: "economy",
@@ -59,23 +62,44 @@ export function createEconomySystem(pack: ContentPack, ids: EconomySystemIds): S
       economy.balanceUsd -= opsUsd;
       economy.totalOpsSpendUsd += opsUsd;
 
-      // Phase-3 propellant sales: powered depot sells LOX into daily demand.
+      // Phase-3 propellant sales: powered depot sells LOX into daily demand;
+      // a powered mass driver multiplies reachable demand (exports without
+      // burning propellant to launch them). Phase-5 He-3 exports at the
+      // Interlune-class price (speculative economics, flagged in data).
       if (phase.phase >= 3) {
         let depotDuty = 0;
+        let driverOnline = false;
+        let combineOnline = false;
         for (const [, building] of buildings.entries()) {
-          if (pack.building(building.defId).propellantDepot) {
-            depotDuty = Math.max(depotDuty, building.poweredFraction * building.condition);
+          const def = pack.building(building.defId);
+          const duty = building.poweredFraction * building.condition;
+          if (def.propellantDepot) {
+            depotDuty = Math.max(depotDuty, duty);
+          }
+          if (def.massDriver && duty > 0.5) {
+            driverOnline = true;
+          }
+          if (
+            def.reactions.some((rid) => pack.reaction(rid).primaryOutput === "he-3") &&
+            duty > 0
+          ) {
+            combineOnline = true;
           }
         }
         if (depotDuty > 0) {
-          const soldKg = colonyConsume(
-            world,
-            R_LOX,
-            (loxDemandKgPerDay / 24) * depotDuty,
-            "propellant-sale",
-          );
+          const demand =
+            (loxDemandKgPerDay / 24) * depotDuty * (driverOnline ? massDriverMultiplier : 1);
+          const soldKg = colonyConsume(world, R_LOX, demand, "propellant-sale");
           if (soldKg > 0) {
             const revenue = soldKg * loxPriceUsdPerKg;
+            economy.balanceUsd += revenue;
+            economy.totalRevenueUsd += revenue;
+          }
+        }
+        if (combineOnline || driverOnline) {
+          const soldHe3 = colonyConsume(world, R_HE3, he3DemandKgPerDay / 24, "he3-sale");
+          if (soldHe3 > 0) {
+            const revenue = soldHe3 * he3PriceUsdPerKg;
             economy.balanceUsd += revenue;
             economy.totalRevenueUsd += revenue;
           }
