@@ -318,5 +318,133 @@
     "realWorld": "Lunar propellant depots are the recurring business case for ice mining: fuel sold at the top of the gravity well.",
     "sources": ["ECONOMY.md make-vs-buy", "PHASES.md Phase 3"],
     "as_of": "2026-06"
+  },
+  {
+    "id": "enc-greenhouse",
+    "title": "Greenhouse Module",
+    "body": "Fifty square meters of LED-lit hydroponics — about one person's full diet. The lights, not the plants, are the power bill.",
+    "realWorld": "NASA Veggie heritage scaled up; 40-50 m²/person for full caloric diets.",
+    "sources": ["NASA crop studies", "SDD crop constants"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-agri-dome",
+    "title": "Agri-Dome",
+    "body": "Five hundred square meters under one pressure shell: eleven diets, a CO₂ sink, and an O₂ spring. Closed-loop ecology at the scale where it starts getting Biosphere-2 temperamental.",
+    "realWorld": "MELiSSA's compartmentalized loop needed 453 m² for six crew menus.",
+    "sources": ["ESA MELiSSA", "Biosphere 2 lessons"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-medical-center",
+    "title": "Medical Center",
+    "body": "Surgery, imaging, intensive care. The building that removes 'evacuate to Earth' from the emergency flowchart.",
+    "realWorld": "Settlement-scale extension of ISS telemedicine practice.",
+    "sources": ["BUILDINGS.md tier 4"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-refinery",
+    "title": "Refinery",
+    "body": "Separates MRE slag into usable metal at 8 kWh/kg. Iron first; the rest of the melt waits for better chemistry.",
+    "realWorld": "Slag-to-ingot processing per NASA ISRU metallurgy studies.",
+    "sources": ["SDD section 7 metal refining"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-workshop",
+    "title": "Workshop",
+    "body": "Mills, lathes, and printers turning lunar iron into the spare parts that keep everything else alive. Every part made here is import mass deleted.",
+    "realWorld": "The mass-closure keystone: maintenance localization.",
+    "sources": ["ECONOMY.md make-vs-buy"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-fab-plant",
+    "title": "Fabrication Plant",
+    "body": "Precision manufacturing of machine components from local metal — only the electronics fraction still rides a rocket.",
+    "realWorld": "Advanced manufacturing tier; electronics independence is a Phase-6 problem.",
+    "sources": ["BUILDINGS.md tier 4"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-reclamation",
+    "title": "Water Reclamation Plant",
+    "body": "Brine-processing at settlement scale pushes water recovery to 98% — the last few percent that ISS chased for two decades.",
+    "realWorld": "ISS Brine Processor Assembly raised recovery from 93-94% to ~98%.",
+    "sources": ["ISS ECLSS BPA"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-printed-hab",
+    "title": "Printed Habitat Block",
+    "body": "A pressurized apartment block under twenty g/cm² of printed regolith: twelve residents, storm-proof by construction, and mostly made of Moon.",
+    "realWorld": "Regolith-shell habitat concepts from ESA/ICON printing programs.",
+    "sources": ["ESA D-Shape", "ICON Olympus"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-mass-driver",
+    "title": "Mass Driver",
+    "body": "An electromagnetic rail that throws cargo into space without burning a gram of propellant. Megawatt-hungry, megaproject-priced — and it makes exports nearly free at the margin.",
+    "realWorld": "O'Neill-era concept; 10 MW class when segments complete. Speculative engineering, sound physics.",
+    "sources": ["BUILDINGS.md tier 5 (flagged)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-volatile-combine",
+    "title": "Volatile Combine",
+    "body": "Eats a hundred tonnes of regolith and exhales hydrogen, water, carbon — and about a gram and a half of helium-3. The most speculative machine on the Moon.",
+    "realWorld": "Interlune/Vermeer demonstrated a full-scale 100 t/hr excavator in 2025; the economics remain unproven.",
+    "sources": ["Interlune 2025", "ECONOMY.md He-3 (speculative)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-solar-farm",
+    "title": "Solar Farm Field",
+    "body": "Photovoltaics made from MRE silicon — power infrastructure that never rode a rocket. The endgame of in-situ manufacturing.",
+    "realWorld": "In-situ PV fabrication from regolith silicon, a long-standing late-tech concept.",
+    "sources": ["TECH-TREE.md insitu_solar_cells"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-beamed-power",
+    "title": "Beamed Power Pilot",
+    "body": "Microwave power beamed to receivers in permanent shadow — mining the dark without dragging cables across the rim.",
+    "realWorld": "Power-beaming demos for PSR operations.",
+    "sources": ["TECH-TREE.md beamed_power"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-crater-dome",
+    "title": "Crater Dome Segment",
+    "body": "A section of pressurized roof over an entire crater. Paraterraforming: the city stops living in buildings and starts living in geography. Firmly speculative.",
+    "realWorld": "Paraterraforming literature (Richard Taylor et al.); no engineering program exists.",
+    "sources": ["PHASES.md Phase 6 (speculative)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-civic-center",
+    "title": "Civic Center",
+    "body": "Council chamber, school, archive, plaza. When the referendum on autonomy finally comes, it happens here. Speculative era content.",
+    "realWorld": "The social infrastructure of a settlement that has become a polity.",
+    "sources": ["PHASES.md Phase 6 (speculative)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-iron",
+    "title": "Iron",
+    "body": "The Moon's first structural metal, refined from MRE slag. Beams, parts, machines — civilization's skeleton, locally sourced.",
+    "realWorld": "Iron dominates the recoverable metal fraction of processed regolith.",
+    "sources": ["ECONOMY.md metals chain"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-he3",
+    "title": "Helium-3",
+    "body": "A solar-wind isotope worth ~$20M/kg to Earth's dilution refrigerators and neutron detectors. The fusion story is hype for now — the cryogenics market is real but tiny.",
+    "realWorld": "Interlune holds ~$500M in binding purchase orders; near-term demand is quantum-computing cryogenics, not reactors.",
+    "sources": ["Interlune 2026", "ECONOMY.md (speculative)"],
+    "as_of": "2026-06"
   }
 ]

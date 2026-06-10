@@ -138,7 +138,7 @@
   },
   {
     "id": "crew_co2_day",
-    "value": 1.0,
+    "value": 1,
     "unit": "kg/person/day",
     "source": "NASA JSC Advanced Life Support (ICES-2017-87), CO2 output",
     "as_of": "2026-06",
@@ -199,7 +199,11 @@
   },
   {
     "id": "mre_plant_small",
-    "value": { "massKg": 400, "powerKw": 14, "o2KgPerYear": 1000 },
+    "value": {
+      "massKg": 400,
+      "powerKw": 14,
+      "o2KgPerYear": 1000
+    },
     "unit": "composite",
     "source": "MIT/Schreiner MRE plant sizing (highlands feed)",
     "as_of": "2026-06",
@@ -207,7 +211,11 @@
   },
   {
     "id": "mre_plant_large",
-    "value": { "massKg": 1593, "powerKw": 56.5, "o2KgPerYear": 10000 },
+    "value": {
+      "massKg": 1593,
+      "powerKw": 56.5,
+      "o2KgPerYear": 10000
+    },
     "unit": "composite",
     "source": "MIT/Schreiner MRE plant sizing (highlands feed)",
     "as_of": "2026-06",
@@ -232,16 +240,20 @@
   },
   {
     "id": "electrolysis_energy",
-    "value": 5.0,
+    "value": 5,
     "unit": "kWh/kg H2O",
-    "range": [4.5, 6.0],
+    "range": [4.5, 6],
     "source": "PEM water electrolysis typical; stoichiometric 8:1 O2:H2 by mass",
     "as_of": "2026-06",
     "status": "sourced"
   },
   {
     "id": "fission_unit",
-    "value": { "powerKwe": 40, "massKg": 6000, "lifeYears": 10 },
+    "value": {
+      "powerKwe": 40,
+      "massKg": 6000,
+      "lifeYears": 10
+    },
     "unit": "composite",
     "source": "NASA Fission Surface Power RFP: 40 kWe continuous >= 10 yr, <= 6,000 kg, 4 m x 6 m stowed",
     "as_of": "2026-06",
@@ -249,7 +261,10 @@
   },
   {
     "id": "rtg_unit",
-    "value": { "powerKwe": 0.4, "massKg": 50 },
+    "value": {
+      "powerKwe": 0.4,
+      "massKg": 50
+    },
     "unit": "composite",
     "source": "Radioisotope generator class for night keep-alive loads (0.1-1 kWe)",
     "as_of": "2026-06",
@@ -363,7 +378,10 @@
   },
   {
     "id": "launch_failure_p_clps",
-    "value": { "early": 0.5, "mature": 0.15 },
+    "value": {
+      "early": 0.5,
+      "mature": 0.15
+    },
     "unit": "probability per mission",
     "source": "CLPS historical record: 1 full success in first 4 landing attempts (2024-2025), improving with tech",
     "as_of": "2026-06",
@@ -380,7 +398,12 @@
   },
   {
     "id": "cost_per_kg_surface",
-    "value": { "legacy": 1000000, "clps": 250000, "heavy": 100000, "starshipTarget": 10000 },
+    "value": {
+      "legacy": 1000000,
+      "clps": 250000,
+      "heavy": 100000,
+      "starshipTarget": 10000
+    },
     "unit": "USD/kg to lunar surface",
     "source": "Tiered cost classes; legacy/CLPS from program costs, Starship-class tier is a company target",
     "as_of": "2026-06",
@@ -431,7 +454,7 @@
   },
   {
     "id": "building_specific_heat",
-    "value": 1.0,
+    "value": 1,
     "unit": "kJ/(kg*K)",
     "source": "",
     "as_of": "2026-06",
@@ -475,7 +498,7 @@
   {
     "id": "radiation_shielding_curve",
     "value": {
-      "0": 1.0,
+      "0": 1,
       "4": 0.85,
       "10": 0.7,
       "30": 0.55,
@@ -535,7 +558,7 @@
   },
   {
     "id": "co2_danger_kg_per_person",
-    "value": 1.0,
+    "value": 1,
     "unit": "kg CO2 per person in crewed volumes",
     "source": "",
     "as_of": "2026-06",
@@ -826,5 +849,68 @@
     "source": "TASKS.md M5 Starship-class 100 t with refueling-chain prerequisite; $/kg is an undemonstrated company target",
     "as_of": "2026-06",
     "status": "speculative"
+  },
+  {
+    "id": "immigration_wave_days",
+    "value": 30,
+    "unit": "days",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Interval between settler waves when housing/food allow; gameplay model parameter"
+  },
+  {
+    "id": "immigration_wave_size",
+    "value": 8,
+    "unit": "settlers",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Wave size cap; gameplay model parameter"
+  },
+  {
+    "id": "birth_rate_per_year_per_10_crew",
+    "value": 0.5,
+    "unit": "births/yr per 10 crew",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Phase-4 demographic rate with countermeasures + medical capacity; gameplay model parameter"
+  },
+  {
+    "id": "fresh_food_morale_bonus",
+    "value": 5,
+    "unit": "morale",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Baseline lift when farms grow at least half the diet (crop variety, SDD section 9 morale inputs)"
+  },
+  {
+    "id": "he3_price_usd_per_kg",
+    "value": 20000000,
+    "unit": "USD/kg",
+    "source": "Interlune-era market price ~ $20M/kg (cryogenics/neutron-detection demand)",
+    "as_of": "2026-06",
+    "status": "sourced",
+    "notes": "Near-term demand is dilution refrigerators, not fusion; the market is small and elastic (flagged)"
+  },
+  {
+    "id": "he3_demand_kg_per_day",
+    "value": 0.01,
+    "unit": "kg/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "speculative",
+    "notes": "Tiny elastic market (~3.6 kg/yr); flooding it is a Phase-5 macro lesson for later milestones"
+  },
+  {
+    "id": "mass_driver_demand_multiplier",
+    "value": 5,
+    "unit": "factor",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "speculative",
+    "notes": "Propellant-export reach once launches need no propellant; gameplay model parameter"
   }
 ]

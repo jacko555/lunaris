@@ -191,5 +191,29 @@
     "encyclopedia": "enc-spare-parts",
     "source": "ECONOMY.md maintenance sink; imported until the Workshop (Phase 4)",
     "as_of": "2026-06"
+  },
+  {
+    "id": "iron",
+    "name": "Iron",
+    "phase": 3,
+    "storageClass": "bulk",
+    "densityKgM3": 7800,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-iron",
+    "source": "ECONOMY.md metals chain; refined from MRE slag",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "he-3",
+    "name": "Helium-3",
+    "phase": 5,
+    "storageClass": "pressurized",
+    "densityKgM3": 60,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-he3",
+    "source": "ECONOMY.md exports; ~1.5 g per 100 t regolith — economics flagged speculative",
+    "as_of": "2026-06"
   }
 ]

@@ -1,0 +1,192 @@
+[
+  {
+    "id": "artemis_baseline",
+    "name": "Artemis Baseline (2026 plan)",
+    "agency": "nasa",
+    "startYear": 2026,
+    "horizonYears": 15,
+    "budgetProfile": {
+      "annualUSD": 7000000000,
+      "volatility": "ideal"
+    },
+    "launchCadence": {
+      "roboticPerYear": 6,
+      "crewPerYear": 1
+    },
+    "startTechs": ["eclss_baseline"],
+    "failureTables": "ideal",
+    "site": "shackleton_rim",
+    "policyAI": "balanced",
+    "autopause": ["phase", "crew-death"],
+    "seed": 20262026,
+    "rival": {
+      "name": "ILRS ticker",
+      "milestones": [
+        {
+          "year": 2026.8,
+          "label": "Chang'e-7 south-pole prospecting underway"
+        },
+        {
+          "year": 2030,
+          "label": "China lands taikonauts at the south pole"
+        },
+        {
+          "year": 2035,
+          "label": "ILRS basic station operational"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ideal_trajectory",
+    "name": "Ideal Trajectory — the brochure timeline",
+    "agency": "nasa",
+    "startYear": 2026,
+    "horizonYears": 25,
+    "budgetProfile": {
+      "annualUSD": 9000000000,
+      "volatility": "ideal"
+    },
+    "launchCadence": {
+      "roboticPerYear": 8,
+      "crewPerYear": 2
+    },
+    "startTechs": ["eclss_baseline", "precision_landing"],
+    "failureTables": "ideal",
+    "site": "shackleton_rim",
+    "policyAI": "aggressive",
+    "autopause": ["phase"],
+    "seed": 19690720,
+    "rival": {
+      "name": "ILRS ticker",
+      "milestones": [
+        {
+          "year": 2026.8,
+          "label": "Chang'e-7 south-pole prospecting underway"
+        },
+        {
+          "year": 2030,
+          "label": "China lands taikonauts at the south pole"
+        },
+        {
+          "year": 2035,
+          "label": "ILRS basic station operational"
+        }
+      ]
+    }
+  },
+  {
+    "id": "realistic_trajectory",
+    "name": "Realistic Trajectory (2026–2050)",
+    "agency": "nasa",
+    "startYear": 2026,
+    "horizonYears": 25,
+    "budgetProfile": {
+      "annualUSD": 7000000000,
+      "volatility": "realistic"
+    },
+    "launchCadence": {
+      "roboticPerYear": 4,
+      "crewPerYear": 1
+    },
+    "startTechs": ["eclss_baseline"],
+    "failureTables": "realistic",
+    "site": "shackleton_rim",
+    "policyAI": "cautious",
+    "autopause": ["phase", "crew-death"],
+    "seed": 20260528,
+    "rival": {
+      "name": "ILRS ticker",
+      "milestones": [
+        {
+          "year": 2026.8,
+          "label": "Chang'e-7 south-pole prospecting underway"
+        },
+        {
+          "year": 2030,
+          "label": "China lands taikonauts at the south pole"
+        },
+        {
+          "year": 2035,
+          "label": "ILRS basic station operational"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ilrs_race",
+    "name": "ILRS Race",
+    "agency": "ilrs",
+    "startYear": 2026,
+    "horizonYears": 20,
+    "budgetProfile": {
+      "annualUSD": 8000000000,
+      "volatility": "realistic"
+    },
+    "launchCadence": {
+      "roboticPerYear": 5,
+      "crewPerYear": 1
+    },
+    "startTechs": ["eclss_baseline", "precision_landing"],
+    "failureTables": "realistic",
+    "site": "shackleton_rim",
+    "policyAI": "balanced",
+    "autopause": ["phase"],
+    "seed": 20301001,
+    "rival": {
+      "name": "NASA Artemis",
+      "milestones": [
+        {
+          "year": 2028,
+          "label": "Artemis IV: first NASA crewed landing of the program"
+        },
+        {
+          "year": 2031,
+          "label": "NASA Foundation Habitat delivered to the south pole"
+        },
+        {
+          "year": 2035,
+          "label": "NASA outpost continuously crewed"
+        }
+      ]
+    }
+  },
+  {
+    "id": "commercial_bootstrap",
+    "name": "Commercial Bootstrap — propellant or die",
+    "agency": "commercial",
+    "startYear": 2026,
+    "horizonYears": 20,
+    "budgetProfile": {
+      "annualUSD": 2500000000,
+      "volatility": "realistic"
+    },
+    "launchCadence": {
+      "roboticPerYear": 6,
+      "crewPerYear": 1
+    },
+    "startTechs": ["eclss_baseline", "precision_landing", "ice_prospecting"],
+    "failureTables": "realistic",
+    "site": "shackleton_rim",
+    "policyAI": "isru_first",
+    "autopause": ["crew-death"],
+    "seed": 21001969,
+    "rival": {
+      "name": "ILRS ticker",
+      "milestones": [
+        {
+          "year": 2026.8,
+          "label": "Chang'e-7 south-pole prospecting underway"
+        },
+        {
+          "year": 2030,
+          "label": "China lands taikonauts at the south pole"
+        },
+        {
+          "year": 2035,
+          "label": "ILRS basic station operational"
+        }
+      ]
+    }
+  }
+]

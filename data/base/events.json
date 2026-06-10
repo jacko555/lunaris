@@ -2,10 +2,20 @@
   {
     "id": "spe-minor",
     "category": "environmental",
-    "rates": { "ideal": 4, "realistic": 6 },
+    "rates": {
+      "ideal": 4,
+      "realistic": 6
+    },
     "warningTicks": [12, 48],
-    "conditions": { "minPhase": 1 },
-    "effects": [{ "type": "radiation-dose", "mSv": [10, 50] }],
+    "conditions": {
+      "minPhase": 1
+    },
+    "effects": [
+      {
+        "type": "radiation-dose",
+        "mSv": [10, 50]
+      }
+    ],
     "responses": ["shelter-order"],
     "alertTemplate": "Minor solar particle event inbound (ETA {eta} h) — 10-50 mSv unsheltered. Order crew to shielded volumes.",
     "source": "EVENTS.md environmental table",
@@ -14,10 +24,20 @@
   {
     "id": "spe-major",
     "category": "environmental",
-    "rates": { "ideal": 0.3, "realistic": 0.5 },
+    "rates": {
+      "ideal": 0.3,
+      "realistic": 0.5
+    },
     "warningTicks": [12, 48],
-    "conditions": { "minPhase": 1 },
-    "effects": [{ "type": "radiation-dose", "mSv": [100, 500] }],
+    "conditions": {
+      "minPhase": 1
+    },
+    "effects": [
+      {
+        "type": "radiation-dose",
+        "mSv": [100, 500]
+      }
+    ],
     "responses": ["shelter-order"],
     "alertTemplate": "MAJOR solar particle event inbound (ETA {eta} h) — 100-500 mSv unsheltered, Carrington-class. Everyone into the storm shelter (>=10 g/cm2) NOW.",
     "source": "EVENTS.md environmental table; NASA dose limit framework",
@@ -26,9 +46,17 @@
   {
     "id": "micrometeorite",
     "category": "environmental",
-    "rates": { "ideal": 0.5, "realistic": 1 },
+    "rates": {
+      "ideal": 0.5,
+      "realistic": 1
+    },
     "conditions": {},
-    "effects": [{ "type": "building-damage", "conditionLoss": [0.01, 0.1] }],
+    "effects": [
+      {
+        "type": "building-damage",
+        "conditionLoss": [0.01, 0.1]
+      }
+    ],
     "responses": [],
     "alertTemplate": "Micrometeorite strike",
     "source": "EVENTS.md environmental table; no atmosphere, full flux",
@@ -37,9 +65,16 @@
   {
     "id": "moonquake",
     "category": "environmental",
-    "rates": { "ideal": 0.2, "realistic": 0.3 },
+    "rates": {
+      "ideal": 0.2,
+      "realistic": 0.3
+    },
     "conditions": {},
-    "effects": [{ "type": "structural-stress" }],
+    "effects": [
+      {
+        "type": "structural-stress"
+      }
+    ],
     "responses": [],
     "alertTemplate": "Shallow moonquake",
     "source": "EVENTS.md environmental table; Apollo seismic network",
@@ -48,12 +83,134 @@
   {
     "id": "fission-scram",
     "category": "technical",
-    "rates": { "ideal": 0.1, "realistic": 0.2 },
-    "conditions": { "minPhase": 2 },
-    "effects": [{ "type": "power-outage", "ticks": [24, 72] }],
+    "rates": {
+      "ideal": 0.1,
+      "realistic": 0.2
+    },
+    "conditions": {
+      "minPhase": 2
+    },
+    "effects": [
+      {
+        "type": "power-outage",
+        "ticks": [24, 72]
+      }
+    ],
     "responses": [],
     "alertTemplate": "Fission scram",
     "source": "EVENTS.md technical table; the night-timing nightmare",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "budget-cut",
+    "category": "logistics",
+    "rates": {
+      "ideal": 0,
+      "realistic": 0.4
+    },
+    "conditions": {},
+    "effects": [
+      {
+        "type": "budget-delta",
+        "fraction": [-0.3, -0.1]
+      }
+    ],
+    "alertTemplate": "Appropriation cut",
+    "source": "EVENTS.md logistics/program table: budget cut/boost deck, ±10-30%",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "budget-boost",
+    "category": "logistics",
+    "rates": {
+      "ideal": 0.2,
+      "realistic": 0.2
+    },
+    "conditions": {},
+    "effects": [
+      {
+        "type": "budget-delta",
+        "fraction": [0.1, 0.3]
+      }
+    ],
+    "alertTemplate": "Appropriation boost",
+    "source": "EVENTS.md logistics/program table; media-moment upside",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "resupply-slip",
+    "category": "logistics",
+    "rates": {
+      "ideal": 0,
+      "realistic": 1.5
+    },
+    "conditions": {},
+    "effects": [
+      {
+        "type": "mission-delay",
+        "ticks": [336, 1008]
+      }
+    ],
+    "alertTemplate": "Launch slip",
+    "source": "EVENTS.md: resupply slip 20%/mission +2-6 weeks, compounding pressure",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "eclss-component-failure",
+    "category": "technical",
+    "rates": {
+      "ideal": 0.5,
+      "realistic": 1
+    },
+    "conditions": {
+      "minPhase": 2
+    },
+    "effects": [
+      {
+        "type": "eclss-outage",
+        "ticks": [24, 72]
+      }
+    ],
+    "alertTemplate": "ECLSS component failure",
+    "source": "EVENTS.md technical table: scrubber/OGA offline, grace window then health cascade",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "accords-safety-zone",
+    "category": "political",
+    "rates": {
+      "ideal": 0.3,
+      "realistic": 0.5
+    },
+    "conditions": {
+      "minPhase": 1
+    },
+    "effects": [
+      {
+        "type": "flavor"
+      }
+    ],
+    "alertTemplate": "Artemis Accords consultation: a rival operator filed a safety-zone notification overlapping your prospecting tracts. Diplomats exchange firmly worded memos; operations continue.",
+    "source": "EVENTS.md political deck; Artemis Accords section 11 deconfliction",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "autonomy-referendum",
+    "category": "political",
+    "rates": {
+      "ideal": 0.5,
+      "realistic": 0.5
+    },
+    "conditions": {
+      "minPhase": 6
+    },
+    "effects": [
+      {
+        "type": "flavor"
+      }
+    ],
+    "alertTemplate": "SPECULATIVE ERA: the settlement council has scheduled a referendum on charter autonomy. Earth's lawyers note the Outer Space Treaty has no clause for this. The plaza outside the Civic Center is full.",
+    "source": "PHASES.md Phase 6 sandbox arc (flagged speculative)",
     "as_of": "2026-06"
   }
 ]

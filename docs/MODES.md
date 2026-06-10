@@ -62,3 +62,7 @@ Heuristic agent evaluated each game-day:
 ## 4. Reproducibility contract
 
 Preset + seed ⇒ identical milestone timeline (golden tests). Scenario results screen exports a shareable JSON (seed+config+milestones) so users can publish "runs".
+
+---
+
+**Implemented notes (M6):** the Policy AI runs daily passes 0-4 (research → safety → needs → growth) inside sim-core, issuing the same serializable commands as a player so observer runs replay deterministically; cmd-set-policy is the Take Command handoff (same world, same tick). Scenario presets live in data/base/scenarios.json and map to world config via scenarioToConfig; weight profiles (cautious/balanced/aggressive/isru_first) are overridable per scenario via policyWeights. The AI provisions consumables for _incoming_ crew parties (an uncrewed base otherwise deadlocks: no food ordered until crew exist, no crew landed until food exists) and scales radiator orders to the base's aggregate waste heat. The rival ticker fires scheduled scenario milestones as flavor alerts.

@@ -1,0 +1,27 @@
+{
+  "id": "demo-mod",
+  "buildings": [
+    {
+      "id": "solar-array-25kw",
+      "name": "Solar Array (25 kW, mod)",
+      "tier": 2,
+      "phase": 2,
+      "analogue": "Demo mod content: a bigger ROSA wing",
+      "source": "mods/demo-mod.json (example content pack)",
+      "as_of": "2026-06",
+      "massKg": 2200,
+      "footprint": [1, 2],
+      "powerKw": 25,
+      "powerScalesWithIllumination": true,
+      "dustSensitive": true,
+      "heatKw": 0,
+      "priorityTier": null,
+      "wearRatePerYear": 0.05,
+      "buildCost": { "imported": [{ "resource": "machine-components", "kg": 2200 }], "local": [] },
+      "placement": { "terrain": ["highland", "mare"], "maxSlope": 10, "requiresPSR": false },
+      "reactions": [],
+      "techRequired": null,
+      "encyclopedia": "enc-solar-array"
+    }
+  ]
+}

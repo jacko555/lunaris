@@ -3,8 +3,18 @@
     "id": "ice-extraction",
     "name": "Volatile Extraction (ice → water)",
     "building": "volatile-oven",
-    "inputs": [{ "resource": "water-ice", "kg": 1.0 }],
-    "outputs": [{ "resource": "water", "kg": 1.0 }],
+    "inputs": [
+      {
+        "resource": "water-ice",
+        "kg": 1
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "water",
+        "kg": 1
+      }
+    ],
     "energyKwhPerKgPrimary": 1.5,
     "primaryOutput": "water",
     "heatKw": 2,
@@ -15,10 +25,21 @@
     "id": "water-electrolysis",
     "name": "Water Electrolysis",
     "building": "electrolyzer",
-    "inputs": [{ "resource": "water", "kg": 1.0 }],
+    "inputs": [
+      {
+        "resource": "water",
+        "kg": 1
+      }
+    ],
     "outputs": [
-      { "resource": "o2-gas", "kg": 0.89 },
-      { "resource": "h2-gas", "kg": 0.11 }
+      {
+        "resource": "o2-gas",
+        "kg": 0.89
+      },
+      {
+        "resource": "h2-gas",
+        "kg": 0.11
+      }
     ],
     "energyKwhPerKgPrimary": 5.62,
     "primaryOutput": "o2-gas",
@@ -31,11 +52,25 @@
     "id": "mre",
     "name": "Molten Regolith Electrolysis",
     "building": "mre-plant-s",
-    "inputs": [{ "resource": "regolith", "kg": 100.0 }],
+    "inputs": [
+      {
+        "resource": "regolith",
+        "kg": 100
+      }
+    ],
     "outputs": [
-      { "resource": "o2-gas", "kg": 28.0 },
-      { "resource": "metal-slag", "kg": 30.0 },
-      { "resource": "tailings", "kg": 42.0 }
+      {
+        "resource": "o2-gas",
+        "kg": 28
+      },
+      {
+        "resource": "metal-slag",
+        "kg": 30
+      },
+      {
+        "resource": "tailings",
+        "kg": 42
+      }
     ],
     "energyKwhPerKgPrimary": 33,
     "primaryOutput": "o2-gas",
@@ -48,12 +83,24 @@
     "name": "Sabatier Reaction",
     "building": "sabatier-unit",
     "inputs": [
-      { "resource": "co2-gas", "kg": 44.0 },
-      { "resource": "h2-gas", "kg": 8.0 }
+      {
+        "resource": "co2-gas",
+        "kg": 44
+      },
+      {
+        "resource": "h2-gas",
+        "kg": 8
+      }
     ],
     "outputs": [
-      { "resource": "ch4-gas", "kg": 16.0 },
-      { "resource": "water", "kg": 36.0 }
+      {
+        "resource": "ch4-gas",
+        "kg": 16
+      },
+      {
+        "resource": "water",
+        "kg": 36
+      }
     ],
     "energyKwhPerKgPrimary": 0,
     "primaryOutput": "water",
@@ -65,8 +112,18 @@
     "id": "lox-liquefaction",
     "name": "LOX Liquefaction",
     "building": "cryo-plant",
-    "inputs": [{ "resource": "o2-gas", "kg": 1.0 }],
-    "outputs": [{ "resource": "lox", "kg": 1.0 }],
+    "inputs": [
+      {
+        "resource": "o2-gas",
+        "kg": 1
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "lox",
+        "kg": 1
+      }
+    ],
     "energyKwhPerKgPrimary": 11.3,
     "primaryOutput": "lox",
     "heatKw": 3,
@@ -77,12 +134,138 @@
     "id": "regolith-printing",
     "name": "Regolith Printing",
     "building": "regolith-printer",
-    "inputs": [{ "resource": "regolith", "kg": 1.0 }],
-    "outputs": [{ "resource": "printed-structure", "kg": 1.0 }],
+    "inputs": [
+      {
+        "resource": "regolith",
+        "kg": 1
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "printed-structure",
+        "kg": 1
+      }
+    ],
     "energyKwhPerKgPrimary": 2,
     "primaryOutput": "printed-structure",
     "heatKw": 1,
     "source": "SDD section 7: regolith printing 2 kWh/kg (D-Shape/ICON sintering class)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "metal-refining",
+    "name": "Metal Refining",
+    "building": "refinery",
+    "inputs": [
+      {
+        "resource": "metal-slag",
+        "kg": 1
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "iron",
+        "kg": 0.5
+      },
+      {
+        "resource": "tailings",
+        "kg": 0.5
+      }
+    ],
+    "energyKwhPerKgPrimary": 8,
+    "primaryOutput": "iron",
+    "heatKw": 12,
+    "source": "SDD section 7: slag -> ingots at 8 kWh/kg (iron fraction of the Fe/Si/Al/Ti melt)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "parts-manufacturing",
+    "name": "Spare-Parts Manufacturing",
+    "building": "workshop",
+    "inputs": [
+      {
+        "resource": "iron",
+        "kg": 1
+      },
+      {
+        "resource": "machine-components",
+        "kg": 0.1
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "spare-parts",
+        "kg": 1.1
+      }
+    ],
+    "energyKwhPerKgPrimary": 5,
+    "primaryOutput": "spare-parts",
+    "heatKw": 2,
+    "source": "ECONOMY.md: metals + components -> spare parts (maintenance localization)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "components-fab",
+    "name": "Component Fabrication",
+    "building": "fab-plant",
+    "inputs": [
+      {
+        "resource": "iron",
+        "kg": 0.95
+      },
+      {
+        "resource": "machine-components",
+        "kg": 0.05
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "machine-components",
+        "kg": 1
+      }
+    ],
+    "energyKwhPerKgPrimary": 15,
+    "primaryOutput": "machine-components",
+    "heatKw": 15,
+    "source": "BUILDINGS.md Fab Plant: local machine components, electronics fraction still imported",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "he3-extraction",
+    "name": "He-3 Volatile Extraction",
+    "building": "volatile-combine",
+    "inputs": [
+      {
+        "resource": "regolith",
+        "kg": 100000
+      }
+    ],
+    "outputs": [
+      {
+        "resource": "he-3",
+        "kg": 0.0015
+      },
+      {
+        "resource": "water",
+        "kg": 50
+      },
+      {
+        "resource": "h2-gas",
+        "kg": 5
+      },
+      {
+        "resource": "co2-gas",
+        "kg": 10
+      },
+      {
+        "resource": "tailings",
+        "kg": 99934.9985
+      }
+    ],
+    "energyKwhPerKgPrimary": 3333333,
+    "primaryOutput": "he-3",
+    "heatKw": 60,
+    "source": "SDD section 7: 100 t regolith baked to 700 C -> He-3 1-2 g + volatiles (50 kWh/t = ~3.3M kWh/kg He-3); economics speculative",
     "as_of": "2026-06"
   }
 ]

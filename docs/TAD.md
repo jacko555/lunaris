@@ -2,7 +2,7 @@
 
 ## 1. Stack decision
 
-- **Now:** TypeScript monorepo (pnpm). `sim-core` = pure deterministic ESM library. `web-client` = Vite + PixiJS (2D) + a thin React (or vanilla) UI layer for panels. Charts: uPlot (tiny).
+- **Now:** TypeScript monorepo (pnpm). `sim-core` = pure deterministic ESM library. `web-client` = Vite + PixiJS (2D) + a thin React (or vanilla) UI layer for panels. Charts: dependency-free canvas sparklines (observer dashboard v1); uPlot when zoom/cursor interactions are needed.
 - **Later (Stage 4):** Godot 4 port. Decision rationale: MIT license, exports to web AND desktop/Steam, GodotSteam for Steamworks. Note Godot 4 web export = Compatibility renderer, no C# on web ⇒ port sim logic to GDScript or embed compiled core via WASM (spike before committing).
 - Rejected: Unity (WebGL weight + licensing trust), Unreal (no real web path, heavy), custom engine (cost).
 
