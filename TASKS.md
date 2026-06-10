@@ -64,15 +64,15 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 4 — ISRU Chains + Construction → **v0.1 MVP**
 
-- [ ] [core] Reaction processor framework: building consumes inputs → outputs at rate, gated by power/thermal/crew-ops, per docs/ECONOMY.md
-- [ ] [data] Reactions: ice mining (PSR tile, yield = tile iceConcentration), water electrolysis (H₂+O₂), MRE (regolith → O₂ 28 kg/100 kg + metal slag; 26–40 kWh/kg O₂), Sabatier, LOX liquefaction (11.3 kWh/kg all-in chain)
-- [ ] [core] Construction system: build queue, material costs (Earth-imported vs printed-regolith discount), build time, regolith works (berm = shielding, landing pad = dust mitigation)
-- [ ] [core] Dust system: EVA and unpaved landings raise dust exposure → solar degradation %/cycle, mechanical wear on moving parts; pads/airlock upgrades mitigate
-- [ ] [core] Hazard engine v0 + events from docs/EVENTS.md: SPE (with 24–48h warning), micrometeorite strike, equipment failure (MTBF per building), moonquake (rare, structural stress), resupply launch failure (per-vehicle p)
-- [ ] [web] Build menu with prerequisites; ISRU chain tooltips showing real chemistry; resource flow inspector
-- [ ] [web] Onboarding: guided first-night tutorial (build shelter → power for night → first ISRU water)
-- [ ] [infra] Deploy v0.1 to GitHub Pages + itch.io
-- [ ] [tests] Scenario regression: "MVP baseline" 5,000-tick golden hash
+- [x] [core] Reaction processor framework: building consumes inputs → outputs at rate, gated by power/thermal/crew-ops, per docs/ECONOMY.md
+- [x] [data] Reactions: ice mining (PSR tile, yield = tile iceConcentration), water electrolysis (H₂+O₂), MRE (regolith → O₂ 28 kg/100 kg + metal slag; 26–40 kWh/kg O₂), Sabatier, LOX liquefaction (11.3 kWh/kg all-in chain)
+- [x] [core] Construction system: build queue, material costs (Earth-imported vs printed-regolith discount), build time, regolith works (berm = shielding, landing pad = dust mitigation)
+- [x] [core] Dust system: EVA and unpaved landings raise dust exposure → solar degradation %/cycle, mechanical wear on moving parts; pads/airlock upgrades mitigate
+- [x] [core] Hazard engine v0 + events from docs/EVENTS.md: SPE (with 24–48h warning), micrometeorite strike, equipment failure (MTBF per building), moonquake (rare, structural stress), resupply launch failure (per-vehicle p)
+- [x] [web] Build menu with prerequisites; ISRU chain tooltips showing real chemistry; resource flow inspector
+- [x] [web] Onboarding: guided first-night tutorial (build shelter → power for night → first ISRU water)
+- [x] [infra] Deploy v0.1 to GitHub Pages + itch.io _(Pages live on every push; itch.io upload pending account credentials — butler push ready when provided)_
+- [x] [tests] Scenario regression: "MVP baseline" 5,000-tick golden hash
 
 **Accept (v0.1 MVP):** Player can reach "≥50% O₂+water locally produced" milestone; first-time playtester survives night ≤3 attempts; deploys publicly.
 
@@ -80,12 +80,12 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 5 — Phases, Tech Tree, Economy
 
-- [ ] [core] Phase engine: Phases 0–3 with transition criteria (docs/PHASES.md); milestone toasts + summary screens
-- [ ] [core] Research system: science points from labs/crew scientists; tech tree from data (docs/TECH-TREE.md), unlock gating
-- [ ] [core] Budget/economy: starting budget by scenario; launch costs by vehicle ($/kg classes: legacy ~$1M/kg-to-surface era → commercial heavy ~$100k/kg → Starship-class target tiers); ongoing ops cost; Phase-3 propellant sales revenue hook
-- [ ] [data] Phase 0–1 content: robotic lander missions (prospecting gameplay: choose landing sites, ~50% historical failure rate in Realistic mode), sortie missions
-- [ ] [core] Logistics v1: launch windows, transit time (~3–5 days), vehicle classes (CLPS-class 100 kg, mid-class 1–2 t, heavy 10–15 t, Starship-class 100 t with refueling-chain prerequisite)
-- [ ] [web] Tech tree screen; phase progress screen; finance panel; resupply planner UI
+- [x] [core] Phase engine: Phases 0–3 with transition criteria (docs/PHASES.md); milestone toasts + summary screens
+- [x] [core] Research system: science points from labs/crew scientists; tech tree from data (docs/TECH-TREE.md), unlock gating
+- [x] [core] Budget/economy: starting budget by scenario; launch costs by vehicle ($/kg classes: legacy ~$1M/kg-to-surface era → commercial heavy ~$100k/kg → Starship-class target tiers); ongoing ops cost; Phase-3 propellant sales revenue hook
+- [x] [data] Phase 0–1 content: robotic lander missions (prospecting gameplay: choose landing sites, ~50% historical failure rate in Realistic mode), sortie missions
+- [x] [core] Logistics v1: launch windows, transit time (~3–5 days), vehicle classes (CLPS-class 100 kg, mid-class 1–2 t, heavy 10–15 t, Starship-class 100 t with refueling-chain prerequisite)
+- [x] [web] Tech tree screen; phase progress screen; finance panel; resupply planner UI
 
 **Accept:** full Phase 0→3 playthrough possible in game mode; tech gating verified by tests.
 

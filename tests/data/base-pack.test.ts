@@ -37,9 +37,10 @@ describe("data/base content pack", () => {
   it("carries the full SDD §1 constants table plus the model-parameter sets", () => {
     const pack = loadBasePack();
     // 45 = SDD master table minus micrometeorite_flux (site-dependent,
-    // lives in the EVENTS hazard tables); +8 thermal/power constants (M2,
-    // SDD §5); +20 crew/ECLSS/radiation/health constants (M3, SDD §4/§6/§9).
-    expect(pack.constants.length).toBe(73);
+    // lives in the EVENTS hazard tables); +8 thermal/power constants (M2);
+    // +20 crew/ECLSS/radiation/health (M3); +19 construction/dust/repair/
+    // economy/vehicle constants (M4/M5).
+    expect(pack.constants.length).toBe(92);
   });
 
   it("spot-checks sourced values against the SDD", () => {
@@ -57,7 +58,12 @@ describe("data/base content pack", () => {
   it("flags only known-speculative and known-unsourced constants", () => {
     const pack = loadBasePack();
     const speculative = pack.constants.filter((c) => c.status === "speculative").map((c) => c.id);
-    expect(speculative).toEqual(["cost_per_kg_surface"]);
+    expect(speculative).toEqual([
+      "cost_per_kg_surface",
+      "lox_demand_kg_per_day",
+      "lox_price_usd_per_kg",
+      "vehicle_starship",
+    ]);
     // Model parameters awaiting engineering citations (CLAUDE.md rule 5).
     const unsourced = pack.constants
       .filter((c) => c.status === "needs_source")
@@ -70,14 +76,22 @@ describe("data/base content pack", () => {
       "co2_danger_kg_per_person",
       "co2_health_per_hour",
       "co2_warning_kg_per_person",
+      "construction_hours_per_tonne",
+      "crew_ops_usd_per_day",
       "crowding_morale_per_day",
       "dehydration_health_per_day",
+      "dust_cleaning_per_day",
+      "dust_landing_spike",
       "heater_max_kw",
       "hypoxia_health_per_hour",
       "morale_baseline",
       "morale_recovery_per_day",
       "o2_reserve_target_days",
       "radiation_sickness_health_per_day",
+      "repair_parts_kg_per_point",
+      "repair_points_per_day",
+      "science_per_scientist_day",
+      "sortie_payload_kg",
       "starvation_health_per_day",
       "starvation_morale_per_day",
       "temp_internal_target",
@@ -86,33 +100,51 @@ describe("data/base content pack", () => {
     ]);
   });
 
-  it("ships the tier 0–2 building set, resources, encyclopedia, and map", () => {
+  it("ships the tier 0–3 building set, resources, reactions, tech, events, and map", () => {
     const pack = loadBasePack();
     expect(pack.buildings.map((b) => b.id)).toEqual([
       "battery-bank",
       "clinic",
       "comms-tower",
+      "cryo-plant",
       "eclss-core",
+      "electrolyzer",
       "exercise-module",
+      "field-lab",
       "fission-surface-power",
       "foundation-habitat",
+      "ice-harvester",
+      "landing-pad",
+      "mre-plant-l",
+      "mre-plant-s",
+      "propellant-depot-pad",
       "radiator-wing",
       "regen-fuel-cell",
+      "regolith-berm",
+      "regolith-printer",
       "rtg-keepalive",
       "sabatier-unit",
       "solar-array-10kw",
       "storm-shelter",
+      "volatile-oven",
       "water-gas-storage",
     ]);
-    expect(pack.building("fission-surface-power").powerKw).toBe(40);
-    expect(pack.building("battery-bank").storageKwh).toBe(200);
-    expect(pack.building("regen-fuel-cell").storageRoundTripEff).toBe(0.55);
-    expect(pack.building("foundation-habitat").services.housing).toBe(4);
-    expect(pack.building("storm-shelter").shieldingGcm2).toBe(10);
-    expect(pack.building("eclss-core").eclss?.scrubberKgCo2Day).toBe(8);
-    expect(pack.resource("machine-components").importCostPerKg).toBe(100000);
-    expect(pack.resource("food").id).toBe("food");
-    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(23);
+    expect(pack.building("fission-surface-power").techRequired).toBe("surface_power_40kw");
+    expect(pack.building("ice-harvester").mining?.kgPerDay).toBe(720);
+    expect(pack.building("mre-plant-s").reactionKgPerDay["mre"]).toBe(2.74);
+    expect(pack.reaction("mre").outputs.find((o) => o.resource === "o2-gas")?.kg).toBe(28);
+    expect(pack.reaction("sabatier").inputs.map((i) => i.kg)).toEqual([44, 8]);
+    expect(pack.tech).toHaveLength(34);
+    expect(pack.techNode("orbital_refueling").costScience).toBe(120);
+    expect(pack.events.map((e) => e.id)).toEqual([
+      "fission-scram",
+      "micrometeorite",
+      "moonquake",
+      "spe-major",
+      "spe-minor",
+    ]);
+    expect(pack.resource("regolith").groundSourced).toBe(true);
+    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(40);
     expect(pack.maps).toHaveLength(1);
   });
 

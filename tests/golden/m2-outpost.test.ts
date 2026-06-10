@@ -72,7 +72,12 @@ function makeOutpost(withFission: boolean): World {
   const site = findBuildSite(9, 7);
   const world = createWorld(gameDef, {
     seed: SEED,
-    config: { scenario: withFission ? "outpost-fission" : "outpost-solar" },
+    config: {
+      scenario: withFission ? "outpost-fission" : "outpost-solar",
+      startPhase: 2,
+      // M5 tech gating: outpost scenarios start with Phase-2 power research done.
+      startTechs: ["surface_power_40kw"],
+    },
   });
   const place = (defId: string, dx: number, dy: number): void => {
     world.enqueueCommand(CMD_PLACE_BUILDING, { defId, x: site.x + dx, y: site.y + dy });
@@ -137,7 +142,8 @@ describe("M2 acceptance: the lunar night", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);
     expect(report.everFroze).toBe(false);
     expect(report.tier0EverShed).toBe(false);
-    expect(report.habCondition).toBe(1);
+    // Equipment wear (M4) costs ~0.8% condition over two cycles without spares.
+    expect(report.habCondition).toBeGreaterThan(0.98);
   });
 });
 
@@ -148,12 +154,15 @@ describe("M2 scenario golden hash", () => {
    * hash — explain the cause in the commit message (CLAUDE.md rule 6).
    */
   /**
-   * History: c6f78a33 (M2 original) → 4f36011a at M3, because the game def
-   * now registers the crew and resupply component stores, which appear
-   * (empty) in the canonical snapshot. No behavioral change to this
-   * scenario — verified by identical grid/thermal trajectories.
+   * History: c6f78a33 (M2 original) → 4f36011a at M3 (crew/resupply stores
+   * registered) → d08e98e2 at M4/M5: seven new component stores in the
+   * snapshot (sites, dust, stats, research, economy, phase, pending
+   * hazards), buildings carry offlineUntilTick, the hazard engine and wear
+   * draw from the shared RNG each tick, and the scenario config gained
+   * startPhase/startTechs for tech gating. The outpost still freezes
+   * without fission and survives with it (asserted above).
    */
-  const EXPECTED_HASH = "4f36011a";
+  const EXPECTED_HASH = "d08e98e2";
 
   it("fission outpost reproduces the golden hash after two lunar cycles", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);

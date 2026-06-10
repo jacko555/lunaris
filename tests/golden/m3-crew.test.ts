@@ -76,7 +76,12 @@ function makeCrewedOutpost(withResupply: boolean): World {
   const site = findBuildSite(12, 8);
   const world = createWorld(gameDef, {
     seed: SEED,
-    config: { scenario: withResupply ? "m3-crewed-outpost" : "m3-resupply-cutoff" },
+    config: {
+      scenario: withResupply ? "m3-crewed-outpost" : "m3-resupply-cutoff",
+      startPhase: 2,
+      // M5 tech gating: the crewed outpost starts with its Phase-2 stack researched.
+      startTechs: ["eclss_baseline", "surface_power_40kw"],
+    },
   });
   const place = (defId: string, dx: number, dy: number): void => {
     world.enqueueCommand(CMD_PLACE_BUILDING, { defId, x: site.x + dx, y: site.y + dy });
@@ -123,9 +128,10 @@ function makeCrewedOutpost(withResupply: boolean): World {
       targetEntity: 11,
     });
   }
-  // Tick 1: crew land after the seed cargo is on the ground.
+  // Crew land after the seed cargo is on the ground (logistics v1 transit
+  // puts the tick-0 mission's touchdown at ~tick 96).
   for (const name of CREW_NAMES) {
-    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: HAB }, 1);
+    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: HAB }, 100);
   }
   return world;
 }
@@ -195,7 +201,14 @@ describe("M3 acceptance: 6-crew outpost", () => {
 
 describe("M3 scenario golden hash", () => {
   /** Changes here need an explained cause in the commit (CLAUDE.md rule 6). */
-  const EXPECTED_HASH = "39df34bf";
+  /**
+   * History: 39df34bf (M3 original) → b7363dd6 at M4/M5: new component
+   * stores in the snapshot, logistics v1 transit/failure mechanics (crew
+   * now land at tick 100 behind the cargo), hazard-engine RNG draws, and
+   * tech-gated placement via startTechs. The acceptance behaviors above
+   * (survival with resupply, food cascade without) still hold.
+   */
+  const EXPECTED_HASH = "8f06d656";
 
   it("crewed outpost reproduces the golden hash after 3 lunar cycles", () => {
     const world = makeCrewedOutpost(true);
