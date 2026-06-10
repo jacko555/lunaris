@@ -60,10 +60,12 @@ export type BuildingComponent = {
   defId: string;
   x: number;
   y: number;
-  /** 0–1; thermal damage erodes it, 0 = inoperative. */
+  /** 0–1; thermal damage and wear erode it, 0 = inoperative. */
   condition: number;
   /** Fraction of demanded power received last power pass (producers: 1). */
   poweredFraction: number;
+  /** Tick until which the building is forced offline (fission scram etc.). */
+  offlineUntilTick: number;
 };
 
 export type ThermalComponent = {
@@ -104,14 +106,102 @@ export type CrewComponent = {
   radiationSick: number;
 };
 
-/** Scheduled Earth cargo mission (logistics v0 — no failure rolls until M4/M5). */
+/** Scheduled Earth mission (logistics v1: vehicle classes, transit, failure). */
 export type ResupplyComponent = {
+  /** "cargo" | "probe" | "sortie" */
+  kind: string;
+  vehicle: string; // vehicle class id (clps | mid | heavy | starship)
   manifest: { resource: string; kg: number }[];
   arrivalTick: number;
   /** 0 = one-shot; otherwise reschedules every N ticks after delivery. */
   repeatTicks: number;
-  /** Building entity that receives the cargo. */
+  /** Building entity that receives the cargo (cargo kind). */
   targetEntity: number;
+  /** Probe target tile (probe kind). */
+  targetX: number;
+  targetY: number;
   costUsd: number;
   deliveries: number;
+  failures: number;
+};
+
+export const SITE_COMPONENT = "construction-site";
+export const DUST_COMPONENT = "dust";
+export const STATS_COMPONENT = "stats";
+export const RESEARCH_COMPONENT = "research";
+export const ECONOMY_COMPONENT = "economy";
+export const PHASE_COMPONENT = "phase";
+export const PENDING_HAZARD_COMPONENT = "pending-hazard";
+
+/** A queued build in progress (TASKS.md M4 construction system). */
+export type SiteComponent = {
+  defId: string;
+  x: number;
+  y: number;
+  progressHours: number;
+  totalHours: number;
+  /** "imported" | "local" — which buildCost recipe was paid. */
+  recipe: string;
+  /** 1 once materials are consumed; sites wait (alerting) until affordable. */
+  paid: number;
+};
+
+/** Dust accumulation on a dust-sensitive building (solar arrays). */
+export type DustComponent = {
+  frac: number; // 0–1 output degradation
+};
+
+/** Colony flow statistics (rolling per lunar cycle + cumulative). */
+export type StatsComponent = {
+  /** Current-cycle local vs imported production of O₂ + water (kg). */
+  cycleLocalKg: number;
+  cycleImportedKg: number;
+  /** Last completed cycle's local share of O₂+water production (0–1). */
+  lastCycleLocalShare: number;
+  cumulativeLocalKg: number;
+  cumulativeImportedKg: number;
+  /** 1 once the ≥50% local O₂+water milestone has been hit (v0.1 MVP goal). */
+  isru50Milestone: number;
+};
+
+/** Research state (TECH-TREE.md). */
+export type ResearchComponent = {
+  sciencePoints: number;
+  unlocked: string[];
+  current: string; // tech id or "" when idle
+  progress: number;
+  /** 1 after a Realistic-mode setback already hit the current project. */
+  setbackApplied: number;
+};
+
+/** Budget & cashflow (ECONOMY.md §4). */
+export type EconomyComponent = {
+  balanceUsd: number;
+  annualBudgetUsd: number;
+  totalLaunchSpendUsd: number;
+  totalOpsSpendUsd: number;
+  totalRevenueUsd: number;
+};
+
+/** Phase progression flags (PHASES.md, phases 0–3 in v0.5 scope). */
+export type PhaseComponent = {
+  phase: number;
+  successfulLandings: number;
+  iceCharacterized: number;
+  commsActive: number;
+  sortiesCompleted: number;
+  /** Consecutive ticks with living crew on the surface. */
+  occupationTicks: number;
+  /** 1 after crew survived a full lunar night on the surface. */
+  nightSurvived: number;
+  /** Ticks of night endured so far with crew alive (resets at dawn/death). */
+  nightTicksWithCrew: number;
+  isruDemo: number;
+  milestones: string[];
+};
+
+/** A hazard rolled by the engine, waiting out its warning lead time. */
+export type PendingHazardComponent = {
+  eventId: string;
+  impactTick: number;
 };

@@ -34,6 +34,7 @@ const electrolyzer = {
   buildCost: { imported: [{ resource: "water", kg: 1 }], local: [] },
   placement: { terrain: ["highland"], maxSlope: 5, requiresPSR: false },
   reactions: ["electrolysis"],
+  reactionKgPerDay: { electrolysis: 100 },
   techRequired: null,
 };
 

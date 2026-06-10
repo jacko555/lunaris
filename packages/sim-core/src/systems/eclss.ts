@@ -14,7 +14,8 @@ import {
   colonyAmount,
   colonyConsume,
 } from "../game/pool.js";
-import { R_CH4, R_CO2, R_FOOD, R_H2, R_O2, R_WASTEWATER, R_WATER } from "../game/resource-ids.js";
+import { R_CO2, R_FOOD, R_H2, R_O2, R_WASTEWATER, R_WATER } from "../game/resource-ids.js";
+import { isUnlocked } from "./reactions.js";
 
 /**
  * ECLSS system (docs/SDD.md §6). Per crew member per day (÷24 per tick):
@@ -35,6 +36,7 @@ import { R_CH4, R_CO2, R_FOOD, R_H2, R_O2, R_WASTEWATER, R_WATER } from "../game
 
 export interface EclssSystemIds {
   alertsEntity: EntityId;
+  colonyEntity: EntityId;
 }
 
 export function createEclssSystem(pack: ContentPack, ids: EclssSystemIds): System {
@@ -150,6 +152,10 @@ export function createEclssSystem(pack: ContentPack, ids: EclssSystemIds): Syste
         }
 
         if (eclss.waterKgDay > 0 && eclss.waterRecovery > 0) {
+          // water_recovery_98 tech lifts ISS-baseline closure to BPA-class.
+          const recovery = isUnlocked(world, ids.colonyEntity, "water_recovery_98")
+            ? Math.max(eclss.waterRecovery, 0.98)
+            : eclss.waterRecovery;
           const processedKg = colonyConsume(
             world,
             R_WASTEWATER,
@@ -157,31 +163,12 @@ export function createEclssSystem(pack: ContentPack, ids: EclssSystemIds): Syste
             "water-recycler",
           );
           if (processedKg > 0) {
-            world.resources.add(
-              entity,
-              R_WATER,
-              processedKg * eclss.waterRecovery,
-              "water-recycler",
-            );
+            world.resources.add(entity, R_WATER, processedKg * recovery, "water-recycler");
             // Remainder is brine, lost until brine-processor tech (M5+).
           }
         }
-
-        if (eclss.sabatierKgCo2Day > 0) {
-          // Feedstock CO₂ comes from the colony pool (scrubbers concentrate
-          // it into their own machine stores).
-          const co2Kg = Math.min(
-            (eclss.sabatierKgCo2Day / 24) * duty,
-            colonyAmount(world, R_CO2),
-            colonyAmount(world, R_H2) / (8 / 44),
-          );
-          if (co2Kg > 0) {
-            colonyConsume(world, R_CO2, co2Kg, "sabatier");
-            colonyConsume(world, R_H2, co2Kg * (8 / 44), "sabatier");
-            world.resources.add(entity, R_CH4, co2Kg * (16 / 44), "sabatier");
-            world.resources.add(entity, R_WATER, co2Kg * (36 / 44), "sabatier");
-          }
-        }
+        // Sabatier runs through the reaction framework from M4 (the
+        // sabatier-unit hosts the 'sabatier' reaction).
       }
 
       // ── cabin CO₂ accumulation (per-crew accumulators, grace in HealthSystem) ──

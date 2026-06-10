@@ -50,13 +50,17 @@ export function createPowerSystem(pack: ContentPack, map: LunarMap, ids: PowerSy
       // ── survey production and demand ──
       let generationKw = 0;
       const tierDemandKw = [0, 0, 0, 0];
+      const dusts = world.store<{ frac: number }>("dust");
       for (const [entity, building] of buildings.entries()) {
         const def = pack.building(building.defId);
         if (def.powerKw > 0) {
           const illumination = def.powerScalesWithIllumination
             ? (litByClass[tileAt(map, building.x, building.y).illumClass] as number)
             : 1;
-          generationKw += def.powerKw * illumination * building.condition;
+          // Dust film on sensitive producers; scrams force producers offline.
+          const dustFactor = def.dustSensitive ? 1 - (dusts.get(entity)?.frac ?? 0) : 1;
+          const online = world.tickCount >= building.offlineUntilTick ? 1 : 0;
+          generationKw += def.powerKw * illumination * building.condition * dustFactor * online;
           building.poweredFraction = 1;
         } else if (def.powerKw < 0 && building.condition > 0) {
           const tier = def.priorityTier as number;

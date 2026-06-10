@@ -1,55 +1,95 @@
 import type { World } from "../ecs/world.js";
 import type { WorldDef } from "../save.js";
 import type { ContentPack } from "../schema/content-pack.js";
-import type { EntityId, JsonValue } from "../types.js";
-import { inBounds, tileAt, type LunarMap } from "../map/tiles.js";
+import type { EntityId, JsonObject, JsonValue } from "../types.js";
+import type { LunarMap } from "../map/tiles.js";
+import { inBounds, tileAt } from "../map/tiles.js";
+import {
+  createConstructionSystem,
+  instantiateBuilding,
+  validatePlacement,
+} from "../systems/construction.js";
+import { createDustSystem } from "../systems/dust.js";
 import { createEclssSystem } from "../systems/eclss.js";
+import { createEconomySystem } from "../systems/economy.js";
 import { createEnvironmentSystem } from "../systems/environment.js";
+import { createHazardSystem } from "../systems/hazards.js";
 import { createHealthSystem } from "../systems/health.js";
-import { createLogisticsSystem } from "../systems/logistics.js";
-import { importCostPerKg } from "../systems/logistics.js";
+import { chargeLaunch, createLogisticsSystem, vehicleClass } from "../systems/logistics.js";
+import { createPhaseSystem } from "../systems/phase.js";
 import { createPowerSystem } from "../systems/power.js";
 import { applySpeDose, createRadiationSystem } from "../systems/radiation.js";
+import { createReactionSystem } from "../systems/reactions.js";
+import { createResearchSystem, hardPrereqsMet } from "../systems/research.js";
+import { createStatsSystem } from "../systems/stats.js";
 import { createThermalSystem } from "../systems/thermal.js";
 import { pushAlert } from "./alerts.js";
 import {
   ALERTS_COMPONENT,
   BUILDING_COMPONENT,
   CREW_COMPONENT,
+  DUST_COMPONENT,
+  ECONOMY_COMPONENT,
   ENVIRONMENT_COMPONENT,
   GRID_COMPONENT,
+  PENDING_HAZARD_COMPONENT,
+  PHASE_COMPONENT,
+  RESEARCH_COMPONENT,
   RESUPPLY_COMPONENT,
+  SITE_COMPONENT,
+  STATS_COMPONENT,
   STORAGE_COMPONENT,
   THERMAL_COMPONENT,
   type AlertsComponent,
   type BuildingComponent,
   type CrewComponent,
+  type DustComponent,
+  type EconomyComponent,
   type EnvironmentComponent,
   type GridComponent,
+  type PendingHazardComponent,
+  type PhaseComponent,
+  type ResearchComponent,
   type ResupplyComponent,
+  type SiteComponent,
+  type StatsComponent,
   type StorageComponent,
   type ThermalComponent,
 } from "./components.js";
 
 /**
- * The game world definition: singleton entities, systems in the fixed
- * registry order Environment → Power → Thermal (docs/TAD.md §3 — later
- * systems slot in between Thermal and the milestone-4+ stages), and the
- * command surface. Content (pack) and terrain (map) are static inputs
- * captured by closure — they are not world state and never serialize.
+ * The game world definition. Singleton entities: ENV (1) carries the
+ * environment; GRID (2) doubles as the colony entity carrying grid, stats,
+ * research, economy, and phase components; ALERTS (3) the alert log.
+ * Systems run in the docs/TAD.md §3 registry order:
+ * Environment → Power → Thermal → Reactions(ISRU) → Construction → ECLSS →
+ * Crew (Radiation, Health) → Logistics → Research → Hazards(Events) →
+ * Phase → Economy → Stats.
+ *
+ * Scenario config (world.config) keys read at setup:
+ *   startTechs: string[]      pre-unlocked tech ids
+ *   startBudgetUsd, annualBudgetUsd: numbers (default 0)
+ *   startPhase: number        (default 0; outpost scenarios start at 2)
+ *   failureTables: "ideal" | "realistic" (read live by hazards/logistics)
  */
 
-/** Singleton entity ids, fixed by setup order. */
 export const ENV_ENTITY: EntityId = 1;
 export const GRID_ENTITY: EntityId = 2;
 export const ALERTS_ENTITY: EntityId = 3;
+/** Colony-wide singletons (stats/research/economy/phase) live on GRID. */
+export const COLONY_ENTITY: EntityId = GRID_ENTITY;
 
 export const CMD_PLACE_BUILDING = "cmd-place-building";
+export const CMD_QUEUE_BUILD = "cmd-queue-build";
+export const CMD_CANCEL_BUILD = "cmd-cancel-build";
 export const CMD_REMOVE_BUILDING = "cmd-remove-building";
 export const CMD_ADD_CREW = "cmd-add-crew";
 export const CMD_ASSIGN_CREW = "cmd-assign-crew";
 export const CMD_SCHEDULE_RESUPPLY = "cmd-schedule-resupply";
 export const CMD_CANCEL_RESUPPLY = "cmd-cancel-resupply";
+export const CMD_START_RESEARCH = "cmd-start-research";
+export const CMD_LAUNCH_PROBE = "cmd-launch-probe";
+export const CMD_LAUNCH_SORTIE = "cmd-launch-sortie";
 export const CMD_TRIGGER_SPE = "cmd-trigger-spe";
 
 export interface CmdPlaceBuildingPayload {
@@ -71,7 +111,16 @@ export interface CmdScheduleResupplyPayload {
   arrivalTick: number;
   repeatTicks?: number;
   targetEntity: number;
+  vehicle?: string;
   [key: string]: JsonValue;
+}
+
+function configValue(world: World, key: string): JsonValue | undefined {
+  const config = world.config;
+  if (config === null || typeof config !== "object" || Array.isArray(config)) {
+    return undefined;
+  }
+  return (config as JsonObject)[key];
 }
 
 export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
@@ -81,10 +130,17 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       const grids = world.registerComponent<GridComponent>(GRID_COMPONENT);
       const alerts = world.registerComponent<AlertsComponent>(ALERTS_COMPONENT);
       const buildings = world.registerComponent<BuildingComponent>(BUILDING_COMPONENT);
-      const thermals = world.registerComponent<ThermalComponent>(THERMAL_COMPONENT);
-      const storages = world.registerComponent<StorageComponent>(STORAGE_COMPONENT);
+      world.registerComponent<ThermalComponent>(THERMAL_COMPONENT);
+      world.registerComponent<StorageComponent>(STORAGE_COMPONENT);
       const crews = world.registerComponent<CrewComponent>(CREW_COMPONENT);
       const missions = world.registerComponent<ResupplyComponent>(RESUPPLY_COMPONENT);
+      const sites = world.registerComponent<SiteComponent>(SITE_COMPONENT);
+      world.registerComponent<DustComponent>(DUST_COMPONENT);
+      const statsStore = world.registerComponent<StatsComponent>(STATS_COMPONENT);
+      const researchStore = world.registerComponent<ResearchComponent>(RESEARCH_COMPONENT);
+      const economyStore = world.registerComponent<EconomyComponent>(ECONOMY_COMPONENT);
+      const phaseStore = world.registerComponent<PhaseComponent>(PHASE_COMPONENT);
+      world.registerComponent<PendingHazardComponent>(PENDING_HAZARD_COMPONENT);
 
       const envEntity = world.createEntity();
       const gridEntity = world.createEntity();
@@ -120,95 +176,144 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         brownout: 0,
       });
       alerts.set(alertsEntity, { entries: [], seq: 0 });
+      statsStore.set(COLONY_ENTITY, {
+        cycleLocalKg: 0,
+        cycleImportedKg: 0,
+        lastCycleLocalShare: 0,
+        cumulativeLocalKg: 0,
+        cumulativeImportedKg: 0,
+        isru50Milestone: 0,
+      });
+      const startTechs = (configValue(world, "startTechs") as string[] | undefined) ?? [];
+      researchStore.set(COLONY_ENTITY, {
+        sciencePoints: 0,
+        unlocked: [...startTechs],
+        current: "",
+        progress: 0,
+        setbackApplied: 0,
+      });
+      economyStore.set(COLONY_ENTITY, {
+        balanceUsd: (configValue(world, "startBudgetUsd") as number | undefined) ?? 0,
+        annualBudgetUsd: (configValue(world, "annualBudgetUsd") as number | undefined) ?? 0,
+        totalLaunchSpendUsd: 0,
+        totalOpsSpendUsd: 0,
+        totalRevenueUsd: 0,
+      });
+      phaseStore.set(COLONY_ENTITY, {
+        phase: (configValue(world, "startPhase") as number | undefined) ?? 0,
+        successfulLandings: 0,
+        iceCharacterized: 0,
+        commsActive: 0,
+        sortiesCompleted: 0,
+        occupationTicks: 0,
+        nightSurvived: 0,
+        nightTicksWithCrew: 0,
+        isruDemo: 0,
+        milestones: [],
+      });
 
-      const ids = { envEntity: ENV_ENTITY, gridEntity: GRID_ENTITY, alertsEntity: ALERTS_ENTITY };
-      // Fixed registry order per docs/TAD.md §3:
-      // Environment → Power → Thermal → ECLSS → Crew (radiation, health) → Logistics.
+      const ids = {
+        envEntity: ENV_ENTITY,
+        gridEntity: GRID_ENTITY,
+        alertsEntity: ALERTS_ENTITY,
+        colonyEntity: COLONY_ENTITY,
+      };
       world.registerSystem(createEnvironmentSystem(pack, ENV_ENTITY));
       world.registerSystem(createPowerSystem(pack, map, ids));
       world.registerSystem(createThermalSystem(pack, map, ids));
+      world.registerSystem(createReactionSystem(pack, map, ids));
+      world.registerSystem(createConstructionSystem(pack, ids));
       world.registerSystem(createEclssSystem(pack, ids));
       world.registerSystem(createRadiationSystem(pack, ids));
       world.registerSystem(createHealthSystem(pack, ids));
-      world.registerSystem(createLogisticsSystem(ids));
+      world.registerSystem(createLogisticsSystem(pack, map, ids));
+      world.registerSystem(createResearchSystem(pack, ids));
+      world.registerSystem(createHazardSystem(pack, ids));
+      world.registerSystem(createDustSystem(pack, ids));
+      world.registerSystem(createPhaseSystem(pack, ids));
+      world.registerSystem(createEconomySystem(pack, ids));
+      world.registerSystem(createStatsSystem(pack, ids));
+
+      const reject = (w: World, code: string, message: string): void => {
+        pushAlert(w, ALERTS_ENTITY, "warning", code, message);
+      };
+
+      // ── building commands ──
 
       world.registerCommandHandler(CMD_PLACE_BUILDING, (w, payload) => {
         const { defId, x, y } = payload as CmdPlaceBuildingPayload;
-        const reject = (reason: string): void => {
-          pushAlert(
+        const problem = validatePlacement(w, pack, map, defId, x, y, COLONY_ENTITY);
+        if (problem !== null) {
+          reject(
             w,
-            ALERTS_ENTITY,
-            "warning",
             "placement-rejected",
-            `Cannot place '${defId}' at (${x}, ${y}): ${reason}`,
+            `Cannot place '${defId}' at (${x}, ${y}): ${problem.reason}`,
           );
-        };
-        let def;
-        try {
-          def = pack.building(defId);
-        } catch {
-          reject("unknown building");
           return;
         }
-        if (!inBounds(map, x, y)) {
-          reject("outside the map");
+        instantiateBuilding(w, pack, defId, x, y);
+        // Comms infrastructure satisfies the Phase-0 relay criterion.
+        if (pack.building(defId).commsRelay) {
+          phaseStore.require(COLONY_ENTITY).commsActive = 1;
+        }
+      });
+
+      world.registerCommandHandler(CMD_QUEUE_BUILD, (w, payload) => {
+        const { defId, x, y } = payload as CmdPlaceBuildingPayload;
+        const problem = validatePlacement(w, pack, map, defId, x, y, COLONY_ENTITY);
+        if (problem !== null) {
+          reject(w, "build-rejected", `Cannot build '${defId}' at (${x}, ${y}): ${problem.reason}`);
           return;
         }
-        const tile = tileAt(map, x, y);
-        if (def.placement.requiresPSR && tile.illumClass !== "C") {
-          reject("requires a permanently shadowed tile");
-          return;
-        }
-        if (!def.placement.terrain.includes(tile.regolith)) {
-          reject(`needs ${def.placement.terrain.join(" or ")} terrain`);
-          return;
-        }
-        if (tile.slopeDeg > def.placement.maxSlope) {
-          reject(`slope ${tile.slopeDeg}° exceeds maximum ${def.placement.maxSlope}°`);
-          return;
-        }
+        const def = pack.building(defId);
         const entity = w.createEntity();
-        buildings.set(entity, { defId, x, y, condition: 1, poweredFraction: 0 });
-        // Thermal management applies to active equipment (waste heat or
-        // powered loads). Passive structures like solar arrays degrade via
-        // the dust/wear systems (M4), not freeze/overheat states.
-        if (def.heatKw > 0 || def.powerKw < 0) {
-          thermals.set(entity, {
-            tempK: pack.number("temp_internal_target"),
-            state: "nominal",
-            heaterRequestKw: 0,
-            heaterDeliveredKw: 0,
-          });
+        sites.set(entity, {
+          defId,
+          x,
+          y,
+          progressHours: 0,
+          totalHours: Math.max(
+            1,
+            (def.massKg / 1000) * pack.number("construction_hours_per_tonne"),
+          ),
+          recipe: "",
+          paid: 0,
+        });
+        pushAlert(
+          w,
+          ALERTS_ENTITY,
+          "info",
+          "build-queued",
+          `${def.name} queued at (${x}, ${y}) — materials will be drawn from stores when available`,
+        );
+      });
+
+      world.registerCommandHandler(CMD_CANCEL_BUILD, (w, payload) => {
+        const { entity } = payload as { entity: number };
+        if (!sites.has(entity)) {
+          reject(w, "cancel-rejected", `No construction site on entity ${entity}`);
+          return;
         }
-        if (def.storageKwh !== undefined) {
-          // Storage arrives charged (commissioning assumption, deterministic).
-          storages.set(entity, { energyKwh: def.storageKwh });
-        }
+        w.destroyEntity(entity); // paid materials are lost (site scrap)
       });
 
       world.registerCommandHandler(CMD_REMOVE_BUILDING, (w, payload) => {
         const { entity } = payload as { entity: number };
         if (!buildings.has(entity)) {
-          pushAlert(
-            w,
-            ALERTS_ENTITY,
-            "warning",
-            "remove-rejected",
-            `No building on entity ${entity}`,
-          );
+          reject(w, "remove-rejected", `No building on entity ${entity}`);
           return;
         }
         w.destroyEntity(entity);
       });
 
+      // ── crew commands ──
+
       world.registerCommandHandler(CMD_ADD_CREW, (w, payload) => {
         const { name, skills, location } = payload as CmdAddCrewPayload;
         const home = buildings.get(location);
         if (home === undefined || (pack.building(home.defId).services.housing ?? 0) <= 0) {
-          pushAlert(
+          reject(
             w,
-            ALERTS_ENTITY,
-            "warning",
             "crew-rejected",
             `Cannot berth ${name}: entity ${location} is not a housing building`,
           );
@@ -241,21 +346,13 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         };
         const member = crews.get(crew);
         if (member === undefined || member.alive !== 1) {
-          pushAlert(
-            w,
-            ALERTS_ENTITY,
-            "warning",
-            "assign-rejected",
-            `No living crew on entity ${crew}`,
-          );
+          reject(w, "assign-rejected", `No living crew on entity ${crew}`);
           return;
         }
         if (location !== undefined) {
           if (!buildings.has(location)) {
-            pushAlert(
+            reject(
               w,
-              ALERTS_ENTITY,
-              "warning",
               "assign-rejected",
               `Cannot move ${member.name}: entity ${location} is not a building`,
             );
@@ -268,14 +365,71 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
         }
       });
 
+      // ── mission commands ──
+
+      const scheduleMission = (
+        w: World,
+        kind: string,
+        vehicleId: string,
+        manifest: { resource: string; kg: number }[],
+        arrivalTick: number,
+        repeatTicks: number,
+        targetEntity: number,
+        targetX: number,
+        targetY: number,
+        payloadKg: number,
+      ): boolean => {
+        let vehicle;
+        try {
+          vehicle = vehicleClass(pack, vehicleId);
+        } catch {
+          reject(w, "mission-rejected", `Unknown vehicle class '${vehicleId}'`);
+          return false;
+        }
+        if (payloadKg > vehicle.payloadKg) {
+          reject(
+            w,
+            "mission-rejected",
+            `${payloadKg.toFixed(0)} kg exceeds the ${vehicleId} payload cap (${vehicle.payloadKg} kg)`,
+          );
+          return false;
+        }
+        if (vehicleId === "starship") {
+          const research = researchStore.require(COLONY_ENTITY);
+          if (!research.unlocked.includes("orbital_refueling")) {
+            reject(
+              w,
+              "mission-rejected",
+              "Starship-class missions require orbital_refueling research",
+            );
+            return false;
+          }
+        }
+        const costUsd = payloadKg * vehicle.usdPerKg;
+        chargeLaunch(w, COLONY_ENTITY, costUsd);
+        const entity = w.createEntity();
+        missions.set(entity, {
+          kind,
+          vehicle: vehicleId,
+          manifest,
+          arrivalTick: Math.max(arrivalTick, w.tickCount + Math.round(vehicle.transitDays * 24)),
+          repeatTicks,
+          targetEntity,
+          targetX,
+          targetY,
+          costUsd,
+          deliveries: 0,
+          failures: 0,
+        });
+        return true;
+      };
+
       world.registerCommandHandler(CMD_SCHEDULE_RESUPPLY, (w, payload) => {
-        const { manifest, arrivalTick, repeatTicks, targetEntity } =
+        const { manifest, arrivalTick, repeatTicks, targetEntity, vehicle } =
           payload as CmdScheduleResupplyPayload;
         if (!buildings.has(targetEntity)) {
-          pushAlert(
+          reject(
             w,
-            ALERTS_ENTITY,
-            "warning",
             "resupply-rejected",
             `Resupply target entity ${targetEntity} is not a building`,
           );
@@ -286,54 +440,93 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
           try {
             pack.resource(entry.resource);
           } catch {
-            pushAlert(
+            reject(
               w,
-              ALERTS_ENTITY,
-              "warning",
               "resupply-rejected",
               `Unknown resource '${entry.resource}' in resupply manifest`,
             );
             return;
           }
           if (!(entry.kg > 0)) {
-            pushAlert(
-              w,
-              ALERTS_ENTITY,
-              "warning",
-              "resupply-rejected",
-              "Manifest masses must be positive",
-            );
+            reject(w, "resupply-rejected", "Manifest masses must be positive");
             return;
           }
           totalKg += entry.kg;
         }
-        const entity = w.createEntity();
-        missions.set(entity, {
+        scheduleMission(
+          w,
+          "cargo",
+          vehicle ?? "heavy",
           manifest,
-          arrivalTick: Math.max(arrivalTick, w.tickCount),
-          repeatTicks: repeatTicks ?? 0,
+          arrivalTick,
+          repeatTicks ?? 0,
           targetEntity,
-          costUsd: totalKg * importCostPerKg(pack),
-          deliveries: 0,
-        });
+          0,
+          0,
+          totalKg,
+        );
       });
 
       world.registerCommandHandler(CMD_CANCEL_RESUPPLY, (w, payload) => {
         const { entity } = payload as { entity: number };
         if (!missions.has(entity)) {
-          pushAlert(
-            w,
-            ALERTS_ENTITY,
-            "warning",
-            "cancel-rejected",
-            `No mission on entity ${entity}`,
-          );
+          reject(w, "cancel-rejected", `No mission on entity ${entity}`);
           return;
         }
         w.destroyEntity(entity);
       });
 
-      // Debug/testing hook until the M4 hazard engine rolls SPEs itself.
+      world.registerCommandHandler(CMD_LAUNCH_PROBE, (w, payload) => {
+        const { x, y } = payload as { x: number; y: number };
+        if (!inBounds(map, x, y)) {
+          reject(w, "mission-rejected", `Probe target (${x}, ${y}) is outside the map`);
+          return;
+        }
+        void tileAt(map, x, y);
+        scheduleMission(w, "probe", "clps", [], 0, 0, 0, x, y, pack.number("probe_payload_kg"));
+      });
+
+      world.registerCommandHandler(CMD_LAUNCH_SORTIE, (w) => {
+        scheduleMission(
+          w,
+          "sortie",
+          "heavy",
+          [],
+          w.tickCount + Math.round(pack.number("sortie_stay_days") * 24),
+          0,
+          0,
+          0,
+          0,
+          pack.number("sortie_payload_kg"),
+        );
+      });
+
+      // ── research ──
+
+      world.registerCommandHandler(CMD_START_RESEARCH, (w, payload) => {
+        const { techId } = payload as { techId: string };
+        const research = researchStore.require(COLONY_ENTITY);
+        let tech;
+        try {
+          tech = pack.techNode(techId);
+        } catch {
+          reject(w, "research-rejected", `Unknown tech '${techId}'`);
+          return;
+        }
+        if (research.unlocked.includes(techId)) {
+          reject(w, "research-rejected", `'${techId}' is already researched`);
+          return;
+        }
+        if (!hardPrereqsMet(tech, research.unlocked)) {
+          reject(w, "research-rejected", `'${techId}' prerequisites are not met`);
+          return;
+        }
+        research.current = techId;
+        research.progress = 0;
+        research.setbackApplied = 0;
+      });
+
+      // Debug/testing hook until simulation-mode policy AI rolls its own.
       world.registerCommandHandler(CMD_TRIGGER_SPE, (w, payload) => {
         const { mSv } = payload as { mSv: number };
         applySpeDose(w, pack, ids, mSv);

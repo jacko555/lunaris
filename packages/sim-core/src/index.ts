@@ -66,9 +66,16 @@ export {
   ALERTS_COMPONENT,
   BUILDING_COMPONENT,
   CREW_COMPONENT,
+  DUST_COMPONENT,
+  ECONOMY_COMPONENT,
   ENVIRONMENT_COMPONENT,
   GRID_COMPONENT,
+  PENDING_HAZARD_COMPONENT,
+  PHASE_COMPONENT,
+  RESEARCH_COMPONENT,
   RESUPPLY_COMPONENT,
+  SITE_COMPONENT,
+  STATS_COMPONENT,
   STORAGE_COMPONENT,
   THERMAL_COMPONENT,
 } from "./game/components.js";
@@ -77,9 +84,16 @@ export type {
   AlertsComponent,
   BuildingComponent,
   CrewComponent,
+  DustComponent,
+  EconomyComponent,
   EnvironmentComponent,
   GridComponent,
+  PendingHazardComponent,
+  PhaseComponent,
+  ResearchComponent,
   ResupplyComponent,
+  SiteComponent,
+  StatsComponent,
   StorageComponent,
   ThermalComponent,
 } from "./game/components.js";
@@ -89,10 +103,18 @@ export {
   R_CO2,
   R_FOOD,
   R_H2,
+  R_LOX,
+  R_MACHINE_COMPONENTS,
   R_MEDKITS,
   R_O2,
+  R_PRINTED,
+  R_REGOLITH,
+  R_SLAG,
+  R_SPARE_PARTS,
+  R_TAILINGS,
   R_WASTEWATER,
   R_WATER,
+  R_WATER_ICE,
 } from "./game/resource-ids.js";
 export {
   atmosphereAmount,
@@ -105,11 +127,17 @@ export {
   ALERTS_ENTITY,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
+  CMD_CANCEL_BUILD,
   CMD_CANCEL_RESUPPLY,
+  CMD_LAUNCH_PROBE,
+  CMD_LAUNCH_SORTIE,
   CMD_PLACE_BUILDING,
+  CMD_QUEUE_BUILD,
   CMD_REMOVE_BUILDING,
   CMD_SCHEDULE_RESUPPLY,
+  CMD_START_RESEARCH,
   CMD_TRIGGER_SPE,
+  COLONY_ENTITY,
   ENV_ENTITY,
   GRID_ENTITY,
   createGameDef,
@@ -139,5 +167,32 @@ export {
 export type { RadiationSystemIds } from "./systems/radiation.js";
 export { createHealthSystem } from "./systems/health.js";
 export type { HealthSystemIds } from "./systems/health.js";
-export { createLogisticsSystem, importCostPerKg } from "./systems/logistics.js";
-export type { LogisticsSystemIds } from "./systems/logistics.js";
+export {
+  chargeLaunch,
+  createLogisticsSystem,
+  importCostPerKg,
+  missionFailureP,
+  vehicleClass,
+} from "./systems/logistics.js";
+export type { LogisticsSystemIds, VehicleClass } from "./systems/logistics.js";
+export { createReactionSystem, isUnlocked, staffedFactor } from "./systems/reactions.js";
+export type { ReactionSystemIds } from "./systems/reactions.js";
+export {
+  adjacentBermShielding,
+  createConstructionSystem,
+  instantiateBuilding,
+  validatePlacement,
+} from "./systems/construction.js";
+export type { ConstructionSystemIds, PlacementProblem } from "./systems/construction.js";
+export { applyLandingDust, createDustSystem } from "./systems/dust.js";
+export type { DustSystemIds } from "./systems/dust.js";
+export { createHazardSystem } from "./systems/hazards.js";
+export type { HazardSystemIds } from "./systems/hazards.js";
+export { createStatsSystem } from "./systems/stats.js";
+export type { StatsSystemIds } from "./systems/stats.js";
+export { createResearchSystem, effectiveTechCost, hardPrereqsMet } from "./systems/research.js";
+export type { ResearchSystemIds } from "./systems/research.js";
+export { createEconomySystem } from "./systems/economy.js";
+export type { EconomySystemIds } from "./systems/economy.js";
+export { createPhaseSystem } from "./systems/phase.js";
+export type { PhaseSystemIds } from "./systems/phase.js";

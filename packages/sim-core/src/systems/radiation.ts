@@ -8,6 +8,7 @@ import {
   type BuildingComponent,
   type CrewComponent,
 } from "../game/components.js";
+import { adjacentBermShielding } from "./construction.js";
 import { compareStrings } from "../stable-stringify.js";
 
 /**
@@ -73,7 +74,8 @@ function crewShieldingGcm2(world: World, pack: ContentPack, crew: CrewComponent)
   if (building === undefined) {
     return 0;
   }
-  return pack.building(building.defId).shieldingGcm2;
+  // Regolith berms add their areal density to adjacent structures (M4).
+  return pack.building(building.defId).shieldingGcm2 + adjacentBermShielding(world, pack, building);
 }
 
 export function createRadiationSystem(pack: ContentPack, ids: RadiationSystemIds): System {

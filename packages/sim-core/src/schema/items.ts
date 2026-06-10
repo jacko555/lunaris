@@ -59,6 +59,8 @@ export const resourceSchema = z
     name: z.string().min(1),
     phase: phaseSchema,
     storageClass: z.enum(["pressurized", "cryogenic", "bulk", "ambient"]),
+    /** Drawn freely from the ground at the consuming building (regolith). */
+    groundSourced: z.boolean().default(false),
     densityKgM3: z.number().positive(),
     boiloffPerDay: z.number().min(0).max(1).default(0),
     importCostPerKg: z.number().min(0).nullable(),
@@ -148,14 +150,13 @@ export const buildingSchema = z
     services: z
       .record(z.enum(["housing", "shelter", "exercise", "medical"]), z.number().positive())
       .default({}),
-    /** Life-support equipment rates (ECLSS core, Sabatier unit). */
+    /** Life-support equipment rates (ECLSS core). */
     eclss: z
       .object({
         scrubberKgCo2Day: z.number().min(0).default(0),
         ogaKgO2Day: z.number().min(0).default(0),
         waterRecovery: z.number().min(0).max(1).default(0),
         waterKgDay: z.number().min(0).default(0),
-        sabatierKgCo2Day: z.number().min(0).default(0),
       })
       .strict()
       .optional(),
@@ -178,6 +179,32 @@ export const buildingSchema = z
       })
       .strict(),
     reactions: z.array(idSchema).default([]),
+    /** Primary-output throughput per hosted reaction (kg of primaryOutput/day). */
+    reactionKgPerDay: z.record(idSchema, z.number().positive()).default({}),
+    /**
+     * Excavates the building's own tile: yields water-ice × tile iceFrac
+     * plus regolith × (1 − iceFrac) — "ice mining yield = tile ice
+     * concentration" (TASKS.md M4). Energy is included in powerKw.
+     */
+    mining: z
+      .object({
+        kgPerDay: z.number().positive(),
+        energyKwhPerKg: z.number().min(0),
+      })
+      .strict()
+      .optional(),
+    /** Research output (labs/observatories), points per day at full duty. */
+    sciencePerDay: z.number().min(0).default(0),
+    /** Output degrades with dust accumulation (solar arrays). */
+    dustSensitive: z.boolean().default(false),
+    /** Grants its shieldingGcm2 to adjacent buildings (regolith berms). */
+    shieldingAura: z.boolean().default(false),
+    /** Damps landing-dust spikes colony-wide when present (landing pads). */
+    landingPad: z.boolean().default(false),
+    /** Sells LOX to visiting missions when powered (Phase-3 revenue hook). */
+    propellantDepot: z.boolean().default(false),
+    /** Satisfies the Phase-0 comms-relay criterion (comms towers/relays). */
+    commsRelay: z.boolean().default(false),
     techRequired: idSchema.nullable(),
     encyclopedia: idSchema.optional(),
     ...overrideField,

@@ -30,6 +30,9 @@ export interface LedgerReport {
   tick: number;
   createdKg: Record<string, number>;
   destroyedKg: Record<string, number>;
+  /** Per-resource breakdown: resource → source/sink tag → kg (for stats/UI). */
+  createdByResource: Record<string, Record<string, number>>;
+  destroyedByResource: Record<string, Record<string, number>>;
   netDeltaKg: number;
 }
 
@@ -37,6 +40,8 @@ export class ResourceLedger {
   private readonly store: ComponentStore<ResourceStoreData>;
   private created = new Map<string, number>();
   private destroyed = new Map<string, number>();
+  private createdDetail = new Map<string, Map<string, number>>(); // resource → tag → kg
+  private destroyedDetail = new Map<string, Map<string, number>>();
   private totalAtTickStartKg = 0;
 
   constructor(store: ComponentStore<ResourceStoreData>) {
@@ -72,6 +77,7 @@ export class ResourceLedger {
     this.validateFlow(kg, source, "source");
     this.deposit(entity, resource, kg);
     this.created.set(source, (this.created.get(source) ?? 0) + kg);
+    this.recordDetail(this.createdDetail, resource, source, kg);
   }
 
   /** Destroy mass from an entity's store, attributed to a declared sink. */
@@ -79,6 +85,21 @@ export class ResourceLedger {
     this.validateFlow(kg, sink, "sink");
     this.withdraw(entity, resource, kg);
     this.destroyed.set(sink, (this.destroyed.get(sink) ?? 0) + kg);
+    this.recordDetail(this.destroyedDetail, resource, sink, kg);
+  }
+
+  private recordDetail(
+    detail: Map<string, Map<string, number>>,
+    resource: string,
+    tag: string,
+    kg: number,
+  ): void {
+    let byTag = detail.get(resource);
+    if (byTag === undefined) {
+      byTag = new Map<string, number>();
+      detail.set(resource, byTag);
+    }
+    byTag.set(tag, (byTag.get(tag) ?? 0) + kg);
   }
 
   /** Destroy up to `kg`, returning what was actually removed. */
@@ -116,6 +137,8 @@ export class ResourceLedger {
   beginTick(): void {
     this.created.clear();
     this.destroyed.clear();
+    this.createdDetail.clear();
+    this.destroyedDetail.clear();
     this.totalAtTickStartKg = this.totalKg();
   }
 
@@ -147,6 +170,8 @@ export class ResourceLedger {
       tick,
       createdKg: this.flowRecord(this.created),
       destroyedKg: this.flowRecord(this.destroyed),
+      createdByResource: this.detailRecord(this.createdDetail),
+      destroyedByResource: this.detailRecord(this.destroyedDetail),
       netDeltaKg,
     };
   }
@@ -155,6 +180,16 @@ export class ResourceLedger {
     const record: Record<string, number> = {};
     for (const tag of [...flows.keys()].sort(compareStrings)) {
       record[tag] = flows.get(tag) as number;
+    }
+    return record;
+  }
+
+  private detailRecord(
+    detail: Map<string, Map<string, number>>,
+  ): Record<string, Record<string, number>> {
+    const record: Record<string, Record<string, number>> = {};
+    for (const resource of [...detail.keys()].sort(compareStrings)) {
+      record[resource] = this.flowRecord(detail.get(resource) as Map<string, number>);
     }
     return record;
   }

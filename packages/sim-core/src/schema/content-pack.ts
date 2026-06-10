@@ -299,6 +299,13 @@ function crossValidate(raw: RawPack, issues: string[]): void {
     if (building.powerKw < 0 && building.priorityTier === null) {
       issues.push(`building '${building.id}' consumes power but has no priorityTier`);
     }
+    for (const rid of building.reactions) {
+      if (building.reactionKgPerDay[rid] === undefined) {
+        issues.push(
+          `building '${building.id}' hosts reaction '${rid}' without a reactionKgPerDay rate`,
+        );
+      }
+    }
     if (building.storageKwh !== undefined && building.storageRoundTripEff === undefined) {
       issues.push(`building '${building.id}' has storageKwh but no storageRoundTripEff`);
     }
