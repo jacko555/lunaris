@@ -118,29 +118,46 @@ export class SeriesBuffer {
   }
 }
 
-export function drawSparkline(canvas: HTMLCanvasElement, values: number[], color: string): void {
+export function drawSparkline(
+  canvas: HTMLCanvasElement,
+  values: number[],
+  color: string,
+  shadowValues: number[] = [],
+): void {
   const ctx = canvas.getContext("2d");
   if (ctx === null || values.length < 2) {
     return;
   }
   const { width: w, height: h } = canvas;
   ctx.clearRect(0, 0, w, h);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  // Shared scale so the two failure-table runs compare honestly.
+  const all = shadowValues.length > 1 ? values.concat(shadowValues) : values;
+  const min = Math.min(...all);
+  const max = Math.max(...all);
   const span = max - min || 1;
+  const trace = (vals: number[]): void => {
+    ctx.beginPath();
+    for (let i = 0; i < vals.length; i++) {
+      const x = (i / (vals.length - 1)) * (w - 2) + 1;
+      const y = h - 2 - (((vals[i] as number) - min) / span) * (h - 6);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+  };
+  if (shadowValues.length > 1) {
+    ctx.strokeStyle = "rgba(160, 170, 190, 0.55)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    trace(shadowValues);
+    ctx.setLineDash([]);
+  }
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.25;
-  ctx.beginPath();
-  for (let i = 0; i < values.length; i++) {
-    const x = (i / (values.length - 1)) * (w - 2) + 1;
-    const y = h - 2 - (((values[i] as number) - min) / span) * (h - 6);
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  }
-  ctx.stroke();
+  trace(values);
 }
 
 /** The milestone ribbon: "2026.4 ▸ ice-characterized" lines, newest last. */

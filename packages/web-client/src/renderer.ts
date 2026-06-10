@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import {
   BUILDING_COMPONENT,
   DUST_COMPONENT,
@@ -255,13 +255,44 @@ function drawGlyph(
     .stroke({ color: 0xffffff, width: 1, alpha: 0.25 });
 }
 
+// ── Mission Ops sprite pipeline (ASSET-PLAN §1): assets are optional — the
+// glob is empty until Codex output lands, and every defId without a sprite
+// falls back to its vector glyph so the game always runs asset-less.
+const SPRITE_URLS = import.meta.glob("../../../assets/gen/buildings/iso/*__base@1x.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+const TERRAIN_URLS = import.meta.glob("../../../assets/gen/terrain/baseplate__*.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function spriteUrl(defId: string): string | null {
+  for (const [path, url] of Object.entries(SPRITE_URLS)) {
+    if (path.endsWith(`/${defId}__base@1x.png`)) {
+      return url;
+    }
+  }
+  return null;
+}
+
 export class MapRenderer {
   readonly app: Application;
   private readonly map: LunarMap;
   private readonly pack: ContentPack;
+  private world = new Container();
+  private networkLayer = new Graphics();
   private buildingLayer = new Graphics();
+  private spriteLayer = new Container();
   private nightTint = new Graphics();
   private ready = false;
+  /** defId → loaded texture, or null when missing / not yet loaded. */
+  private textures = new Map<string, Texture | null>();
+  private spritePool = new Map<number, Sprite>();
+  /** True while (or just after) the pointer dragged the camera. */
+  wasDrag = false;
 
   constructor(map: LunarMap, pack: ContentPack) {
     this.map = map;
@@ -274,22 +305,123 @@ export class MapRenderer {
       width: this.map.width * TILE_PX,
       height: this.map.height * TILE_PX,
       background: 0x05070b,
-      antialias: false,
+      antialias: true,
     });
     parent.appendChild(this.app.canvas);
 
-    const tileLayer = new Graphics();
-    for (let y = 0; y < this.map.height; y++) {
-      for (let x = 0; x < this.map.width; x++) {
-        tileLayer.rect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX).fill(tileColor(this.map, x, y));
+    // Terrain: pre-rendered plate when generated, vector tiles otherwise.
+    const dayPlate = Object.entries(TERRAIN_URLS).find(([p]) =>
+      p.endsWith("baseplate__day.png"),
+    )?.[1];
+    if (dayPlate !== undefined) {
+      const tex = await Assets.load<Texture>(dayPlate);
+      const plate = new Sprite(tex);
+      plate.width = this.map.width * TILE_PX;
+      plate.height = this.map.height * TILE_PX;
+      this.world.addChild(plate);
+    } else {
+      const tileLayer = new Graphics();
+      for (let y = 0; y < this.map.height; y++) {
+        for (let x = 0; x < this.map.width; x++) {
+          tileLayer
+            .rect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX)
+            .fill(tileColor(this.map, x, y));
+        }
       }
+      this.world.addChild(tileLayer);
     }
-    const root = new Container();
-    root.addChild(tileLayer);
-    root.addChild(this.buildingLayer);
-    root.addChild(this.nightTint);
-    this.app.stage.addChild(root);
+    this.world.addChild(this.networkLayer);
+    this.world.addChild(this.spriteLayer);
+    this.world.addChild(this.buildingLayer); // glyphs + badges overlay sprites
+    this.world.addChild(this.nightTint);
+    this.app.stage.addChild(this.world);
+    this.installCamera();
     this.ready = true;
+  }
+
+  /** Wheel zoom (cursor-centered) + drag pan; sets wasDrag for click logic. */
+  private installCamera(): void {
+    const canvas = this.app.canvas;
+    const minZoom = 1;
+    const maxZoom = 6;
+    const clampPan = (): void => {
+      const w = this.map.width * TILE_PX;
+      const s = this.world.scale.x;
+      this.world.x = Math.min(0, Math.max(this.app.renderer.width - w * s, this.world.x));
+      this.world.y = Math.min(0, Math.max(this.app.renderer.height - w * s, this.world.y));
+    };
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const cx = ((event.clientX - rect.left) / rect.width) * this.app.renderer.width;
+        const cy = ((event.clientY - rect.top) / rect.height) * this.app.renderer.height;
+        const old = this.world.scale.x;
+        const next = Math.min(maxZoom, Math.max(minZoom, old * (event.deltaY < 0 ? 1.18 : 0.85)));
+        // Keep the world point under the cursor stationary.
+        this.world.x = cx - ((cx - this.world.x) / old) * next;
+        this.world.y = cy - ((cy - this.world.y) / old) * next;
+        this.world.scale.set(next);
+        clampPan();
+      },
+      { passive: false },
+    );
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let moved = 0;
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      moved = 0;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      this.wasDrag = false;
+    });
+    window.addEventListener("pointermove", (event) => {
+      if (!dragging) {
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const sx = this.app.renderer.width / rect.width;
+      this.world.x += (event.clientX - lastX) * sx;
+      this.world.y += (event.clientY - lastY) * sx;
+      moved += Math.abs(event.clientX - lastX) + Math.abs(event.clientY - lastY);
+      lastX = event.clientX;
+      lastY = event.clientY;
+      if (moved > 6) {
+        this.wasDrag = true;
+      }
+      clampPan();
+    });
+    window.addEventListener("pointerup", () => {
+      dragging = false;
+    });
+  }
+
+  /** Map a DOM click to a tile under the current camera transform. */
+  tileAtClient(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = this.app.canvas.getBoundingClientRect();
+    const gx = ((clientX - rect.left) / rect.width) * this.app.renderer.width;
+    const gy = ((clientY - rect.top) / rect.height) * this.app.renderer.height;
+    const wx = (gx - this.world.x) / this.world.scale.x;
+    const wy = (gy - this.world.y) / this.world.scale.y;
+    return { x: Math.floor(wx / TILE_PX), y: Math.floor(wy / TILE_PX) };
+  }
+
+  /** Resolve (and lazily load) the sprite texture for a building def. */
+  private textureFor(defId: string): Texture | null {
+    if (this.textures.has(defId)) {
+      return this.textures.get(defId) as Texture | null;
+    }
+    const url = spriteUrl(defId);
+    this.textures.set(defId, null);
+    if (url !== null) {
+      void Assets.load<Texture>(url).then((tex) => {
+        this.textures.set(defId, tex);
+      });
+    }
+    return null;
   }
 
   draw(world: World): void {
@@ -321,6 +453,51 @@ export class MapRenderer {
           .fill({ color: 0x000000, alpha: 0.22 });
       }
     }
+    // ── connection network (Mission Ops): a minimum-spanning tree over
+    // building centers drawn as layered strokes — reads as roads/cable
+    // trays without needing path sprites for arbitrary layouts. ──
+    this.networkLayer.clear();
+    const centers: { x: number; y: number }[] = [];
+    for (const [, building] of buildings.entries()) {
+      const [w, h] = this.pack.building(building.defId).footprint;
+      centers.push({
+        x: (building.x + w / 2) * TILE_PX,
+        y: (building.y + h / 2) * TILE_PX,
+      });
+    }
+    if (centers.length > 1) {
+      const inTree = new Set<number>([0]);
+      const lineColor = env.litB === 1 ? 0x8a93a6 : 0xf2a65a;
+      while (inTree.size < centers.length) {
+        let best: [number, number, number] = [-1, -1, Infinity];
+        for (const a of inTree) {
+          for (let b = 0; b < centers.length; b++) {
+            if (inTree.has(b)) {
+              continue;
+            }
+            const pa = centers[a] as { x: number; y: number };
+            const pb = centers[b] as { x: number; y: number };
+            const d = (pa.x - pb.x) ** 2 + (pa.y - pb.y) ** 2;
+            if (d < best[2]) {
+              best = [a, b, d];
+            }
+          }
+        }
+        const pa = centers[best[0]] as { x: number; y: number };
+        const pb = centers[best[1]] as { x: number; y: number };
+        this.networkLayer
+          .moveTo(pa.x, pa.y)
+          .lineTo(pb.x, pb.y)
+          .stroke({ color: 0x10141c, width: 3.5, alpha: 0.65 });
+        this.networkLayer
+          .moveTo(pa.x, pa.y)
+          .lineTo(pb.x, pb.y)
+          .stroke({ color: lineColor, width: 1.2, alpha: env.litB === 1 ? 0.5 : 0.9 });
+        inTree.add(best[1]);
+      }
+    }
+
+    const liveEntities = new Set<number>();
     for (const [entity, building] of buildings.entries()) {
       const def = this.pack.building(building.defId);
       const [w, h] = def.footprint;
@@ -329,16 +506,35 @@ export class MapRenderer {
       const wpx = w * TILE_PX;
       const hpx = h * TILE_PX;
       const color = BUILDING_COLORS[building.defId] ?? 0xffffff;
-      drawGlyph(
-        this.buildingLayer,
-        classify(def),
-        px,
-        py,
-        wpx,
-        hpx,
-        color,
-        0.55 + 0.45 * building.condition,
-      );
+      const texture = this.textureFor(building.defId);
+      if (texture !== null) {
+        // Sprite path: bottom-anchored on the footprint, free to overflow
+        // upward (3/4-view art is taller than its ground plan).
+        liveEntities.add(entity);
+        let sprite = this.spritePool.get(entity);
+        if (sprite === undefined || sprite.texture !== texture) {
+          sprite?.destroy();
+          sprite = new Sprite(texture);
+          sprite.anchor.set(0.5, 1);
+          this.spritePool.set(entity, sprite);
+          this.spriteLayer.addChild(sprite);
+        }
+        sprite.width = wpx * 1.15;
+        sprite.height = (texture.height / texture.width) * wpx * 1.15;
+        sprite.position.set(px + wpx / 2, py + hpx);
+        sprite.alpha = 0.6 + 0.4 * building.condition;
+      } else {
+        drawGlyph(
+          this.buildingLayer,
+          classify(def),
+          px,
+          py,
+          wpx,
+          hpx,
+          color,
+          0.55 + 0.45 * building.condition,
+        );
+      }
       const thermal = thermals.get(entity);
       const outline =
         thermal?.state === "freeze" ? 0x3b82f6 : thermal?.state === "overheat" ? 0xeb5757 : null;
@@ -366,6 +562,14 @@ export class MapRenderer {
       const dust = dusts.get(entity);
       if (dust !== undefined && dust.frac > 0.15) {
         this.buildingLayer.rect(px + 1, py + 1, 4, 4).fill(0xd2b48c);
+      }
+    }
+
+    // Reclaim sprites whose buildings are gone (or lost their texture).
+    for (const [entity, sprite] of this.spritePool) {
+      if (!liveEntities.has(entity)) {
+        sprite.destroy();
+        this.spritePool.delete(entity);
       }
     }
 

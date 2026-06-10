@@ -196,6 +196,13 @@ async function boot(): Promise<void> {
     mode: "game" as "game" | "sim",
     startYear: 2026,
     buffers: new Map<string, SeriesBuffer>(OBSERVER_SERIES.map((s) => [s.key, new SeriesBuffer()])),
+    // T11 dual-run compare: a shadow world with the same seed and the
+    // OTHER failure table, ticked in lockstep — deterministic core makes
+    // "ideal vs realistic, same history otherwise" an honest overlay.
+    shadow: null as World | null,
+    shadowBuffers: new Map<string, SeriesBuffer>(
+      OBSERVER_SERIES.map((s) => [s.key, new SeriesBuffer()]),
+    ),
   };
   app.map = loadMap(app.pack.maps[0] as (typeof app.pack.maps)[number]);
   app.gameDef = createGameDef(app.pack, app.map);
@@ -258,9 +265,13 @@ async function boot(): Promise<void> {
 
   // ── map interaction ──
   app.renderer.app.canvas.addEventListener("click", (event) => {
-    const rect = app.renderer.app.canvas.getBoundingClientRect();
-    const tx = Math.floor(((event.clientX - rect.left) / rect.width) * app.map.width);
-    const ty = Math.floor(((event.clientY - rect.top) / rect.height) * app.map.height);
+    if (app.renderer.wasDrag) {
+      return; // camera pan, not a selection
+    }
+    const { x: tx, y: ty } = app.renderer.tileAtClient(event.clientX, event.clientY);
+    if (tx < 0 || ty < 0 || tx >= app.map.width || ty >= app.map.height) {
+      return;
+    }
     if (ui.selectedBuild !== null) {
       app.host.world.enqueueCommand(CMD_QUEUE_BUILD, { defId: ui.selectedBuild, x: tx, y: ty });
       ui.selectedBuild = null;
@@ -433,6 +444,7 @@ async function boot(): Promise<void> {
   }
   const startGame = (): void => {
     app.mode = "game";
+    app.shadow = null;
     app.host.replaceWorld(makeTutorialWorld(app.pack, app.map, app.gameDef));
     app.host.autopauseCodes = new Set();
     app.hud.resync(app.host.world);
@@ -457,7 +469,15 @@ async function boot(): Promise<void> {
     app.host.autopauseCodes = new Set(scenario.autopause);
     app.hud.resync(app.host.world);
     app.startYear = scenario.startYear;
+    const shadowConfig = scenarioToConfig(scenario);
+    const shadowTables = failureTables === "realistic" ? "ideal" : "realistic";
+    shadowConfig["failureTables"] = shadowTables;
+    app.shadow = createWorld(app.gameDef, { seed, config: shadowConfig });
+    $("#compare-legend").textContent = `— ${failureTables} · ┄ ${shadowTables} (same seed)`;
     for (const buffer of app.buffers.values()) {
+      buffer.reset();
+    }
+    for (const buffer of app.shadowBuffers.values()) {
       buffer.reset();
     }
     takeCommand.classList.remove("ai-off");
@@ -525,6 +545,17 @@ async function boot(): Promise<void> {
     for (const series of OBSERVER_SERIES) {
       (app.buffers.get(series.key) as SeriesBuffer).push(world, series);
     }
+    if (app.shadow !== null) {
+      // Lockstep, bounded per frame so a long synchronous catch-up on the
+      // main world cannot freeze the render loop.
+      let budget = 200;
+      while (app.shadow.tickCount < world.tickCount && budget-- > 0) {
+        app.shadow.tick();
+      }
+      for (const series of OBSERVER_SERIES) {
+        (app.shadowBuffers.get(series.key) as SeriesBuffer).push(app.shadow, series);
+      }
+    }
     if (frameCount % 15 === 0) {
       if (app.mode === "game") {
         renderTutorial(tutorialRoot, world);
@@ -561,7 +592,8 @@ async function boot(): Promise<void> {
         for (const series of OBSERVER_SERIES) {
           const buffer = app.buffers.get(series.key) as SeriesBuffer;
           const canvas = canvases.get(series.key) as HTMLCanvasElement;
-          drawSparkline(canvas, buffer.values, series.color);
+          const shadowBuffer = app.shadowBuffers.get(series.key) as SeriesBuffer;
+          drawSparkline(canvas, buffer.values, series.color, app.shadow ? shadowBuffer.values : []);
           const valueEl = canvas.previousElementSibling?.querySelector(".chart-value");
           if (valueEl !== null && valueEl !== undefined && buffer.values.length > 0) {
             valueEl.textContent = ` ${series.format(buffer.values[buffer.values.length - 1] as number)}`;

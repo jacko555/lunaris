@@ -93,5 +93,16 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Build/asset tooling runs under plain Node (ESM scripts).
+    files: ["tools/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+      },
+    },
+  },
   prettier,
 );

@@ -99,11 +99,24 @@ export function renderTechPanel(root: HTMLElement, world: World, pack: ContentPa
     list.push(tech);
     byBranch.set(tech.branch, list);
   }
+  // Mockup v2 research grid: branch columns become titled sections (the
+  // 300px side panel can't fit five columns), rows ordered by unlock phase
+  // then cost — the same reading order as the phase-gate grid.
+  const BRANCH_NAMES: Record<string, string> = {
+    A: "Transportation & Landing",
+    B: "Power & Thermal",
+    C: "ISRU & Industry",
+    D: "Life Support & Habitation",
+    E: "Science & Operations",
+  };
   for (const branch of [...byBranch.keys()].sort()) {
     const title = document.createElement("h4");
-    title.textContent = `Branch ${branch}`;
+    title.textContent = BRANCH_NAMES[branch] ?? `Branch ${branch}`;
     rows.push(title);
-    for (const tech of byBranch.get(branch) as Tech[]) {
+    const ordered = (byBranch.get(branch) as Tech[])
+      .slice()
+      .sort((a, b) => a.phase - b.phase || a.costScience - b.costScience || (a.id < b.id ? -1 : 1));
+    for (const tech of ordered) {
       const done = research.unlocked.includes(tech.id);
       const current = research.current === tech.id;
       const available = !done && !current && hardPrereqsMet(tech, research.unlocked);

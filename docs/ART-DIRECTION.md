@@ -26,6 +26,24 @@ UI: Inter or IBM Plex Sans; data/mono: IBM Plex Mono (telemetry vibe). Title: ex
 
 Quiet synth ambience; Geiger-tick during SPE; comms-static blips for events; no music walls — Antarctic-station quiet.
 
+## Direction v2: "Mission Ops" (supersedes the flat-vector schematic)
+
+Adopted 2026-06 from the mockup set (see docs/ASSET-PLAN.md). The web client moves
+from flat vector glyphs to **pre-rendered photoreal stills inside instrument-panel
+UI** — the Frostpunk-poster + Anno-sprite + NASA-console formula. Nothing is realtime
+3D; everything AAA on screen is either a gpt-image-2 still (building sprites, terrain
+plates, portraits, tech cards) or disciplined dark FUI (mono type, thin borders,
+amber/cyan accents, bars and sparklines).
+
+- Map: pre-rendered terrain plate + per-building 3/4-view sprites, bottom-anchored on
+  the square sim grid (sprites may overflow upward); procedural glowing connection
+  network (vector, never sprites); zoom/pan camera.
+- Night is half the drama: every building gets an emissive `__night` variant; the UI
+  itself shifts to red-on-black night ops.
+- The old vector glyph layer stays as the fallback when a sprite is missing — the
+  game must run asset-less (CI, mods, partial generation).
+- Charts, badges, radii, routes: always vector. Raster icons are banned below 24 px.
+
 ## Godot 3D upgrade path (Stage 4)
 
 Keep schematic language: low-poly buildings, flat materials + emissive accents, orthographic-ish camera; terrain from real LRO south-pole DEM. Vector icon set carries over 1:1.
