@@ -294,6 +294,14 @@ function crossValidate(raw: RawPack, issues: string[]): void {
   }
 
   for (const building of raw.buildings) {
+    // Power consumers must declare a priority tier or the brownout ladder
+    // cannot place them (SDD §3).
+    if (building.powerKw < 0 && building.priorityTier === null) {
+      issues.push(`building '${building.id}' consumes power but has no priorityTier`);
+    }
+    if (building.storageKwh !== undefined && building.storageRoundTripEff === undefined) {
+      issues.push(`building '${building.id}' has storageKwh but no storageRoundTripEff`);
+    }
     for (const rid of building.reactions) {
       if (!reactionIds.has(rid)) {
         issues.push(`building '${building.id}' references missing reaction '${rid}'`);

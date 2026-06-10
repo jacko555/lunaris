@@ -70,8 +70,12 @@ All game content is JSON in `data/`, validated by zod schemas in `sim-core/src/s
   "footprint": [2, 2],
   "keepoutRadius": 1,
   "powerKw": 40, // + produce, − consume
+  "powerScalesWithIllumination": false, // true for solar arrays
+  "storageKwh": 0, // energy storage capacity (battery/RFC); omit if none
+  "storageRoundTripEff": 1.0, // required with storageKwh (SDD §3: battery 0.90, RFC 0.55)
   "heatKw": 8,
   "radiatorKw": 0,
+  "radiatorShared": false, // true: rejection serves the whole base (radiator wings)
   "crewOps": { "engineer": 1 }, // person-hours/day by skill
   "shieldingGcm2": 0,
   "priorityTier": null,
@@ -178,6 +182,6 @@ See MODES.md §2.1 (authoritative example). Schema adds `failureOverrides: {even
 1. Mass balance per reaction (±1e-6).
 2. Every building/tech/event id referenced exists.
 3. Every `value` with status `sourced` has non-empty `source`.
-4. Power priority tiers ∈ {0,1,2,3}; tier 0 reserved for life-support class.
+4. Power priority tiers ∈ {0,1,2,3}; tier 0 reserved for life-support class. Buildings with `powerKw < 0` must declare a tier; `storageKwh` requires `storageRoundTripEff`.
 5. No tech cycles; phase of unlocks ≥ phase of tech.
 6. Scenario presets load + 100-tick smoke run in CI.

@@ -59,3 +59,42 @@ export type {
 } from "./schema/items.js";
 export { ContentPackError, loadContentPack, mergePacks } from "./schema/content-pack.js";
 export type { ContentPack, ContentPackDocuments, LoadOptions } from "./schema/content-pack.js";
+export { encodeBase64, decodeBase64 } from "./map/base64.js";
+export { decodeTiles, encodeTiles, inBounds, loadMap, tileAt } from "./map/tiles.js";
+export type { IlluminationClass, LunarMap, RegolithType, Tile } from "./map/tiles.js";
+export {
+  ALERTS_COMPONENT,
+  BUILDING_COMPONENT,
+  ENVIRONMENT_COMPONENT,
+  GRID_COMPONENT,
+  STORAGE_COMPONENT,
+  THERMAL_COMPONENT,
+} from "./game/components.js";
+export type {
+  AlertEntry,
+  AlertsComponent,
+  BuildingComponent,
+  EnvironmentComponent,
+  GridComponent,
+  StorageComponent,
+  ThermalComponent,
+} from "./game/components.js";
+export { MAX_ALERTS, pushAlert } from "./game/alerts.js";
+export {
+  ALERTS_ENTITY,
+  CMD_PLACE_BUILDING,
+  CMD_REMOVE_BUILDING,
+  ENV_ENTITY,
+  GRID_ENTITY,
+  createGameDef,
+} from "./game/game-def.js";
+export type { CmdPlaceBuildingPayload } from "./game/game-def.js";
+export {
+  CLASS_A_ECLIPSE_END,
+  CLASS_A_ECLIPSE_START,
+  createEnvironmentSystem,
+} from "./systems/environment.js";
+export { createPowerSystem, energyImbalanceKw } from "./systems/power.js";
+export type { PowerSystemIds } from "./systems/power.js";
+export { createThermalSystem } from "./systems/thermal.js";
+export type { ThermalSystemIds } from "./systems/thermal.js";

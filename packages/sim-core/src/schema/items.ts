@@ -129,8 +129,16 @@ export const buildingSchema = z
     footprint: z.tuple([z.number().int().min(1), z.number().int().min(1)]),
     keepoutRadius: z.number().int().min(0).default(0),
     powerKw: z.number(), // + produces, − consumes
+    /** Production scales with tile illumination (solar arrays). */
+    powerScalesWithIllumination: z.boolean().default(false),
+    /** Energy storage capacity (battery banks, regenerative fuel cells). */
+    storageKwh: z.number().positive().optional(),
+    /** Round-trip efficiency applied when charging storage (SDD §3). */
+    storageRoundTripEff: z.number().gt(0).max(1).optional(),
     heatKw: z.number(),
     radiatorKw: z.number().min(0).default(0),
+    /** Rejection serves the whole base (radiator wings) instead of only this building. */
+    radiatorShared: z.boolean().default(false),
     crewOps: z.record(z.string(), z.number().min(0)).default({}),
     shieldingGcm2: z.number().min(0).default(0),
     // DATA-SCHEMA rule 4: tiers 0–3, tier 0 reserved for life-support class.
