@@ -14,10 +14,6 @@ import sharp from "sharp";
  * already containing "@").
  */
 
-const KEY = { r: 255, g: 0, b: 255 };
-const TOLERANCE = 90; // euclidean rgb distance counted as background
-const DESPILL_RADIUS = 150; // distance within which magenta spill is muted
-
 async function strip(file) {
   const img = sharp(file).ensureAlpha();
   const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
@@ -28,21 +24,33 @@ async function strip(file) {
   let maxY = 0;
   for (let i = 0; i < px; i++) {
     const o = i * 4;
-    const dr = data[o] - KEY.r;
-    const dg = data[o + 1] - KEY.g;
-    const db = data[o + 2] - KEY.b;
-    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-    if (dist < TOLERANCE) {
-      data[o + 3] = 0;
-      continue;
-    }
-    if (dist < DESPILL_RADIUS) {
-      // Despill: pull the magenta cast toward neutral, keep luminance.
-      const spill = 1 - (dist - TOLERANCE) / (DESPILL_RADIUS - TOLERANCE);
-      const g = data[o + 1];
-      data[o] = Math.round(data[o] - (data[o] - g) * spill * 0.7);
-      data[o + 2] = Math.round(data[o + 2] - (data[o + 2] - g) * spill * 0.7);
-      data[o + 3] = Math.round(255 * Math.min(1, 0.35 + (1 - spill)));
+    const r = data[o];
+    const g = data[o + 1];
+    const b = data[o + 2];
+    // Hue-based key: anything magenta-toned is background — including the
+    // object's soft shadow, which the model renders ON the magenta and so
+    // arrives as DARK magenta (a plain distance-to-key test keeps it and
+    // produces a purple halo). Real object colors (white MLI, gold foil,
+    // amber windows, cyan accents) all fail the |r−b| symmetry test.
+    const m = Math.min(r, b);
+    const isMagentaHue = m - g > 28 && Math.abs(r - b) < 72;
+    if (isMagentaHue) {
+      // Reconstruct the shadow: how much darker than the pure key this
+      // pixel is becomes black-with-alpha; pure key (m≈255) vanishes.
+      const shade = Math.max(0, Math.min(1, (235 - m) / 235));
+      data[o] = 0;
+      data[o + 1] = 0;
+      data[o + 2] = 0;
+      data[o + 3] = Math.round(170 * shade);
+      if (data[o + 3] < 12) {
+        data[o + 3] = 0;
+        continue;
+      }
+    } else if (g > 0 && m > g * 1.05) {
+      // Mild magenta spill on object edges: pull r/b toward g.
+      const spill = Math.min(1, (m / g - 1.05) * 1.4);
+      data[o] = Math.round(r - (r - g) * spill * 0.6);
+      data[o + 2] = Math.round(b - (b - g) * spill * 0.6);
     }
     const x = i % info.width;
     const y = Math.floor(i / info.width);
