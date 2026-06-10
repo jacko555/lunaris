@@ -28,6 +28,11 @@ export class Rng {
     return this.state;
   }
 
+  /** Restore a serialized stream state in place (used by world load). */
+  setState(state: number): void {
+    this.state = state >>> 0;
+  }
+
   /** Next float in [0, 1) with 32 bits of entropy. */
   next(): number {
     this.state = (this.state + 0x6d2b79f5) >>> 0;
