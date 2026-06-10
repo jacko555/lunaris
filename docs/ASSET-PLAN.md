@@ -218,3 +218,47 @@ Lucide/Phosphor, MIT). gpt-image-2 raster icons at that size read as mud. (P2 ta
       not under the code MIT license)
 
 P1 = T1–T4 (the map stops being rectangles). P2 = T5–T7 (the mockup screens). P3 = T8–T10.
+
+---
+
+## 8. Addendum — mockup set v2 (build day/night, research tree, observer dashboard)
+
+### New assets
+
+| file                       | count | prompt core                                                                                                                                                                                                                                                                                                    |
+| -------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cards/tech__<techId>.png` | 34    | One per id in `data/base/tech.json`. Template: "Documentary photograph illustrating {tech name} on the lunar surface or inside a habitat lab: {one-line scene — e.g. automation_robotics: an autonomous robotic arm assembling a truss while an engineer supervises on a tablet}. 1536x1024." + §2 (no chroma) |
+| `ui/moon-disc.png`         | 1     | Full-disc Moon photograph, straight-on, black background, for the lunar-cycle clock dial (masked/rotated in CSS)                                                                                                                                                                                               |
+
+Scene one-liners for the 34 tech cards live next to each node's `description` in
+`data/base/tech.json` — derive, don't invent new lore.
+
+### Priority changes
+
+- `buildings/iso/<defId>__night.png` (39) and `terrain/baseplate__night.png`: **promoted P3 → P1.5**. The night view carries the game's central tension; day-only would read as half-finished against these mockups.
+- Night UI theme already exists in the web client (warm-red accents after sunset) — keep, retune to the mockup's red-on-black.
+
+### Explicitly NOT assets (procedural, zero generation)
+
+- Building connection network (roads/cable trays with glow): PixiJS polylines + bloom-ish layered strokes; sprites can't follow arbitrary layouts.
+- Numbered node badges (01..NN), selection ring, "show radius" circles: vector.
+- Lunar-cycle clock dial: canvas arc + `ui/moon-disc.png` rotated.
+- All charts (ideal-vs-realistic overlays, radiation forecast histogram): existing canvas sparkline layer, extended.
+
+### Feature notes harvested from the mockups (renderer/UI backlog, not assets)
+
+- **Dual-run comparison (observer):** run a shadow world — same seed, other failure
+  table — and overlay both series on every chart. Deterministic core makes this ~free;
+  it is the single most differentiating feature on these screens. (T11)
+- Event log entries carry cause → effect chains (alert codes already exist; needs a
+  parent-alert reference in AlertsComponent). (T12)
+- Live map thumbnail in the observer view = the Pixi canvas rendered small. (T4)
+- Research screen layout = branches A–E as columns, unlock-phase as rows; TRL chip can
+  map from each node's `phase` field. Pure UI re-skin of existing tech data. (T13)
+
+### Task list additions
+
+- [ ] T11 Shadow-world dual-run compare mode in observer (same seed, ideal vs realistic)
+- [ ] T12 AlertsComponent: optional `causedBy` seq reference + UI chain rendering
+- [ ] T13 Research screen v2 (branch-column grid + tech cards) once `cards/tech__*` exist
+- [ ] T14 Generate `__night` set + baseplate\_\_night (P1.5, after T4 proves the day pipeline)
