@@ -72,16 +72,37 @@ export function staffedFactor(
   return isUnlocked(world, colonyEntity, "automation_robotics") ? 0.8 : 0.5;
 }
 
+/** Days of crew consumables industry may never touch (SDD: LSS priority). */
+const LSS_RESERVE_DAYS = 5;
+
 export function createReactionSystem(
   pack: ContentPack,
   map: LunarMap,
   ids: ReactionSystemIds,
 ): System {
+  const waterPerCrewDay =
+    pack.number("crew_water_potable_day") + pack.number("crew_hygiene_water_day");
+  const o2PerCrewDay = pack.number("crew_o2_day");
   return {
     name: "reactions",
     update: (world) => {
       const buildings = world.store<BuildingComponent>(BUILDING_COMPONENT);
       const thermals = world.store<ThermalComponent>(THERMAL_COMPONENT);
+
+      // Life-support reserve: industrial reactions (electrolysis, LOX
+      // liquefaction) must leave the crew several days of water and O₂ —
+      // otherwise a propellant plant drinks every delivery to zero and
+      // settlers die of thirst on a base that exports water by the tonne.
+      let living = 0;
+      for (const [, crew] of world.store<CrewComponent>(CREW_COMPONENT).entries()) {
+        if (crew.alive === 1) {
+          living++;
+        }
+      }
+      const reserveKg: Record<string, number> = {
+        water: living * waterPerCrewDay * LSS_RESERVE_DAYS,
+        "o2-gas": living * o2PerCrewDay * LSS_RESERVE_DAYS,
+      };
 
       for (const [entity, building] of buildings.entries()) {
         if (building.condition <= 0 || world.tickCount < building.offlineUntilTick) {
@@ -137,7 +158,9 @@ export function createReactionSystem(
             if (pack.resource(input.resource).groundSourced) {
               continue;
             }
-            const availableBatches = colonyAvailable(world, input.resource) / input.kg;
+            const reserved = reserveKg[input.resource] ?? 0;
+            const availableBatches =
+              Math.max(0, colonyAvailable(world, input.resource) - reserved) / input.kg;
             batches = Math.min(batches, availableBatches);
           }
           if (batches <= 0) {

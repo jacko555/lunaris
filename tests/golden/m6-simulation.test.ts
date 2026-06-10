@@ -67,10 +67,10 @@ describe("M6 acceptance: simulation mode", () => {
      * change with an explained cause — these ARE the observer ribbons).
      */
     const expected: Record<string, string> = {
-      artemis_baseline: "d6c76f83",
-      ideal_trajectory: "ed6560c4",
+      artemis_baseline: "4295e4e3",
+      ideal_trajectory: "e04ab902",
       realistic_trajectory: "81843d24",
-      ilrs_race: "ed6560c4",
+      ilrs_race: "e04ab902",
       commercial_bootstrap: "1352ab0a",
     };
     const actual: Record<string, string> = {};

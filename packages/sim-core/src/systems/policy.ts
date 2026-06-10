@@ -32,6 +32,7 @@ import {
   R_SPARE_PARTS,
   R_WATER,
 } from "../game/resource-ids.js";
+import { vehicleClass } from "./logistics.js";
 import { hardPrereqsMet } from "./research.js";
 
 /**
@@ -279,21 +280,36 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
         const needWater = runwayDays(R_WATER, CREW_RATE_KG_DAY.water) < 30;
         const needO2 = runwayDays(R_O2, CREW_RATE_KG_DAY.o2) < 30;
         const needParts = colonyAmount(world, R_SPARE_PARTS) < 200;
-        if ((needFood || needWater || needO2 || needParts) && cargoInFlight < 3 && canSpend) {
+        // Survival shipments run down to a far lower floor than growth —
+        // a launch-broke colony skips habs, not dinners (48 settlers
+        // starved in the soak run while canSpend held the food budget).
+        const canFeed = economy.balanceUsd > 1e8;
+        if ((needFood || needWater || needO2 || needParts) && cargoInFlight < 3 && canFeed) {
+          // Priority-ordered and clamped to one heavy lander: at large
+          // populations the naive manifest (water alone: 7 kg/person-day)
+          // overflows the payload and the whole order is rejected.
+          let remaining = vehicleClass(pack, "heavy").payloadKg;
           const manifest: { resource: string; kg: number }[] = [];
+          const push = (resource: string, kg: number): void => {
+            const clamped = Math.min(Math.ceil(kg), Math.floor(remaining));
+            if (clamped > 0) {
+              manifest.push({ resource, kg: clamped });
+              remaining -= clamped;
+            }
+          };
           if (needFood) {
-            manifest.push({ resource: R_FOOD, kg: Math.ceil(living * 0.62 * 45) });
-          }
-          if (needWater) {
-            manifest.push({ resource: R_WATER, kg: Math.ceil(living * 7.04 * 35) });
+            push(R_FOOD, living * 0.62 * 45);
           }
           if (needO2) {
-            manifest.push({ resource: R_O2, kg: Math.ceil(living * 0.84 * 45) });
+            push(R_O2, living * 0.84 * 45);
           }
+          push("medkits", 5);
           if (needParts) {
-            manifest.push({ resource: R_SPARE_PARTS, kg: 400 });
+            push(R_SPARE_PARTS, 400);
           }
-          manifest.push({ resource: "medkits", kg: 5 });
+          if (needWater) {
+            push(R_WATER, living * 7.04 * 35);
+          }
           world.enqueueCommand("cmd-schedule-resupply", {
             manifest,
             arrivalTick: 0,
@@ -353,7 +369,20 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
         } else {
           // Phase 2+: outpost & industry by weights.
           if ((w["infrastructure"] ?? 1) > 0) {
-            if (colonyAmount(world, R_MACHINE_COMPONENTS) < 3000 && cargoInFlight < 3) {
+            // The floor must cover queued-but-unpaid sites, or an expensive
+            // build (fission: 6 t) deadlocks below the reorder threshold —
+            // and every settler party then dies in the first unpowered night.
+            let pendingKg = 0;
+            for (const [, s] of world.store<SiteComponent>(SITE_COMPONENT).entries()) {
+              if (s.paid === 0) {
+                for (const entry of pack.building(s.defId).buildCost.imported) {
+                  if (entry.resource === R_MACHINE_COMPONENTS) {
+                    pendingKg += entry.kg;
+                  }
+                }
+              }
+            }
+            if (colonyAmount(world, R_MACHINE_COMPONENTS) < 3000 + pendingKg && cargoInFlight < 3) {
               world.enqueueCommand("cmd-schedule-resupply", {
                 manifest: [{ resource: R_MACHINE_COMPONENTS, kg: 11000 }],
                 arrivalTick: 0,
@@ -363,12 +392,30 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
                 vehicle: "heavy",
               });
             }
-            // Radiators scale with the base's industrial waste heat.
+            // Radiators scale with waste heat; reactors with night demand.
             let heatKw = 0;
+            let demandKw = 0;
             for (const [, b] of world.store<BuildingComponent>(BUILDING_COMPONENT).entries()) {
-              heatKw += pack.building(b.defId).heatKw;
+              const bd = pack.building(b.defId);
+              heatKw += bd.heatKw;
+              if (bd.powerKw < 0) {
+                demandKw -= bd.powerKw;
+              }
             }
+            const fissionKw = knows("fission-surface-power")
+              ? pack.building("fission-surface-power").powerKw
+              : 40;
             for (const [defId, want] of [
+              // Night power FIRST, scaled to ~80% of installed demand (the
+              // grid sheds tier-3 loads at night, but ECLSS + heaters must
+              // hold for 354 h) — a single 40 kW unit froze a 25-building
+              // base solid at t6871 of the ideal-trajectory soak run.
+              [
+                "fission-surface-power",
+                unlocked("surface_power_40kw")
+                  ? Math.max(1, Math.ceil((demandKw * 0.8) / fissionKw))
+                  : 0,
+              ],
               ["foundation-habitat", Math.ceil(Math.max(4, living + 2) / 4)],
               ["radiator-wing", Math.max(2, Math.ceil(heatKw / 12))],
               ["eclss-core", 1 + Math.ceil(Math.max(1, living / 6))],
@@ -409,8 +456,16 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
             world.tickCount - policy.lastCrewTick > ticksPerLunarDay
           ) {
             let housing = 0;
+            // Night-capable generation must be BUILT — builtCount also counts
+            // queued sites, and a settler party landed against a half-built
+            // fission plant dies in the first 354-hour night.
+            let nightPowerKw = 0;
             for (const [, b] of world.store<BuildingComponent>(BUILDING_COMPONENT).entries()) {
-              housing += pack.building(b.defId).services.housing ?? 0;
+              const bd = pack.building(b.defId);
+              housing += bd.services.housing ?? 0;
+              if (bd.powerKw > 0 && bd.powerScalesWithIllumination !== true) {
+                nightPowerKw += bd.powerKw;
+              }
             }
             const eclssOnline = knows("eclss-core") && builtCount(world, "eclss-core") > 0;
             // Provision for the INCOMING party, not the current roster —
@@ -419,8 +474,21 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
             const party = Math.min(4, Math.max(0, housing - living));
             const expected = living + party;
             const foodRunway = colonyAmount(world, R_FOOD) / Math.max(1, expected * 0.62);
-            if (phase.phase >= 2 && eclssOnline && party > 0 && habs.length > 0) {
-              if (foodRunway > 45 && colonyAmount(world, R_O2) > expected * 0.84 * 10) {
+            if (
+              phase.phase >= 2 &&
+              eclssOnline &&
+              nightPowerKw >= 10 &&
+              party > 0 &&
+              habs.length > 0
+            ) {
+              if (
+                foodRunway > 45 &&
+                colonyAmount(world, R_O2) > expected * 0.84 * 10 &&
+                // Water too — settlers landed onto a dry base die of thirst
+                // in days, and the AI would re-land a doomed party every
+                // cooldown without ever noticing why.
+                colonyAmount(world, R_WATER) > expected * 7.04 * 10
+              ) {
                 for (let i = 0; i < party; i++) {
                   world.enqueueCommand("cmd-add-crew", {
                     name: `Settler-${world.tickCount}-${i}`,
@@ -442,6 +510,24 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
                   targetEntity: habs[0] as number,
                   vehicle: "heavy",
                 });
+                // Land the party two days behind their supplies — waiting
+                // for a quiet noon never comes on a base whose propellant
+                // plant drinks every water delivery (now reserve-capped,
+                // but only once someone is alive to reserve for). The rare
+                // realistic-tables cargo failure is survivable: the needs
+                // pass rushes consumables the day the party lands.
+                const transitTicks = Math.round(vehicleClass(pack, "heavy").transitDays * 24) + 48;
+                for (let i = 0; i < party; i++) {
+                  world.enqueueCommand(
+                    "cmd-add-crew",
+                    {
+                      name: `Settler-${world.tickCount}-${i}`,
+                      skills: { engineer: 2, scientist: 1 },
+                      location: habs[0] as number,
+                    },
+                    world.tickCount + transitTicks,
+                  );
+                }
                 policy.lastCrewTick = world.tickCount; // cooldown the order too
               }
             }
