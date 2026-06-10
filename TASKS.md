@@ -37,12 +37,12 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 2 — Environment, Power, Thermal
 
-- [ ] [core] Environment system: lunar epoch clock (29.53-day synodic cycle), per-site illumination profile (south-pole site: ~90% lit ridge tiles, PSR tiles 0%), surface temperature curve (+127 °C ↔ −173 °C; PSR constant 40 K)
-- [ ] [data] Map definition: 64×64 tile Shackleton-rim site; tile fields: elevation, illuminationClass, iceConcentration (0–5.6 wt%), regolithType (highland/mare), slope
-- [ ] [core] Power system: producers (solar array — output scales with illumination; fission 40 kWe flat; RTG 0.1–1 kWe), storage (battery, regenerative fuel cell), consumers with priority tiers (life-support > thermal > industry); brownout sheds lowest tier first
-- [ ] [core] Thermal system: building heat balance — internal generation vs radiator capacity vs environment; night heating load; overheat/freeze damage states
-- [ ] [web] Minimal render: PixiJS tile map, building sprites (placeholder shapes), day/night tint, time controls (pause/1×/fast)
-- [ ] [web] HUD v0: power bar (gen/use/stored), clock showing lunar day fraction, alert toasts
+- [x] [core] Environment system: lunar epoch clock (29.53-day synodic cycle), per-site illumination profile (south-pole site: ~90% lit ridge tiles, PSR tiles 0%), surface temperature curve (+127 °C ↔ −173 °C; PSR constant 40 K)
+- [x] [data] Map definition: 64×64 tile Shackleton-rim site; tile fields: elevation, illuminationClass, iceConcentration (0–5.6 wt%), regolithType (highland/mare), slope
+- [x] [core] Power system: producers (solar array — output scales with illumination; fission 40 kWe flat; RTG 0.1–1 kWe), storage (battery, regenerative fuel cell), consumers with priority tiers (life-support > thermal > industry); brownout sheds lowest tier first
+- [x] [core] Thermal system: building heat balance — internal generation vs radiator capacity vs environment; night heating load; overheat/freeze damage states
+- [x] [web] Minimal render: PixiJS tile map, building sprites (placeholder shapes), day/night tint, time controls (pause/1×/fast)
+- [x] [web] HUD v0: power bar (gen/use/stored), clock showing lunar day fraction, alert toasts
 
 **Accept:** a solar+battery test base browns out and freezes during lunar night without fission/fuel-cell capacity; with 40 kWe fission it survives. Visible in browser.
 

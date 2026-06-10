@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { loadContentPack, type ContentPackDocuments } from "@lunaris/sim-core";
+import { loadContentPack, loadMap, type ContentPackDocuments } from "@lunaris/sim-core";
 
 /**
  * CI schema validation of the shipped base pack (docs/DATA-SCHEMA.md
@@ -24,6 +24,7 @@ function loadBasePack() {
     tech: readJson("tech"),
     events: readJson("events"),
     encyclopedia: readJson("encyclopedia"),
+    maps: readJson("maps"),
   };
   return loadContentPack("base", documents);
 }
@@ -33,11 +34,12 @@ describe("data/base content pack", () => {
     expect(() => loadBasePack()).not.toThrow();
   });
 
-  it("carries the full SDD §1 constants table", () => {
+  it("carries the full SDD §1 constants table plus the §5 thermal model set", () => {
     const pack = loadBasePack();
-    // SDD master table minus micrometeorite_flux (site-dependent, lives in
-    // the EVENTS hazard tables).
-    expect(pack.constants.length).toBe(45);
+    // 45 = SDD master table minus micrometeorite_flux (site-dependent,
+    // lives in the EVENTS hazard tables); +8 thermal/power model constants
+    // added with Milestone 2 (SDD §5).
+    expect(pack.constants.length).toBe(53);
   });
 
   it("spot-checks sourced values against the SDD", () => {
@@ -52,11 +54,60 @@ describe("data/base content pack", () => {
     expect(fission["massKg"]).toBe(6000);
   });
 
-  it("flags only known-speculative constants as speculative", () => {
+  it("flags only known-speculative and known-unsourced constants", () => {
     const pack = loadBasePack();
     const speculative = pack.constants.filter((c) => c.status === "speculative").map((c) => c.id);
     expect(speculative).toEqual(["cost_per_kg_surface"]);
-    const unsourced = pack.constants.filter((c) => c.status === "needs_source");
-    expect(unsourced).toEqual([]);
+    // Thermal model parameters await engineering citations (CLAUDE.md rule 5).
+    const unsourced = pack.constants
+      .filter((c) => c.status === "needs_source")
+      .map((c) => c.id)
+      .sort();
+    expect(unsourced).toEqual([
+      "building_specific_heat",
+      "heater_max_kw",
+      "temp_internal_target",
+      "thermal_damage_rate_per_hour",
+      "thermal_leak_kw_per_k_per_tonne",
+    ]);
+  });
+
+  it("ships the M2 tier-2 building set, resources, encyclopedia, and map", () => {
+    const pack = loadBasePack();
+    expect(pack.buildings.map((b) => b.id)).toEqual([
+      "battery-bank",
+      "fission-surface-power",
+      "foundation-habitat",
+      "radiator-wing",
+      "regen-fuel-cell",
+      "rtg-keepalive",
+      "solar-array-10kw",
+    ]);
+    expect(pack.building("fission-surface-power").powerKw).toBe(40);
+    expect(pack.building("battery-bank").storageKwh).toBe(200);
+    expect(pack.building("regen-fuel-cell").storageRoundTripEff).toBe(0.55);
+    expect(pack.resource("machine-components").importCostPerKg).toBe(100000);
+    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(8);
+    expect(pack.maps).toHaveLength(1);
+  });
+
+  it("the Shackleton map decodes to 64×64 with ridge, PSR, and LCROSS-range ice", () => {
+    const pack = loadBasePack();
+    const map = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
+    expect(map.width).toBe(64);
+    expect(map.height).toBe(64);
+    const counts = { A: 0, B: 0, C: 0 };
+    let maxIce = 0;
+    for (const tile of map.tiles) {
+      counts[tile.illumClass]++;
+      maxIce = Math.max(maxIce, tile.iceFrac);
+      if (tile.illumClass !== "C") {
+        expect(tile.iceFrac).toBe(0);
+      }
+    }
+    expect(counts.A).toBeGreaterThan(50); // buildable eternal-light ridge
+    expect(counts.C).toBeGreaterThan(500); // PSR crater interior
+    expect(maxIce).toBeLessThanOrEqual(0.085); // LCROSS upper bound
+    expect(maxIce).toBeGreaterThan(0.03);
   });
 });
