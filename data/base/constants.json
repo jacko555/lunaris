@@ -1,0 +1,390 @@
+[
+  {
+    "id": "gravity_lunar",
+    "value": 1.62,
+    "unit": "m/s2",
+    "source": "Standard lunar physical constant (~1/6 g)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "day_synodic",
+    "value": 29.53,
+    "unit": "Earth days",
+    "source": "Lunar synodic period, standard ephemeris value",
+    "as_of": "2026-06",
+    "status": "sourced",
+    "notes": "708.7 ticks per lunar day at 1 tick = 1 hour"
+  },
+  {
+    "id": "temp_day_max",
+    "value": 400,
+    "unit": "K",
+    "range": [380, 400],
+    "source": "Apollo/LRO Diviner equatorial daytime maximum (~+127 C)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "temp_night_min",
+    "value": 100,
+    "unit": "K",
+    "range": [95, 110],
+    "source": "Apollo/LRO Diviner nighttime minimum (~-173 C)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "temp_psr",
+    "value": 40,
+    "unit": "K",
+    "range": [25, 40],
+    "source": "LRO Diviner permanently-shadowed-region measurements",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "temp_lavatube",
+    "value": 253,
+    "unit": "K",
+    "source": "Mare Tranquillitatis pit thermal modeling (~-20 C stable; some pit floors ~17 C)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "illumination_peak_ridge",
+    "value": 0.9,
+    "unit": "fraction of cycle",
+    "range": [0.85, 0.94],
+    "source": "South-pole 'near-eternal light' ridge illumination studies (Shackleton rim)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dose_surface_chronic",
+    "value": 0.5,
+    "unit": "mSv/day",
+    "range": [0.4, 0.6],
+    "source": "GCR-dominated unshielded surface dose; LRO/CRaTER and DLR models (~200 mSv/yr)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dose_limit_30day",
+    "value": 250,
+    "unit": "mSv",
+    "source": "NASA 30-day short-term crew dose limit",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dose_goal_6month",
+    "value": 150,
+    "unit": "mSv",
+    "source": "NASA Moon-mission 6-month dose goal",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "spe_shelter_min",
+    "value": 4,
+    "unit": "g/cm2",
+    "source": "Regolith areal density dropping a major SPE below the 30-day limit",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "spe_shelter_safe",
+    "value": 10,
+    "unit": "g/cm2",
+    "source": "Regolith areal density giving factor-2 SPE margin",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "regolith_density_loose",
+    "value": 1500,
+    "unit": "kg/m3",
+    "range": [1400, 1600],
+    "source": "Loose lunar regolith bulk density (Apollo soil mechanics)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "regolith_o2_massfrac",
+    "value": 0.45,
+    "unit": "mass fraction",
+    "range": [0.4, 0.45],
+    "source": "Oxygen bound in regolith oxides, ~45 wt%",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "ice_concentration_psr",
+    "value": 0.056,
+    "unit": "mass fraction",
+    "range": [0.027, 0.085],
+    "source": "Colaprete et al. 2010 (NASA/LCROSS, Cabeus): 5.6 +/- 2.9 wt% water ice",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crew_o2_day",
+    "value": 0.84,
+    "unit": "kg/person/day",
+    "source": "NASA JSC Advanced Life Support (ICES-2017-87)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crew_co2_day",
+    "value": 1.0,
+    "unit": "kg/person/day",
+    "source": "NASA JSC Advanced Life Support (ICES-2017-87), CO2 output",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crew_water_potable_day",
+    "value": 3.54,
+    "unit": "kg/person/day",
+    "source": "NASA JSC Advanced Life Support (ICES-2017-87); hygiene adds roughly the same again",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crew_food_dry_day",
+    "value": 0.62,
+    "unit": "kg/person/day",
+    "source": "NASA JSC Advanced Life Support (ICES-2017-87), ~2,500-2,700 kcal",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crew_metabolic_heat",
+    "value": 137,
+    "unit": "W/person",
+    "range": [100, 170],
+    "source": "NASA ALS average metabolic rate 136.7 W/person",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "eclss_water_recovery",
+    "value": 0.93,
+    "unit": "fraction",
+    "range": [0.9, 0.98],
+    "source": "ISS ECLSS water recovery; Brine Processor Assembly pushed 93-94% to ~98%",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "mre_o2_yield",
+    "value": 0.28,
+    "unit": "kg O2 / kg regolith",
+    "range": [0.25, 0.3],
+    "source": "Molten regolith electrolysis recoverable O2 (~280 kg per 1,000 kg processed)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "mre_energy_per_kgo2",
+    "value": 33,
+    "unit": "kWh/kg O2",
+    "range": [26, 420],
+    "source": "MRE energy estimates; MIT/Schreiner low end, pessimistic reviews to ~420",
+    "as_of": "2026-06",
+    "status": "sourced",
+    "notes": "Huge literature range; default mid-low per SDD"
+  },
+  {
+    "id": "mre_plant_small",
+    "value": { "massKg": 400, "powerKw": 14, "o2KgPerYear": 1000 },
+    "unit": "composite",
+    "source": "MIT/Schreiner MRE plant sizing (highlands feed)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "mre_plant_large",
+    "value": { "massKg": 1593, "powerKw": 56.5, "o2KgPerYear": 10000 },
+    "unit": "composite",
+    "source": "MIT/Schreiner MRE plant sizing (highlands feed)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "ilmenite_threshold",
+    "value": 0.075,
+    "unit": "mass fraction",
+    "source": "Hydrogen reduction competitive at ilmenite >= 7.5 wt% (mare regolith)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "lox_energy_allin",
+    "value": 11.3,
+    "unit": "kWh/kg",
+    "range": [9, 15],
+    "source": "LOX production all-in chain (mining, electrolysis, cryocooling) at ~2.8 MW for ~2,178 t/yr",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "electrolysis_energy",
+    "value": 5.0,
+    "unit": "kWh/kg H2O",
+    "range": [4.5, 6.0],
+    "source": "PEM water electrolysis typical; stoichiometric 8:1 O2:H2 by mass",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "fission_unit",
+    "value": { "powerKwe": 40, "massKg": 6000, "lifeYears": 10 },
+    "unit": "composite",
+    "source": "NASA Fission Surface Power RFP: 40 kWe continuous >= 10 yr, <= 6,000 kg, 4 m x 6 m stowed",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "rtg_unit",
+    "value": { "powerKwe": 0.4, "massKg": 50 },
+    "unit": "composite",
+    "source": "Radioisotope generator class for night keep-alive loads (0.1-1 kWe)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "solar_specific_power",
+    "value": 100,
+    "unit": "W/kg",
+    "range": [80, 150],
+    "source": "Deployed space solar array class",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "battery_specific_energy",
+    "value": 200,
+    "unit": "Wh/kg",
+    "range": [150, 300],
+    "source": "Li-ion class secondary battery",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "rfc_specific_energy",
+    "value": 600,
+    "unit": "Wh/kg",
+    "range": [400, 1000],
+    "source": "Regenerative fuel cell, night-scale energy storage class",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crop_area_per_person",
+    "value": 45,
+    "unit": "m2",
+    "range": [40, 50],
+    "source": "NASA crop studies: full caloric diet area per person (high-light crops)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "crop_led_power",
+    "value": 300,
+    "unit": "W/m2",
+    "range": [200, 500],
+    "source": "LED grow-light power density; dominant food-production energy cost",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dv_tli",
+    "value": 3150,
+    "unit": "m/s",
+    "range": [3100, 3250],
+    "source": "LEO to trans-lunar injection delta-v budget",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dv_loi",
+    "value": 1000,
+    "unit": "m/s",
+    "range": [900, 1100],
+    "source": "Lunar orbit insertion delta-v budget",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dv_descent",
+    "value": 1900,
+    "unit": "m/s",
+    "range": [1800, 2000],
+    "source": "Lunar orbit to surface descent delta-v budget",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dv_ascent",
+    "value": 1900,
+    "unit": "m/s",
+    "source": "Surface to lunar orbit ascent delta-v budget (~= descent)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "comm_delay_oneway",
+    "value": 1.28,
+    "unit": "s",
+    "source": "Earth-Moon one-way light delay",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "transit_days",
+    "value": 4,
+    "unit": "days",
+    "range": [3, 5],
+    "source": "Typical Earth-Moon cargo/crew transit time",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "moonquake_major_rate",
+    "value": 0.3,
+    "unit": "events/yr",
+    "range": [0.1, 0.5],
+    "source": "Shallow moonquakes felt at base scale (Apollo seismic network)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "launch_failure_p_clps",
+    "value": { "early": 0.5, "mature": 0.15 },
+    "unit": "probability per mission",
+    "source": "CLPS historical record: 1 full success in first 4 landing attempts (2024-2025), improving with tech",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "launch_failure_p_heavy",
+    "value": 0.05,
+    "unit": "probability per mission",
+    "range": [0.02, 0.08],
+    "source": "Mature heavy-lift launch reliability class",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "cost_per_kg_surface",
+    "value": { "legacy": 1000000, "clps": 250000, "heavy": 100000, "starshipTarget": 10000 },
+    "unit": "USD/kg to lunar surface",
+    "source": "Tiered cost classes; legacy/CLPS from program costs, Starship-class tier is a company target",
+    "as_of": "2026-06",
+    "status": "speculative",
+    "notes": "Legacy and CLPS tiers are grounded in program history; the Starship-class tier is an undemonstrated target, hence speculative status for the composite"
+  }
+]
