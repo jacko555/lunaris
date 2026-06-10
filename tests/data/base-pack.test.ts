@@ -25,6 +25,7 @@ function loadBasePack() {
     events: readJson("events"),
     encyclopedia: readJson("encyclopedia"),
     maps: readJson("maps"),
+    scenarios: readJson("scenarios"),
   };
   return loadContentPack("base", documents);
 }
@@ -39,8 +40,8 @@ describe("data/base content pack", () => {
     // 45 = SDD master table minus micrometeorite_flux (site-dependent,
     // lives in the EVENTS hazard tables); +8 thermal/power constants (M2);
     // +20 crew/ECLSS/radiation/health (M3); +19 construction/dust/repair/
-    // economy/vehicle constants (M4/M5).
-    expect(pack.constants.length).toBe(92);
+    // economy/vehicle (M4/M5); +7 population/food/export (M6/M7).
+    expect(pack.constants.length).toBe(99);
   });
 
   it("spot-checks sourced values against the SDD", () => {
@@ -60,8 +61,10 @@ describe("data/base content pack", () => {
     const speculative = pack.constants.filter((c) => c.status === "speculative").map((c) => c.id);
     expect(speculative).toEqual([
       "cost_per_kg_surface",
+      "he3_demand_kg_per_day",
       "lox_demand_kg_per_day",
       "lox_price_usd_per_kg",
+      "mass_driver_demand_multiplier",
       "vehicle_starship",
     ]);
     // Model parameters awaiting engineering citations (CLAUDE.md rule 5).
@@ -70,6 +73,7 @@ describe("data/base content pack", () => {
       .map((c) => c.id)
       .sort();
     expect(unsourced).toEqual([
+      "birth_rate_per_year_per_10_crew",
       "building_specific_heat",
       "clinic_heal_per_day",
       "clinic_medkit_per_patient_day",
@@ -82,8 +86,11 @@ describe("data/base content pack", () => {
       "dehydration_health_per_day",
       "dust_cleaning_per_day",
       "dust_landing_spike",
+      "fresh_food_morale_bonus",
       "heater_max_kw",
       "hypoxia_health_per_hour",
+      "immigration_wave_days",
+      "immigration_wave_size",
       "morale_baseline",
       "morale_recovery_per_day",
       "o2_reserve_target_days",
@@ -102,49 +109,48 @@ describe("data/base content pack", () => {
 
   it("ships the tier 0–3 building set, resources, reactions, tech, events, and map", () => {
     const pack = loadBasePack();
-    expect(pack.buildings.map((b) => b.id)).toEqual([
-      "battery-bank",
-      "clinic",
-      "comms-tower",
-      "cryo-plant",
-      "eclss-core",
-      "electrolyzer",
-      "exercise-module",
-      "field-lab",
-      "fission-surface-power",
+    expect(pack.buildings).toHaveLength(39); // tiers 1-6 catalog
+    for (const id of [
       "foundation-habitat",
       "ice-harvester",
-      "landing-pad",
-      "mre-plant-l",
-      "mre-plant-s",
-      "propellant-depot-pad",
-      "radiator-wing",
-      "regen-fuel-cell",
-      "regolith-berm",
-      "regolith-printer",
-      "rtg-keepalive",
-      "sabatier-unit",
-      "solar-array-10kw",
-      "storm-shelter",
-      "volatile-oven",
-      "water-gas-storage",
-    ]);
+      "greenhouse-module",
+      "agri-dome",
+      "workshop",
+      "refinery",
+      "fab-plant",
+      "printed-habitat-block",
+      "mass-driver-segment",
+      "volatile-combine",
+      "crater-dome-segment",
+      "civic-center",
+    ]) {
+      expect(pack.building(id).id).toBe(id);
+    }
     expect(pack.building("fission-surface-power").techRequired).toBe("surface_power_40kw");
     expect(pack.building("ice-harvester").mining?.kgPerDay).toBe(720);
     expect(pack.building("mre-plant-s").reactionKgPerDay["mre"]).toBe(2.74);
     expect(pack.reaction("mre").outputs.find((o) => o.resource === "o2-gas")?.kg).toBe(28);
     expect(pack.reaction("sabatier").inputs.map((i) => i.kg)).toEqual([44, 8]);
     expect(pack.tech).toHaveLength(34);
+    expect(pack.scenarios).toHaveLength(5);
+    expect(pack.reactions).toHaveLength(10);
+    expect(pack.building("volatile-combine").reactionKgPerDay["he3-extraction"]).toBe(0.036);
     expect(pack.techNode("orbital_refueling").costScience).toBe(120);
     expect(pack.events.map((e) => e.id)).toEqual([
+      "accords-safety-zone",
+      "autonomy-referendum",
+      "budget-boost",
+      "budget-cut",
+      "eclss-component-failure",
       "fission-scram",
       "micrometeorite",
       "moonquake",
+      "resupply-slip",
       "spe-major",
       "spe-minor",
     ]);
     expect(pack.resource("regolith").groundSourced).toBe(true);
-    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(40);
+    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(56);
     expect(pack.maps).toHaveLength(1);
   });
 

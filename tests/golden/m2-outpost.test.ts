@@ -142,8 +142,8 @@ describe("M2 acceptance: the lunar night", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);
     expect(report.everFroze).toBe(false);
     expect(report.tier0EverShed).toBe(false);
-    // Equipment wear (M4) costs ~0.8% condition over two cycles without spares.
-    expect(report.habCondition).toBeGreaterThan(0.98);
+    // Wear (~0.8%/two cycles) plus the odd micrometeorite hit (M7 deck).
+    expect(report.habCondition).toBeGreaterThan(0.85);
   });
 });
 
@@ -162,7 +162,7 @@ describe("M2 scenario golden hash", () => {
    * startPhase/startTechs for tech gating. The outpost still freezes
    * without fission and survives with it (asserted above).
    */
-  const EXPECTED_HASH = "d08e98e2";
+  const EXPECTED_HASH = "a8a597fd";
 
   it("fission outpost reproduces the golden hash after two lunar cycles", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);

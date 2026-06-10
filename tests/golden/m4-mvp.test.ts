@@ -119,10 +119,11 @@ export function makeMvpWorld(): World {
   place("exercise-module", 7, 2); // 13
   place("clinic", 9, 2); // 14
   place("comms-tower", 9, 0); // 15
+  place("eclss-core", 5, 4); // 16 — redundancy against the outage deck
   // …plus the M4 ISRU chain and printer.
-  world.enqueueCommand(CMD_PLACE_BUILDING, { defId: "ice-harvester", x: mine.x, y: mine.y }); // 16
-  place("volatile-oven", 7, 4); // 17
-  place("regolith-printer", 9, 4); // 18
+  world.enqueueCommand(CMD_PLACE_BUILDING, { defId: "ice-harvester", x: mine.x, y: mine.y }); // 17
+  place("volatile-oven", 7, 6); // 18
+  place("regolith-printer", 9, 4); // 19
 
   world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
     manifest: [
@@ -179,6 +180,6 @@ describe("M4 acceptance: v0.1 MVP baseline", () => {
   });
 
   it("reproduces the MVP golden hash after 5,000 ticks (CLAUDE.md rule 6)", () => {
-    expect(world.hash()).toBe("4f807851");
+    expect(world.hash()).toBe("a9341726");
   });
 });

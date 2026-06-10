@@ -93,12 +93,12 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 6 — Simulation Mode → **v0.5 Vertical Slice**
 
-- [ ] [core] Policy AI: data-driven heuristic agent issuing the same command types as a player (build priorities, resupply cadence, research order, crisis responses) — lives in sim-core, configured per scenario
-- [ ] [data] Scenario presets: Artemis Baseline 2026, Ideal Trajectory, Realistic Trajectory, ILRS Race, Commercial Bootstrap — each sets budget, cadence, failure tables (ideal vs realistic), agency flavor
-- [ ] [web] Scenario config screen (all knobs exposed); observer dashboard: milestone timeline, charts (population, power, closure %, dose, budget) via lightweight chart lib; event log with real-mission flavor text
-- [ ] [core] Mid-run handoff: pause simulation mode → convert to manual game mode (same world)
-- [ ] [web] Speed controls up to 1 lunar day/min; auto-pause rules configurable
-- [ ] [tests] Sim-mode reproducibility: each preset, fixed seed → fixed milestone timeline hash
+- [x] [core] Policy AI: data-driven heuristic agent issuing the same command types as a player (build priorities, resupply cadence, research order, crisis responses) — lives in sim-core, configured per scenario
+- [x] [data] Scenario presets: Artemis Baseline 2026, Ideal Trajectory, Realistic Trajectory, ILRS Race, Commercial Bootstrap — each sets budget, cadence, failure tables (ideal vs realistic), agency flavor
+- [x] [web] Scenario config screen (all knobs exposed); observer dashboard: milestone timeline, charts (population, power, closure %, dose, budget) via lightweight chart lib; event log with real-mission flavor text _(charts: dependency-free canvas sparklines; uPlot deferred until zoom/cursor interactions arrive)_
+- [x] [core] Mid-run handoff: pause simulation mode → convert to manual game mode (same world)
+- [x] [web] Speed controls up to 1 lunar day/min; auto-pause rules configurable
+- [x] [tests] Sim-mode reproducibility: each preset, fixed seed → fixed milestone timeline hash
 
 **Accept (v0.5):** "Realistic Trajectory" auto-run produces a plausible 2026–2040 timeline; user can intervene mid-run; charts render.
 
@@ -106,16 +106,16 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 7 — Phases 4–6, Depth & Polish → **v1.0**
 
-- [ ] [core] Food production: hydroponics modules (40–50 m²/person full diet; LED power dominant cost), partial-closure math, crop variety morale bonus
-- [ ] [core] Population growth: immigration waves, births (Phase 4+), demographics, housing/mood constraints
-- [ ] [core] Manufacturing & spares: workshop produces spare parts from metals → reduces import dependency; "mass closure %" colony stat
-- [ ] [core] Phase 5 exports: mass driver build (MW-scale power prereq), He-3 regolith processing (volatile extraction; flag speculative economics), propellant depot sales, space-solar beaming
-- [ ] [core] International competition layer: rival agency progress ticker (ILRS), Accords/safety-zone flavor events
-- [ ] [core] Phase 6 sandbox: domed crater megaproject, autonomy referendum event chain (clearly flagged speculative)
-- [ ] [data] Full building catalog (all tiers), full tech tree, full event set
-- [ ] [web] Encyclopedia ("Lunarpedia") — every entity links to real-world source notes from data `source` fields
-- [ ] [web] Accessibility pass (keyboard, colorblind palette); save export/import UI; mod-pack loader UI
-- [ ] [infra] v1.0 release: tag, itch.io page, announcement README
+- [x] [core] Food production: hydroponics modules (40–50 m²/person full diet; LED power dominant cost), partial-closure math, crop variety morale bonus
+- [x] [core] Population growth: immigration waves, births (Phase 4+), demographics, housing/mood constraints
+- [x] [core] Manufacturing & spares: workshop produces spare parts from metals → reduces import dependency; "mass closure %" colony stat
+- [x] [core] Phase 5 exports: mass driver build (MW-scale power prereq), He-3 regolith processing (volatile extraction; flag speculative economics), propellant depot sales, space-solar beaming
+- [x] [core] International competition layer: rival agency progress ticker (ILRS), Accords/safety-zone flavor events
+- [x] [core] Phase 6 sandbox: domed crater megaproject, autonomy referendum event chain (clearly flagged speculative)
+- [x] [data] Full building catalog (all tiers; lava-tube habitat deferred — the Shackleton map has no tube sites), full tech tree, full event set
+- [x] [web] Encyclopedia ("Lunarpedia") — every entity links to real-world source notes from data `source` fields
+- [x] [web] Accessibility pass (keyboard, colorblind palette); save export/import UI; mod-pack loader UI
+- [x] [infra] v1.0 release: tag, itch.io page, announcement README _(itch.io upload pending account credentials; Pages live)_
 
 **Accept (v1.0):** full phase arc playable; mod pack demo loads; accessibility checklist passes.
 

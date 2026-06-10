@@ -132,6 +132,7 @@ function makePlaythrough(): World {
   place("exercise-module", 7, 0, 700);
   place("exercise-module", 7, 2, 700);
   place("clinic", 9, 2, 700);
+  place("eclss-core", 5, 4, 700); // redundancy: the M7 outage deck WILL hit one
   world.enqueueCommand(
     CMD_SCHEDULE_RESUPPLY,
     {
@@ -145,7 +146,7 @@ function makePlaythrough(): World {
       arrivalTick: 700,
       // Entity 26: ground segment 4–12, probe missions 13–15, sorties
       // 16–18, then the 11 outpost placements 19–29 → storage is the 8th.
-      targetEntity: 26,
+      targetEntity: -1, // sentinel: resolve at execution
       vehicle: "heavy",
     },
     700,
@@ -160,13 +161,13 @@ function makePlaythrough(): World {
       ],
       arrivalTick: 1500,
       repeatTicks: 709,
-      targetEntity: 26,
+      targetEntity: -1, // sentinel: resolve at execution
       vehicle: "heavy",
     },
     710,
   );
   for (const name of ["Reid", "Glover", "Koch", "Hansen", "Mann", "Wakata"]) {
-    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: 22 }, 900);
+    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: -1 }, 900);
   }
 
   // ── Phase 3 inputs: ISRU demo in the PSR ──
@@ -191,11 +192,11 @@ describe("M5 acceptance: full Phase 0 → 3 playthrough", () => {
     expect(phase.phase).toBe(3);
     expect(phaseAt[1]).toBeLessThan(phaseAt[2] as number);
     expect(phaseAt[2]).toBeLessThan(phaseAt[3] as number);
-    expect(phase.milestones).toContain("phase-1");
-    expect(phase.milestones).toContain("phase-2");
-    expect(phase.milestones).toContain("phase-3");
-    expect(phase.milestones).toContain("night-survived");
-    expect(phase.milestones).toContain("isru-demo");
+    expect(phase.milestones.some((m) => m.id === "phase-1")).toBe(true);
+    expect(phase.milestones.some((m) => m.id === "phase-2")).toBe(true);
+    expect(phase.milestones.some((m) => m.id === "phase-3")).toBe(true);
+    expect(phase.milestones.some((m) => m.id === "night-survived")).toBe(true);
+    expect(phase.milestones.some((m) => m.id === "isru-demo")).toBe(true);
   });
 
   it("the crew is alive at Phase 3", () => {
@@ -204,6 +205,6 @@ describe("M5 acceptance: full Phase 0 → 3 playthrough", () => {
   });
 
   it("reproduces the playthrough golden hash (CLAUDE.md rule 6)", () => {
-    expect(world.hash()).toBe("98fd6a38");
+    expect(world.hash()).toBe("aa9a51ee");
   });
 });
