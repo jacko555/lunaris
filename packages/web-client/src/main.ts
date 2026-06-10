@@ -2,12 +2,11 @@ import {
   BUILDING_COMPONENT,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
-  CMD_CANCEL_RESUPPLY,
   CMD_PLACE_BUILDING,
+  CMD_QUEUE_BUILD,
   CMD_SCHEDULE_RESUPPLY,
   CMD_TRIGGER_SPE,
   CREW_COMPONENT,
-  RESUPPLY_COMPONENT,
   createGameDef,
   createWorld,
   loadContentPack,
@@ -15,7 +14,6 @@ import {
   tileAt,
   type BuildingComponent,
   type CrewComponent,
-  type ResupplyComponent,
   type World,
 } from "@lunaris/sim-core";
 import constantsDoc from "../../../data/base/constants.json";
@@ -27,8 +25,18 @@ import eventsDoc from "../../../data/base/events.json";
 import encyclopediaDoc from "../../../data/base/encyclopedia.json";
 import mapsDoc from "../../../data/base/maps.json";
 import { Hud } from "./hud.js";
+import {
+  handleResearchEvents,
+  renderBuildMenu,
+  renderColonyPanel,
+  renderFlows,
+  renderSupplyPanel,
+  renderTechPanel,
+  type UiState,
+} from "./panels.js";
 import { MapRenderer } from "./renderer.js";
 import { SimHost, type SimSpeed } from "./sim-host.js";
+import { renderTutorial } from "./tutorial.js";
 
 const pack = loadContentPack("base", {
   constants: constantsDoc,
@@ -43,11 +51,9 @@ const pack = loadContentPack("base", {
 const map = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
 const gameDef = createGameDef(pack, map);
 const SEED = 20260610;
-const TICKS_PER_LUNAR_DAY = 709;
 const HAB = 4;
-const STORAGE_DEPOT = 11;
+const STORAGE_DEPOT = 7;
 
-/** Find a flat class-B highland window for the demo base (deterministic). */
 function findBuildSite(width: number, height: number): { x: number; y: number } {
   for (let y = 2; y < map.height - height - 2; y++) {
     for (let x = 2; x < map.width - width - 2; x++) {
@@ -67,53 +73,85 @@ function findBuildSite(width: number, height: number): { x: number; y: number } 
 }
 
 const site = findBuildSite(12, 8);
-const CREW_NAMES = ["Reid", "Glover", "Koch", "Hansen", "Mann", "Wakata"];
+const CREW_NAMES = ["Reid", "Glover", "Koch", "Hansen"];
 
-/** The Milestone 3 crewed outpost (mirrors tests/golden/m3-crew.test.ts). */
-function makeCrewedWorld(withResupply: boolean): World {
+/**
+ * "First Night" tutorial scenario (GDD §5): a bare-bones Phase-2 start —
+ * habitat, solar, batteries, storage, field labs — with the crew and seed
+ * cargo inbound. The player must build power, thermal, ECLSS, and shelter
+ * before the night, then research their way to first lunar water.
+ */
+function makeTutorialWorld(): World {
   const world = createWorld(gameDef, {
     seed: SEED,
-    config: { scenario: withResupply ? "m3-crewed-outpost" : "m3-resupply-cutoff" },
+    config: {
+      scenario: "first-night-tutorial",
+      startPhase: 2,
+      startBudgetUsd: 25e9,
+      annualBudgetUsd: 8e9,
+      failureTables: "ideal",
+      startTechs: [
+        "eclss_baseline",
+        "surface_power_40kw",
+        "regen_fuel_cells",
+        "ice_prospecting",
+        "night_landing_nav",
+      ],
+    },
   });
   const place = (defId: string, dx: number, dy: number): void => {
     world.enqueueCommand(CMD_PLACE_BUILDING, { defId, x: site.x + dx, y: site.y + dy });
   };
   place("foundation-habitat", 0, 0); // 4
-  place("foundation-habitat", 0, 3); // 5
-  place("fission-surface-power", 3, 0); // 6
-  place("radiator-wing", 3, 3); // 7
-  place("radiator-wing", 4, 3); // 8
-  place("eclss-core", 5, 0); // 9
-  place("storm-shelter", 5, 2); // 10
-  place("water-gas-storage", 6, 5); // 11
-  place("exercise-module", 7, 0); // 12
-  place("exercise-module", 7, 2); // 13
-  place("clinic", 9, 2); // 14
-  place("comms-tower", 9, 0); // 15
+  place("solar-array-10kw", 3, 0); // 5
+  place("solar-array-10kw", 5, 0); // 6
+  place("water-gas-storage", 6, 5); // 7
+  place("battery-bank", 3, 3); // 8
+  place("battery-bank", 4, 3); // 9
+  place("field-lab", 9, 0); // 10
+  place("field-lab", 10, 0); // 11
+  // Seed cargo: consumables plus the hardware mass for the buildings the
+  // tutorial asks for (fission 6 t, radiator 0.8 t, ECLSS 2.5 t, shelter
+  // 3 t). Heavy-lift caps at 12 t, so three landers.
   world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
     manifest: [
-      { resource: "food", kg: 250 },
-      { resource: "water", kg: 2500 },
-      { resource: "o2-gas", kg: 150 },
+      { resource: "food", kg: 300 },
+      { resource: "water", kg: 2000 },
+      { resource: "o2-gas", kg: 200 },
       { resource: "medkits", kg: 10 },
+      { resource: "spare-parts", kg: 800 },
     ],
     arrivalTick: 0,
     targetEntity: STORAGE_DEPOT,
+    vehicle: "heavy",
   });
-  if (withResupply) {
-    world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
-      manifest: [
-        { resource: "food", kg: 140 },
-        { resource: "water", kg: 250 },
-        { resource: "medkits", kg: 5 },
-      ],
-      arrivalTick: TICKS_PER_LUNAR_DAY,
-      repeatTicks: TICKS_PER_LUNAR_DAY,
-      targetEntity: STORAGE_DEPOT,
-    });
-  }
+  world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
+    manifest: [{ resource: "machine-components", kg: 8000 }],
+    arrivalTick: 0,
+    targetEntity: STORAGE_DEPOT,
+    vehicle: "heavy",
+  });
+  world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
+    manifest: [{ resource: "machine-components", kg: 7000 }],
+    arrivalTick: 24,
+    targetEntity: STORAGE_DEPOT,
+    vehicle: "heavy",
+  });
+  world.enqueueCommand(CMD_SCHEDULE_RESUPPLY, {
+    manifest: [
+      { resource: "food", kg: 120 },
+      { resource: "medkits", kg: 5 },
+      { resource: "spare-parts", kg: 300 },
+    ],
+    arrivalTick: 709,
+    repeatTicks: 709,
+    targetEntity: STORAGE_DEPOT,
+    vehicle: "heavy",
+  });
+  // Crew touch down on day ~10 — enough time for a decisive player to have
+  // the ECLSS core and reactor standing (the GDD's forgiving-early rule).
   for (const name of CREW_NAMES) {
-    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: HAB }, 1);
+    world.enqueueCommand(CMD_ADD_CREW, { name, skills: { engineer: 2 }, location: HAB }, 250);
   }
   return world;
 }
@@ -128,15 +166,57 @@ async function start(): Promise<void> {
   const renderer = new MapRenderer(map, pack);
   await renderer.init(document.querySelector("#map-wrap") as HTMLElement);
 
-  const host = new SimHost(makeCrewedWorld(true));
+  const host = new SimHost(makeTutorialWorld());
   const hud = new Hud(pack.number("day_synodic") * 24, pack);
   hud.resync(host.world);
 
-  // Click-to-inspect: map a canvas click to the building occupying the tile.
+  const ui: UiState = { tab: "roster", selectedBuild: null, flowResource: "water" };
+  const panels: Record<string, HTMLElement> = {
+    roster: document.querySelector("#roster") as HTMLElement,
+    build: document.querySelector("#build-panel") as HTMLElement,
+    tech: document.querySelector("#tech-panel") as HTMLElement,
+    colony: document.querySelector("#colony-panel") as HTMLElement,
+    supply: document.querySelector("#supply-panel") as HTMLElement,
+    flows: document.querySelector("#flows-panel") as HTMLElement,
+  };
+  const tabBar = document.querySelector("#tabs") as HTMLElement;
+  const tabNames: [string, string][] = [
+    ["roster", "Crew"],
+    ["build", "Build"],
+    ["tech", "Tech"],
+    ["colony", "Colony"],
+    ["supply", "Supply"],
+    ["flows", "Flows"],
+  ];
+  const setTab = (tab: string): void => {
+    ui.tab = tab;
+    for (const [name, element] of Object.entries(panels)) {
+      element.hidden = name !== tab;
+    }
+    for (const button of tabBar.children) {
+      button.classList.toggle("active", button.getAttribute("data-tab") === tab);
+    }
+  };
+  for (const [name, label] of tabNames) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.setAttribute("data-tab", name);
+    button.addEventListener("click", () => setTab(name));
+    tabBar.appendChild(button);
+  }
+  setTab("roster");
+  handleResearchEvents(panels["tech"] as HTMLElement, () => host.world);
+
+  // ── map interaction: inspect, or place when a build card is selected ──
   renderer.app.canvas.addEventListener("click", (event) => {
     const rect = renderer.app.canvas.getBoundingClientRect();
     const tx = Math.floor(((event.clientX - rect.left) / rect.width) * map.width);
     const ty = Math.floor(((event.clientY - rect.top) / rect.height) * map.height);
+    if (ui.selectedBuild !== null) {
+      host.world.enqueueCommand(CMD_QUEUE_BUILD, { defId: ui.selectedBuild, x: tx, y: ty });
+      ui.selectedBuild = null;
+      return;
+    }
     const buildings = host.world.store<BuildingComponent>(BUILDING_COMPONENT);
     let found: number | null = null;
     for (const [entity, building] of buildings.entries()) {
@@ -146,6 +226,11 @@ async function start(): Promise<void> {
       }
     }
     hud.select(found);
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      ui.selectedBuild = null;
+    }
   });
 
   // ── controls ──
@@ -182,22 +267,25 @@ async function start(): Promise<void> {
   );
   setSpeed(10);
 
-  addButton("Reset outpost", () => {
-    host.replaceWorld(makeCrewedWorld(true));
+  addButton("Restart tutorial", () => {
+    host.replaceWorld(makeTutorialWorld());
     hud.resync(host.world);
-  });
-  addButton("Kill resupply", () => {
-    const missions = host.world.store<ResupplyComponent>(RESUPPLY_COMPONENT);
-    for (const entity of missions.entities()) {
-      host.world.enqueueCommand(CMD_CANCEL_RESUPPLY, { entity });
-    }
   });
   addButton("☀ SPE 300 mSv", () => {
     host.world.enqueueCommand(CMD_TRIGGER_SPE, { mSv: 300 });
   });
   addButton("Crew → shelter", () => {
+    const shelters = [...host.world.store<BuildingComponent>(BUILDING_COMPONENT).entries()].filter(
+      ([, b]) => (pack.building(b.defId).services.shelter ?? 0) > 0,
+    );
+    if (shelters.length === 0) {
+      return;
+    }
     for (const entity of livingCrewEntities(host.world)) {
-      host.world.enqueueCommand(CMD_ASSIGN_CREW, { crew: entity, location: 10 });
+      host.world.enqueueCommand(CMD_ASSIGN_CREW, {
+        crew: entity,
+        location: (shelters[0] as [number, BuildingComponent])[0],
+      });
     }
   });
   addButton("Crew → habitat", () => {
@@ -207,15 +295,36 @@ async function start(): Promise<void> {
   });
 
   if (import.meta.env.DEV) {
-    // Dev-only inspection handle (debugging aid, not part of the app API).
     (window as unknown as Record<string, unknown>)["__lunaris"] = { host, renderer, pack, map };
   }
 
   // ── frame loop ──
+  const tutorialRoot = document.querySelector("#tutorial") as HTMLElement;
+  let frameCount = 0;
   const frame = (nowMs: number): void => {
     host.pump(nowMs);
     renderer.draw(host.world);
     hud.update(host.world);
+    if (frameCount % 15 === 0) {
+      // Panels re-render 4×/s: cheap DOM, no need for per-frame churn.
+      renderTutorial(tutorialRoot, host.world);
+      if (ui.tab === "build") {
+        renderBuildMenu(panels["build"] as HTMLElement, host.world, pack, ui, (defId) => {
+          ui.selectedBuild = defId;
+        });
+      } else if (ui.tab === "tech") {
+        renderTechPanel(panels["tech"] as HTMLElement, host.world, pack);
+      } else if (ui.tab === "colony") {
+        renderColonyPanel(panels["colony"] as HTMLElement, host.world);
+      } else if (ui.tab === "supply") {
+        renderSupplyPanel(panels["supply"] as HTMLElement, host.world, pack, STORAGE_DEPOT);
+      } else if (ui.tab === "flows") {
+        renderFlows(panels["flows"] as HTMLElement, host.world, pack, ui, (resource) => {
+          ui.flowResource = resource;
+        });
+      }
+    }
+    frameCount++;
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

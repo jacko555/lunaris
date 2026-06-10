@@ -3,12 +3,14 @@ import {
   BUILDING_COMPONENT,
   ENV_ENTITY,
   ENVIRONMENT_COMPONENT,
+  SITE_COMPONENT,
   THERMAL_COMPONENT,
   tileAt,
   type BuildingComponent,
   type ContentPack,
   type EnvironmentComponent,
   type LunarMap,
+  type SiteComponent,
   type ThermalComponent,
   type World,
 } from "@lunaris/sim-core";
@@ -23,6 +25,24 @@ const BUILDING_COLORS: Record<string, number> = {
   "fission-surface-power": 0xc084fc,
   "rtg-keepalive": 0xfb923c,
   "radiator-wing": 0xe2e8f0,
+  "storm-shelter": 0x94a3b8,
+  "eclss-core": 0x38bdf8,
+  "water-gas-storage": 0x0ea5e9,
+  "comms-tower": 0xf472b6,
+  "exercise-module": 0xfca5a5,
+  clinic: 0xef4444,
+  "sabatier-unit": 0x84cc16,
+  "field-lab": 0xffffff,
+  "ice-harvester": 0x67e8f9,
+  "volatile-oven": 0xf97316,
+  electrolyzer: 0x60a5fa,
+  "cryo-plant": 0xa5f3fc,
+  "mre-plant-s": 0x9333ea,
+  "mre-plant-l": 0x7e22ce,
+  "regolith-printer": 0xb45309,
+  "regolith-berm": 0x78716c,
+  "landing-pad": 0x44403c,
+  "propellant-depot-pad": 0x22c55e,
 };
 
 function tileColor(map: LunarMap, x: number, y: number): number {
@@ -114,6 +134,29 @@ export class MapRenderer {
         this.buildingLayer
           .rect(px + 3, py + 3, w * TILE_PX - 6, h * TILE_PX - 6)
           .stroke({ color: 0xf2c94c, width: 1 });
+      }
+    }
+
+    // Construction sites: dashed-feel outline filling up with progress.
+    const sites = world.store<SiteComponent>(SITE_COMPONENT);
+    for (const [, site] of sites.entries()) {
+      const def = this.pack.building(site.defId);
+      const [w, h] = def.footprint;
+      const px = site.x * TILE_PX;
+      const py = site.y * TILE_PX;
+      const progress = Math.min(1, site.progressHours / site.totalHours);
+      this.buildingLayer
+        .rect(px + 1, py + 1, w * TILE_PX - 2, h * TILE_PX - 2)
+        .stroke({ color: 0x6c9ef8, width: 1 });
+      if (progress > 0) {
+        this.buildingLayer
+          .rect(
+            px + 2,
+            py + 2 + (h * TILE_PX - 4) * (1 - progress),
+            w * TILE_PX - 4,
+            (h * TILE_PX - 4) * progress,
+          )
+          .fill({ color: 0x6c9ef8, alpha: 0.4 });
       }
     }
 
