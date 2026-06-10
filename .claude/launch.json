@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-client",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@lunaris/web-client", "dev", "--port", "5199", "--strictPort"],
+      "port": 5199,
+      "autoPort": false
+    }
+  ]
+}

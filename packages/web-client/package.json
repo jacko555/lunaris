@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@lunaris/sim-core": "workspace:*"
+    "@lunaris/sim-core": "workspace:*",
+    "pixi.js": "^8.6.2"
   },
   "devDependencies": {
     "vite": "^6.0.5"
