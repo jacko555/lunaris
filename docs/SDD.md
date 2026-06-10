@@ -101,6 +101,8 @@ Per tick: `generation = Σ producers`, `demand = Σ consumers (by priority tier)
 
 Simplify: each building has `heatGenW`, `radiatorW` (rated at day conditions; ×1.6 effective at night), `insulationClass`. State machine: NOMINAL → OVERHEAT (>310 K internal: equipment efficiency −25%, then damage) / FREEZE (<273 K: water systems offline, then damage). Night heating draws Tier-1 power: `heaterW = k × (T_target − T_env) / insulationClass`.
 
+**Implemented model parameters (M2, machine-readable in data/base/constants.json):** thermal management applies to active buildings only (`heatKw > 0` or `powerKw < 0`); passive structures (solar arrays) degrade via dust/wear instead. Envelope conductance scales with size: `U = thermal_leak_kw_per_k_per_tonne (0.00083, needs_source) × massKg/1000` (12 t hab → 0.01 kW/K). Thermal mass `C = massKg × building_specific_heat (1.0 kJ/kg·K, needs_source) / 3600` kWh/K. Setpoint `temp_internal_target = 295 K` (needs_source); freeze 273 K / overheat 310 K thresholds as above; heater capped at `heater_max_kw = 5` per building (needs_source); damage `thermal_damage_rate_per_hour = 0.002` condition/h outside the band (needs_source). Radiators throttle to hold the setpoint; `radiatorShared` wings (ISS-HRS style) pool their capacity base-wide, allocated in entity order; heater requests are posted one tick ahead as Tier-1 demand (deterministic Env → Power → Thermal order).
+
 ---
 
 ## 6. ECLSS Model

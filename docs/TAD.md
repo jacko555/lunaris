@@ -22,6 +22,7 @@
 ```
 
 - Worker messages: `{type:'cmds'|'speed'|'save'|'load'}` in; `{type:'snapshot'|'events'|'alert'}` out. Snapshot = diffed component arrays (structured clone), 10 Hz max to renderer; renderer interpolates.
+- _Status (M2):_ the sim currently runs on the main thread behind the web-client `SimHost` seam; the worker migration is scheduled with the M4 MVP deploy (entity counts and tick rates to that point are far below the performance budget).
 
 ## 3. ECS
 
