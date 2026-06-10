@@ -62,5 +62,125 @@
     "realWorld": "Represents the imported dry mass of all early-phase hardware; cost dominated by $/kg-to-surface launch tiers.",
     "sources": ["ECONOMY.md import cost tiers"],
     "as_of": "2026-06"
+  },
+  {
+    "id": "enc-water",
+    "title": "Water",
+    "body": "Drinking, hygiene, food prep — and via electrolysis, breathable oxygen and rocket propellant. Each crew member needs 3.54 kg of potable water a day, roughly doubled by hygiene. The ISS recycles over 90% of it; so does your ECLSS core.",
+    "realWorld": "NASA ALS: 3.54 kg/person-day potable. ISS ECLSS water recovery reached ~98% with the Brine Processor Assembly.",
+    "sources": ["NASA JSC ALS (ICES-2017-87)", "ISS ECLSS BPA"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-wastewater",
+    "title": "Wastewater",
+    "body": "Urine, cabin humidity condensate, and hygiene gray water. Not waste at all — it is tomorrow's drinking water, minus the brine the recycler cannot yet reclaim.",
+    "realWorld": "ISS processes all three streams; brine processing was the last few percent of closure.",
+    "sources": ["ISS ECLSS water recovery"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-o2",
+    "title": "Oxygen",
+    "body": "0.84 kg per crew member per day, every day, no exceptions. Early bases electrolyze it from water; Phase 3 pulls it straight out of regolith, which is 45% oxygen by mass.",
+    "realWorld": "NASA ALS standard crew O2 consumption; ISS OGA generates 2.3-9 kg/day.",
+    "sources": ["NASA JSC ALS (ICES-2017-87)", "ISS OGA"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-co2",
+    "title": "Carbon Dioxide",
+    "body": "Each crew member exhales a kilogram a day. Unscrubbed, it accumulates in the cabin until headaches become unconsciousness. Scrubbed and stored, it is Sabatier feedstock that closes the oxygen loop.",
+    "realWorld": "ISS CDRA scrubs CO2; Apollo 13's square-peg scrubber crisis is the cautionary tale.",
+    "sources": ["NASA ALS CO2 output 1.00 kg/person-day", "ISS CDRA"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-h2",
+    "title": "Hydrogen",
+    "body": "The light end of water. Electrolysis yields 0.11 kg of hydrogen per kilogram of water split — feed for the Sabatier reactor, ilmenite reduction, and eventually LH2 propellant.",
+    "realWorld": "Stoichiometric 8:1 oxygen:hydrogen split by mass.",
+    "sources": ["Water electrolysis stoichiometry"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-ch4",
+    "title": "Methane",
+    "body": "The Sabatier reaction's carbon sink. Early bases store or vent it; later ones liquefy it as engine propellant for methalox landers.",
+    "realWorld": "ISS Sabatier vented its methane; Starship-class vehicles burn methalox.",
+    "sources": ["ISS Sabatier", "SDD section 6"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-food",
+    "title": "Food",
+    "body": "0.62 kg of dry mass per person per day, all imported until the greenhouses arrive in Phase 3. The heaviest recurring line item on the manifest, and the first thing crews notice when it runs out.",
+    "realWorld": "NASA ALS dry food mass for ~2,500-2,700 kcal/day.",
+    "sources": ["NASA JSC ALS (ICES-2017-87)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-medkits",
+    "title": "Medical Kits",
+    "body": "Pharmaceuticals, diagnostics, trauma supplies. A medical emergency 384,000 km from the nearest hospital is survivable exactly as often as the kit and the clinic make it.",
+    "realWorld": "ISS carries extensive medical kits; lunar missions add surgical-lite capability.",
+    "sources": ["EVENTS.md Human hazard table"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-storm-shelter",
+    "title": "Storm Shelter",
+    "body": "A berm-covered refuge with at least 10 g/cm2 of regolith overhead. When the solar particle event warning sounds, everyone gets inside before the protons arrive — it turns a 500 mSv emergency into a 10 mSv inconvenience.",
+    "realWorld": "4 g/cm2 of regolith drops a major SPE below NASA's 30-day limit; 10 g/cm2 gives a factor-2 margin.",
+    "sources": ["SDD section 4 SPE shielding", "NASA dose limit framework"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-eclss-core",
+    "title": "ECLSS Core",
+    "body": "The machine the crew lives inside: CO2 scrubbing (8 kg/day), oxygen generation by electrolysis (9 kg/day), and a water processor that recovers 93% of every gray liter. When the power fails, this rack is why the clock starts ticking.",
+    "realWorld": "ISS ECLSS rack set: CDRA scrubber, Oxygen Generation Assembly, Water Processor Assembly.",
+    "sources": ["ISS ECLSS", "BUILDINGS.md tier 2"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-water-gas-storage",
+    "title": "Water/Gas Storage",
+    "body": "Tank farm unit holding five tonnes of water or one tonne of pressurized gas. Buffer capacity is survival margin: the difference between a late resupply being an annoyance or an obituary.",
+    "realWorld": "Standard tank-farm consumable buffering.",
+    "sources": ["BUILDINGS.md tier 2"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-comms-tower",
+    "title": "Comms Tower",
+    "body": "Direct-to-Earth link (1.28 light-seconds each way) plus a local LTE mast for rovers and automation. Mission control is never more than 2.6 seconds of round trip away — close enough for advice, too far for rescue.",
+    "realWorld": "Nokia's lunar 4G/LTE system flew on Intuitive Machines IM-2 (2025).",
+    "sources": ["Nokia lunar LTE on IM-2", "SDD comm_delay_oneway"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-exercise-module",
+    "title": "Exercise Module",
+    "body": "Resistive and aerobic machines that substitute for five-sixths of a person's missing weight. Two hours a day per crew member fully offsets bone and muscle loss — skip it and the Moon quietly dismantles your skeleton.",
+    "realWorld": "ISS ARED (Advanced Resistive Exercise Device); 2 h/day is the ISS countermeasure standard.",
+    "sources": ["ISS ARED", "SDD section 9"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-clinic",
+    "title": "Clinic",
+    "body": "Exam bay, telemedicine link, and just enough surgical capability to matter. Heals the slow damage and blunts the sharp emergencies; serious cases still mean an evac burn home.",
+    "realWorld": "Lunar-surface medical concepts extend ISS telemedicine with trauma capability.",
+    "sources": ["BUILDINGS.md tier 2", "EVENTS.md medical emergencies"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-sabatier",
+    "title": "Sabatier Unit",
+    "body": "CO2 + 4H2 → CH4 + 2H2O, with heat to spare. Feeds scrubbed cabin CO2 and electrolysis hydrogen back into the water loop, recovering oxygen that would otherwise be lost — the reaction that closes the air loop.",
+    "realWorld": "Flown on ISS from 2010; the methane was vented there, stored here.",
+    "sources": ["ISS Sabatier", "SDD section 6"],
+    "as_of": "2026-06"
   }
 ]

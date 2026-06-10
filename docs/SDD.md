@@ -117,6 +117,8 @@ Per person-day (divide by 24 per tick):
 
 Failure cascade order (legibility rule): power loss → scrubber stops → CO₂ warning (24–48 tick grace) → health damage → death. Each step fires an alert with cause chain.
 
+**Implemented model notes (M3, machine-readable in data/base/constants.json):** consumables draw from a colony-wide pool in ascending entity order (per-habitat atmospheres arrive with EVA/airlock mechanics); "atmosphere" CO₂ lives in housing/shelter volumes until a scrubber concentrates it into its machine store. OGA electrolyzes water → O₂ 0.89 / H₂ 0.11 toward a reserve of `o2_reserve_target_days` (3, needs_source) of crew demand. Cabin CO₂ proxy thresholds: warning 0.5 / danger 1.0 kg per person (needs_source), damage after `co2_grace_ticks` (36, from the 24–48 range above). Shortage damage rates (all needs_source): hypoxia 20 health/h, dehydration 12/day after 24 h, starvation 2.5 health/day + 10 morale/day (morale collapses first — the legible chain). Wastewater out ≈ water drawn; the recycler's unrecovered fraction is brine loss until brine-processor tech.
+
 ---
 
 ## 7. ISRU Reactions (data-driven; canonical set)
@@ -156,6 +158,8 @@ Attributes: health 0–100, morale 0–100, doseCareer mSv, dose30d ring buffer,
 - Morale inputs: habitat space/person, food variety, comms with Earth (delay flavor), crisis frequency, crowding, lighting during night, recreation modules.
 - Health drift: −0.5/month bone/muscle baseline, fully offset by 2 h/day exercise capacity; medical events per EVENTS.md; clinic capacity heals.
 - Work: buildings list `crewOps` (person-hours/day by skill). Unstaffed ⇒ output ×0.5 (automation tech raises floor).
+
+**Implemented model notes (M3):** drift offset uses powered exercise-service slots covering crew in entity order (explicit assignment later). Radiation sickness damage scales with the rolling-dose excess over the 250 mSv limit (`radiation_sickness_health_per_day` × min(1, excess/limit)) — a marginal exceedance is an illness, not a death sentence. Medical events draw at the EVENTS.md ideal rate (0.05/crew-year); medkits and clinic capacity reduce severity; clinics heal lowest-health first at `clinic_heal_per_day`, burning `clinic_medkit_per_patient_day`. Morale: baseline 70, recovery 2/day capped at baseline, crowding −5/day scaled by the overflow fraction (all needs_source). Career dose >600 mSv raises a standing forced-return flag (acted on by crew rotation, M5).
 
 ---
 

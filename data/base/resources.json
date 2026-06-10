@@ -10,5 +10,101 @@
     "encyclopedia": "enc-machine-components",
     "source": "ECONOMY.md manufactured goods; import cost heavy-lift tier default",
     "as_of": "2026-06"
+  },
+  {
+    "id": "water",
+    "name": "Water (potable)",
+    "phase": 2,
+    "storageClass": "bulk",
+    "densityKgM3": 1000,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-water",
+    "source": "ECONOMY.md fluids; the spine of the lunar economy",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "wastewater",
+    "name": "Wastewater",
+    "phase": 2,
+    "storageClass": "bulk",
+    "densityKgM3": 1000,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-wastewater",
+    "source": "ECONOMY.md air/water loop; urine, humidity condensate, hygiene gray water",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "o2-gas",
+    "name": "Oxygen (gas)",
+    "phase": 2,
+    "storageClass": "pressurized",
+    "densityKgM3": 250,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-o2",
+    "source": "ECONOMY.md gases; tank density at ~200 bar storage pressure",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "co2-gas",
+    "name": "Carbon Dioxide (gas)",
+    "phase": 2,
+    "storageClass": "pressurized",
+    "densityKgM3": 350,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-co2",
+    "source": "ECONOMY.md air loop; scrubbed cabin CO2, Sabatier feedstock",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "h2-gas",
+    "name": "Hydrogen (gas)",
+    "phase": 2,
+    "storageClass": "pressurized",
+    "densityKgM3": 18,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-h2",
+    "source": "ECONOMY.md gases; electrolysis byproduct, Sabatier/reduction feedstock",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "ch4-gas",
+    "name": "Methane (gas)",
+    "phase": 2,
+    "storageClass": "pressurized",
+    "densityKgM3": 130,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-ch4",
+    "source": "ECONOMY.md air loop; Sabatier product, future propellant",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "food",
+    "name": "Food (dry mass)",
+    "phase": 2,
+    "storageClass": "ambient",
+    "densityKgM3": 600,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-food",
+    "source": "ECONOMY.md consumables; NASA ALS 0.62 kg/person-day dry mass",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "medkits",
+    "name": "Medical Kits",
+    "phase": 2,
+    "storageClass": "ambient",
+    "densityKgM3": 500,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-medkits",
+    "source": "ECONOMY.md consumables; clinic and emergency medical supplies",
+    "as_of": "2026-06"
   }
 ]

@@ -455,5 +455,190 @@
     "as_of": "2026-06",
     "status": "needs_source",
     "notes": "Condition loss per hour outside the freeze/overheat band (~21 days from full to destroyed); gameplay model parameter"
+  },
+  {
+    "id": "crew_hygiene_water_day",
+    "value": 3.5,
+    "unit": "kg/person/day",
+    "source": "SDD section 6 (hygiene roughly doubles potable use, per NASA ALS)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dose_career_limit",
+    "value": 600,
+    "unit": "mSv",
+    "source": "NASA historical astronaut career dose limit",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "radiation_shielding_curve",
+    "value": {
+      "0": 1.0,
+      "4": 0.85,
+      "10": 0.7,
+      "30": 0.55,
+      "50": 0.5,
+      "75": 0.6,
+      "105": 0.5,
+      "180": 0.45,
+      "300": 0.35
+    },
+    "unit": "dose factor by areal density g/cm2",
+    "source": "SDD section 4 anchors (S(0)=1, S(10)=0.7, S(50)=0.5, floor 0.35) with the DLR secondary-neutron bump at 45-105 g/cm2",
+    "as_of": "2026-06",
+    "status": "sourced",
+    "notes": "Piecewise-linear lookup; intermediate thickness is WORSE than thin shielding because of GCR secondaries"
+  },
+  {
+    "id": "co2_grace_ticks",
+    "value": 36,
+    "unit": "ticks (hours)",
+    "source": "SDD section 6 failure cascade: CO2 warning grace 24-48 ticks (midpoint)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "bone_muscle_drift_per_month",
+    "value": 0.5,
+    "unit": "health/month",
+    "source": "SDD section 9: baseline 1/6-g deconditioning, fully offset by 2 h/day exercise",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "medical_event_rate_per_year_per_crew",
+    "value": 0.05,
+    "unit": "events/crew/year",
+    "source": "EVENTS.md Human table: medical emergency 0.5/yr per 10 crew (Ideal mode)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "o2_reserve_target_days",
+    "value": 3,
+    "unit": "days of crew demand",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "OGA production setpoint: keep this many days of breathable O2 in stores; ops-margin model parameter"
+  },
+  {
+    "id": "co2_warning_kg_per_person",
+    "value": 0.5,
+    "unit": "kg CO2 per person in crewed volumes",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Cabin CO2 warning threshold (~12 h of unscrubbed exhalation); proxy for ppCO2 until volumes are modeled"
+  },
+  {
+    "id": "co2_danger_kg_per_person",
+    "value": 1.0,
+    "unit": "kg CO2 per person in crewed volumes",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Cabin CO2 danger threshold (~24 h unscrubbed); health damage begins after co2_grace_ticks"
+  },
+  {
+    "id": "co2_health_per_hour",
+    "value": 2,
+    "unit": "health/h",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Damage rate during CO2 poisoning after the grace window; gameplay model parameter"
+  },
+  {
+    "id": "hypoxia_health_per_hour",
+    "value": 20,
+    "unit": "health/h",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Damage once O2 is exhausted (death in ~5-7 h, generous vs reality for legible counterplay)"
+  },
+  {
+    "id": "dehydration_health_per_day",
+    "value": 12,
+    "unit": "health/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Damage after 24 h without potable water (death in ~9-10 days); gameplay model parameter"
+  },
+  {
+    "id": "starvation_health_per_day",
+    "value": 2.5,
+    "unit": "health/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Damage after 24 h without food (death in ~6 weeks); gameplay model parameter"
+  },
+  {
+    "id": "starvation_morale_per_day",
+    "value": 10,
+    "unit": "morale/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Morale collapse while hungry — the legible first stage of the food cascade (SDD section 6)"
+  },
+  {
+    "id": "radiation_sickness_health_per_day",
+    "value": 5,
+    "unit": "health/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Damage while the rolling 30-day dose exceeds the NASA 250 mSv limit; gameplay model parameter"
+  },
+  {
+    "id": "clinic_heal_per_day",
+    "value": 1,
+    "unit": "health/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Clinic recovery rate per treated patient; gameplay model parameter"
+  },
+  {
+    "id": "clinic_medkit_per_patient_day",
+    "value": 0.1,
+    "unit": "medkits/patient/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Consumable burn for routine clinic treatment; gameplay model parameter"
+  },
+  {
+    "id": "morale_baseline",
+    "value": 70,
+    "unit": "morale (0-100)",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Steady-state morale for a fed, housed crew; recreation/comms raise the effective ceiling later"
+  },
+  {
+    "id": "morale_recovery_per_day",
+    "value": 2,
+    "unit": "morale/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Recovery toward baseline when needs are met; gameplay model parameter"
+  },
+  {
+    "id": "crowding_morale_per_day",
+    "value": 5,
+    "unit": "morale/day at 100% overcrowding",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Scaled by the fraction of crew beyond available housing (SDD section 9 morale inputs)"
   }
 ]
