@@ -1,17 +1,25 @@
 import {
   ALERTS_COMPONENT,
   ALERTS_ENTITY,
+  BUILDING_COMPONENT,
+  CREW_COMPONENT,
   ENV_ENTITY,
   ENVIRONMENT_COMPONENT,
   GRID_COMPONENT,
   GRID_ENTITY,
+  THERMAL_COMPONENT,
   type AlertsComponent,
+  type BuildingComponent,
+  type ContentPack,
+  type CrewComponent,
   type EnvironmentComponent,
   type GridComponent,
+  type ResourceStoreData,
+  type ThermalComponent,
   type World,
 } from "@lunaris/sim-core";
 
-/** HUD v0: lunar clock, power bar (gen/use/stored), alert toasts. */
+/** HUD: lunar clock, power bars, alert toasts + queue, crew roster, inspector. */
 export class Hud {
   private clockBig = document.querySelector("#clock .big") as HTMLElement;
   private clockSub = document.querySelector("#clock .sub") as HTMLElement;
@@ -21,11 +29,22 @@ export class Hud {
   private unmetBar = document.querySelector("#powerbar .unmet") as HTMLElement;
   private storedBar = document.querySelector("#storagebar .stored") as HTMLElement;
   private toasts = document.querySelector("#toasts") as HTMLElement;
+  private roster = document.querySelector("#roster") as HTMLElement;
+  private inspector = document.querySelector("#inspector") as HTMLElement;
+  private alertLog = document.querySelector("#alertlog") as HTMLElement;
   private lastAlertSeq = -1;
+  private selectedEntity: number | null = null;
   private readonly ticksPerLunarDay: number;
+  private readonly pack: ContentPack;
 
-  constructor(ticksPerLunarDay: number) {
+  constructor(ticksPerLunarDay: number, pack: ContentPack) {
     this.ticksPerLunarDay = ticksPerLunarDay;
+    this.pack = pack;
+  }
+
+  /** Inspector target (set from map clicks); null clears. */
+  select(entity: number | null): void {
+    this.selectedEntity = entity;
   }
 
   /** Forget already-shown alerts (after a world reset). */
@@ -33,6 +52,10 @@ export class Hud {
     const alerts = world.store<AlertsComponent>(ALERTS_COMPONENT).require(ALERTS_ENTITY);
     this.lastAlertSeq = alerts.seq - 1;
     this.toasts.replaceChildren();
+    this.alertLog.replaceChildren();
+    this.roster.innerHTML = `<em style="color: var(--dim)">No crew on site</em>`;
+    this.inspector.innerHTML = `<em style="color: var(--dim)">Click a building</em>`;
+    this.selectedEntity = null;
   }
 
   update(world: World): void {
@@ -80,7 +103,110 @@ export class Hud {
       while (this.toasts.children.length > 5) {
         this.toasts.firstElementChild?.remove();
       }
+
+      // Persistent alert queue (newest first) with the cause text.
+      const row = document.createElement("div");
+      row.className = `al ${entry.severity}`;
+      const tick = document.createElement("span");
+      tick.className = "t";
+      tick.textContent = `t${entry.tick}`;
+      row.append(tick, document.createTextNode(entry.message));
+      this.alertLog.prepend(row);
+      while (this.alertLog.children.length > 60) {
+        this.alertLog.lastElementChild?.remove();
+      }
     }
+
+    this.renderRoster(world);
+    this.renderInspector(world);
+  }
+
+  private renderRoster(world: World): void {
+    const crews = world.store<CrewComponent>(CREW_COMPONENT);
+    if (crews.size === 0) {
+      return;
+    }
+    const rows: HTMLElement[] = [];
+    for (const [, crew] of crews.entries()) {
+      const row = document.createElement("div");
+      row.className = "crew-row";
+      const dose30 = crew.dose30d.reduce((sum, d) => sum + d, 0);
+      const status =
+        crew.alive !== 1
+          ? "✝ deceased"
+          : crew.hypoxiaHours > 0
+            ? "suffocating!"
+            : crew.thirstHours > 24
+              ? "dehydrated"
+              : crew.hungerHours > 24
+                ? "starving"
+                : crew.hungerHours > 0
+                  ? "hungry"
+                  : crew.radiationSick === 1
+                    ? "radiation sick"
+                    : crew.eva === 1
+                      ? "on EVA"
+                      : "nominal";
+      const name = document.createElement("div");
+      name.className = "nm";
+      name.innerHTML = `<span${crew.alive !== 1 ? ' class="dead"' : ""}>${crew.name}</span><span style="color:var(--dim)">${status}</span>`;
+      row.appendChild(name);
+      if (crew.alive === 1) {
+        row.insertAdjacentHTML(
+          "beforeend",
+          `<div class="bar"><div class="hp" style="width:${crew.health}%"></div></div>
+           <div class="bar"><div class="mo" style="width:${crew.morale}%"></div></div>
+           <div class="bar"><div class="dose" style="width:${Math.min(100, (dose30 / 250) * 100)}%"></div></div>
+           <div class="bar-label"><span>HP ${crew.health.toFixed(0)} · MOR ${crew.morale.toFixed(0)}</span><span>30d ${dose30.toFixed(1)} mSv · career ${crew.doseCareerMSv.toFixed(0)}</span></div>`,
+        );
+      }
+      rows.push(row);
+    }
+    this.roster.replaceChildren(...rows);
+  }
+
+  private renderInspector(world: World): void {
+    const entity = this.selectedEntity;
+    if (entity === null) {
+      return;
+    }
+    const building = world.store<BuildingComponent>(BUILDING_COMPONENT).get(entity);
+    if (building === undefined) {
+      this.inspector.innerHTML = `<em style="color: var(--dim)">Click a building</em>`;
+      return;
+    }
+    const def = this.pack.building(building.defId);
+    const thermal = world.store<ThermalComponent>(THERMAL_COMPONENT).get(entity);
+    const store = world.store<ResourceStoreData>("resources").get(entity);
+    const kv = (key: string, value: string): string =>
+      `<div class="kv"><span>${key}</span><span>${value}</span></div>`;
+    let html = `<strong>${def.name}</strong> <span style="color:var(--dim)">#${entity}</span>`;
+    html += kv("State", thermal ? thermal.state.toUpperCase() : "passive");
+    html += kv("Condition", `${(building.condition * 100).toFixed(0)}%`);
+    html += kv(
+      "Power",
+      `${def.powerKw >= 0 ? "+" : ""}${def.powerKw} kW · ${(building.poweredFraction * 100).toFixed(0)}% supplied`,
+    );
+    if (thermal) {
+      html += kv("Internal temp", `${thermal.tempK.toFixed(1)} K`);
+      if (thermal.heaterDeliveredKw > 0.001) {
+        html += kv("Heater", `${thermal.heaterDeliveredKw.toFixed(2)} kW`);
+      }
+    }
+    if (def.shieldingGcm2 > 0) {
+      html += kv("Shielding", `${def.shieldingGcm2} g/cm²`);
+    }
+    const services = Object.entries(def.services);
+    if (services.length > 0) {
+      html += kv("Services", services.map(([k, v]) => `${k} ${v}`).join(", "));
+    }
+    if (store !== undefined && Object.keys(store.amounts).length > 0) {
+      html += `<div class="kv" style="margin-top:4px"><span>Stores</span><span></span></div>`;
+      for (const [resource, kg] of Object.entries(store.amounts)) {
+        html += kv(`· ${resource}`, `${kg.toFixed(1)} kg`);
+      }
+    }
+    this.inspector.innerHTML = html;
   }
 }
 
