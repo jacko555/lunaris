@@ -140,6 +140,25 @@ export const buildingSchema = z
     /** Rejection serves the whole base (radiator wings) instead of only this building. */
     radiatorShared: z.boolean().default(false),
     crewOps: z.record(z.string(), z.number().min(0)).default({}),
+    /**
+     * Crew-facing capacities: housing (long-term berths, crowding),
+     * shelter (SPE refuge seats), exercise (countermeasure slots/day),
+     * medical (clinic patients).
+     */
+    services: z
+      .record(z.enum(["housing", "shelter", "exercise", "medical"]), z.number().positive())
+      .default({}),
+    /** Life-support equipment rates (ECLSS core, Sabatier unit). */
+    eclss: z
+      .object({
+        scrubberKgCo2Day: z.number().min(0).default(0),
+        ogaKgO2Day: z.number().min(0).default(0),
+        waterRecovery: z.number().min(0).max(1).default(0),
+        waterKgDay: z.number().min(0).default(0),
+        sabatierKgCo2Day: z.number().min(0).default(0),
+      })
+      .strict()
+      .optional(),
     shieldingGcm2: z.number().min(0).default(0),
     // DATA-SCHEMA rule 4: tiers 0–3, tier 0 reserved for life-support class.
     priorityTier: z.number().int().min(0).max(3).nullable(),

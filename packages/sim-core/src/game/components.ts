@@ -77,3 +77,41 @@ export type ThermalComponent = {
 export type StorageComponent = {
   energyKwh: number;
 };
+
+export const CREW_COMPONENT = "crew";
+export const RESUPPLY_COMPONENT = "resupply";
+
+/** Crew member (docs/SDD.md §9; save shape per docs/DATA-SCHEMA.md §Crew). */
+export type CrewComponent = {
+  name: string;
+  skills: Record<string, number>;
+  health: number; // 0–100
+  morale: number; // 0–100
+  doseCareerMSv: number;
+  /** Rolling 30 daily mSv buckets indexed by absolute day mod 30. */
+  dose30d: number[];
+  /** Building entity the crew member occupies. */
+  location: number;
+  /** 1 while on EVA: unshielded dose, location shielding ignored. */
+  eva: number;
+  alive: number; // 1 alive, 0 dead (kept for the roster/story)
+  /** Consecutive shortage hours — drive the legible failure cascades. */
+  hungerHours: number;
+  thirstHours: number;
+  hypoxiaHours: number;
+  co2Hours: number;
+  /** 1 while rolling-30-day dose exceeds the NASA limit. */
+  radiationSick: number;
+};
+
+/** Scheduled Earth cargo mission (logistics v0 — no failure rolls until M4/M5). */
+export type ResupplyComponent = {
+  manifest: { resource: string; kg: number }[];
+  arrivalTick: number;
+  /** 0 = one-shot; otherwise reschedules every N ticks after delivery. */
+  repeatTicks: number;
+  /** Building entity that receives the cargo. */
+  targetEntity: number;
+  costUsd: number;
+  deliveries: number;
+};
