@@ -9,31 +9,189 @@
     />
     <title>LUNARIS</title>
     <style>
+      :root {
+        --bg: #0b0d12;
+        --panel: #141823;
+        --line: #232a3a;
+        --text: #d8dee9;
+        --dim: #7a8499;
+        --good: #6fcf97;
+        --warn: #f2c94c;
+        --crit: #eb5757;
+        --accent: #6c9ef8;
+      }
+      * {
+        box-sizing: border-box;
+      }
       html,
       body {
         margin: 0;
         height: 100%;
-        background: #0b0d12;
-        color: #d8dee9;
+        background: var(--bg);
+        color: var(--text);
         font-family: system-ui, sans-serif;
+        font-size: 14px;
       }
       #app {
         height: 100%;
-        display: grid;
-        place-items: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+      }
+      #topbar {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+      }
+      #title {
+        letter-spacing: 0.3em;
+        font-weight: 300;
+        color: var(--accent);
+      }
+      #clock {
         text-align: center;
       }
-      h1 {
-        letter-spacing: 0.35em;
-        font-weight: 300;
+      #clock .big {
+        font-weight: 600;
       }
-      p {
-        color: #7a8499;
+      #clock .sub,
+      #power .sub {
+        color: var(--dim);
+        font-size: 12px;
+      }
+      #power {
+        min-width: 260px;
+      }
+      #powerbar {
+        height: 8px;
+        background: #20263a;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        margin-top: 4px;
+      }
+      #powerbar .gen {
+        background: var(--good);
+        height: 100%;
+      }
+      #powerbar .unmet {
+        background: var(--crit);
+        height: 100%;
+      }
+      #storagebar {
+        height: 4px;
+        background: #20263a;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 3px;
+      }
+      #storagebar .stored {
+        background: var(--accent);
+        height: 100%;
+      }
+      #map-wrap {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      #controls {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      button {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button.active {
+        background: var(--accent);
+        color: #0b0d12;
+        border-color: var(--accent);
+      }
+      #legend {
+        color: var(--dim);
+        font-size: 12px;
+        max-width: 900px;
+        text-align: center;
+      }
+      #toasts {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-width: 360px;
+        z-index: 10;
+      }
+      .toast {
+        background: var(--panel);
+        border-left: 4px solid var(--dim);
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      }
+      .toast.warning {
+        border-left-color: var(--warn);
+      }
+      .toast.critical {
+        border-left-color: var(--crit);
+      }
+      .toast .t {
+        color: var(--dim);
+        font-size: 11px;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-C9jhiAZL.js"></script>
+    <script type="module" crossorigin src="./assets/index-3_wGSghY.js"></script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="topbar">
+        <div id="title">LUNARIS</div>
+        <div id="clock">
+          <div class="big">—</div>
+          <div class="sub">—</div>
+        </div>
+        <div id="power">
+          <div><span id="power-line">—</span></div>
+          <div id="powerbar">
+            <div class="gen"></div>
+            <div class="unmet"></div>
+          </div>
+          <div id="storagebar"><div class="stored"></div></div>
+          <div class="sub" id="storage-line">—</div>
+        </div>
+      </div>
+      <div id="map-wrap"></div>
+      <div id="controls"></div>
+      <div id="legend">
+        Shackleton Rim 64×64 — bright ridge = near-eternal light (class A), dark crater = PSR.
+        Buildings: ▣ habitat · ▢ solar · ▥ battery · ◆ fission · ▭ radiator. Blue outline = frozen,
+        red = overheating.
+      </div>
+      <div id="toasts"></div>
+    </div>
   </body>
 </html>
