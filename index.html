@@ -98,11 +98,103 @@
         background: var(--accent);
         height: 100%;
       }
+      #main-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
       #map-wrap {
         position: relative;
         border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
+      }
+      #side-panel {
+        width: 300px;
+        max-height: 640px;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 13px;
+      }
+      #side-panel h3 {
+        margin: 4px 0 6px;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: var(--dim);
+        text-transform: uppercase;
+      }
+      .crew-row {
+        border-bottom: 1px solid var(--line);
+        padding: 5px 0;
+      }
+      .crew-row .nm {
+        display: flex;
+        justify-content: space-between;
+      }
+      .crew-row .nm .dead {
+        color: var(--crit);
+      }
+      .bar {
+        height: 5px;
+        background: #20263a;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 2px;
+      }
+      .bar > div {
+        height: 100%;
+      }
+      .bar .hp {
+        background: var(--good);
+      }
+      .bar .mo {
+        background: var(--accent);
+      }
+      .bar .dose {
+        background: var(--warn);
+      }
+      .bar-label {
+        display: flex;
+        justify-content: space-between;
+        color: var(--dim);
+        font-size: 11px;
+        margin-top: 3px;
+      }
+      #inspector .kv {
+        display: flex;
+        justify-content: space-between;
+        padding: 1px 0;
+      }
+      #inspector .kv span:first-child {
+        color: var(--dim);
+      }
+      #alertlog {
+        width: 100%;
+        max-width: 948px;
+        max-height: 140px;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      #alertlog .al {
+        padding: 2px 0;
+        border-bottom: 1px solid #1a2030;
+      }
+      #alertlog .al .t {
+        color: var(--dim);
+        margin-right: 6px;
+      }
+      #alertlog .al.warning {
+        color: var(--warn);
+      }
+      #alertlog .al.critical {
+        color: var(--crit);
       }
       #controls {
         width: 100%;
@@ -164,7 +256,7 @@
         font-size: 11px;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-3_wGSghY.js"></script>
+    <script type="module" crossorigin src="./assets/index-Bwqk6sN8.js"></script>
   </head>
   <body>
     <div id="app">
@@ -184,12 +276,20 @@
           <div class="sub" id="storage-line">—</div>
         </div>
       </div>
-      <div id="map-wrap"></div>
+      <div id="main-row">
+        <div id="map-wrap"></div>
+        <div id="side-panel">
+          <h3>Crew Roster</h3>
+          <div id="roster"><em style="color: var(--dim)">No crew on site</em></div>
+          <h3 style="margin-top: 12px">Inspector</h3>
+          <div id="inspector"><em style="color: var(--dim)">Click a building</em></div>
+        </div>
+      </div>
       <div id="controls"></div>
+      <div id="alertlog"></div>
       <div id="legend">
-        Shackleton Rim 64×64 — bright ridge = near-eternal light (class A), dark crater = PSR.
-        Buildings: ▣ habitat · ▢ solar · ▥ battery · ◆ fission · ▭ radiator. Blue outline = frozen,
-        red = overheating.
+        Shackleton Rim 64×64 — bright ridge = near-eternal light (class A), dark crater = PSR. Click
+        buildings to inspect. Blue outline = frozen, red = overheating, yellow = unpowered.
       </div>
       <div id="toasts"></div>
     </div>
