@@ -1,1 +1,88 @@
-[]
+[
+  {
+    "id": "ice-extraction",
+    "name": "Volatile Extraction (ice → water)",
+    "building": "volatile-oven",
+    "inputs": [{ "resource": "water-ice", "kg": 1.0 }],
+    "outputs": [{ "resource": "water", "kg": 1.0 }],
+    "energyKwhPerKgPrimary": 1.5,
+    "primaryOutput": "water",
+    "heatKw": 2,
+    "source": "SDD section 7: thermal extraction 1.5 kWh/kg water",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "water-electrolysis",
+    "name": "Water Electrolysis",
+    "building": "electrolyzer",
+    "inputs": [{ "resource": "water", "kg": 1.0 }],
+    "outputs": [
+      { "resource": "o2-gas", "kg": 0.89 },
+      { "resource": "h2-gas", "kg": 0.11 }
+    ],
+    "energyKwhPerKgPrimary": 5.62,
+    "primaryOutput": "o2-gas",
+    "heatKw": 1.2,
+    "minTempK": 273,
+    "source": "SDD electrolysis_energy 5.0 kWh/kg water = 5.62 kWh/kg O2; PEM stack typical",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "mre",
+    "name": "Molten Regolith Electrolysis",
+    "building": "mre-plant-s",
+    "inputs": [{ "resource": "regolith", "kg": 100.0 }],
+    "outputs": [
+      { "resource": "o2-gas", "kg": 28.0 },
+      { "resource": "metal-slag", "kg": 30.0 },
+      { "resource": "tailings", "kg": 42.0 }
+    ],
+    "energyKwhPerKgPrimary": 33,
+    "primaryOutput": "o2-gas",
+    "heatKw": 10,
+    "source": "SDD section 7: regolith 100 kg -> O2 28 + slag 30 (remainder spent melt); 33 kWh/kg O2 theoretical chemistry, plant sizing governs throughput (MIT/Schreiner)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "sabatier",
+    "name": "Sabatier Reaction",
+    "building": "sabatier-unit",
+    "inputs": [
+      { "resource": "co2-gas", "kg": 44.0 },
+      { "resource": "h2-gas", "kg": 8.0 }
+    ],
+    "outputs": [
+      { "resource": "ch4-gas", "kg": 16.0 },
+      { "resource": "water", "kg": 36.0 }
+    ],
+    "energyKwhPerKgPrimary": 0,
+    "primaryOutput": "water",
+    "heatKw": 1,
+    "source": "CO2 + 4H2 -> CH4 + 2H2O exact molar masses; exothermic, net ~0 (SDD section 7)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "lox-liquefaction",
+    "name": "LOX Liquefaction",
+    "building": "cryo-plant",
+    "inputs": [{ "resource": "o2-gas", "kg": 1.0 }],
+    "outputs": [{ "resource": "lox", "kg": 1.0 }],
+    "energyKwhPerKgPrimary": 11.3,
+    "primaryOutput": "lox",
+    "heatKw": 3,
+    "source": "SDD lox_energy_allin 11.3 kWh/kg all-in chain (mining -> electrolysis -> cryo)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "regolith-printing",
+    "name": "Regolith Printing",
+    "building": "regolith-printer",
+    "inputs": [{ "resource": "regolith", "kg": 1.0 }],
+    "outputs": [{ "resource": "printed-structure", "kg": 1.0 }],
+    "energyKwhPerKgPrimary": 2,
+    "primaryOutput": "printed-structure",
+    "heatKw": 1,
+    "source": "SDD section 7: regolith printing 2 kWh/kg (D-Shape/ICON sintering class)",
+    "as_of": "2026-06"
+  }
+]

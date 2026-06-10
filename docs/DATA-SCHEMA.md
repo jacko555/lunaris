@@ -84,10 +84,20 @@ All game content is JSON in `data/`, validated by zod schemas in `sim-core/src/s
   "buildCost": { "imported": [{ "resource": "machine-components", "kg": 6000 }], "local": [] }, // alternative local recipe if printable
   "placement": { "terrain": ["highland", "mare"], "maxSlope": 5, "requiresPSR": false },
   "reactions": [], // reaction ids hosted here
+  "reactionKgPerDay": {}, // REQUIRED rate (kg primaryOutput/day) per hosted reaction
+  "mining": { "kgPerDay": 720, "energyKwhPerKg": 0.5 }, // optional: excavates own tile (ice × tile iceFrac + regolith)
+  "sciencePerDay": 0, // research output (labs)
+  "dustSensitive": false, // output degrades with dust (solar)
+  "shieldingAura": false, // grants shieldingGcm2 to adjacent buildings (berms)
+  "landingPad": false, // damps landing-dust spikes colony-wide
+  "propellantDepot": false, // sells LOX when powered (Phase-3 revenue)
+  "commsRelay": false, // satisfies the Phase-0 relay criterion
   "techRequired": "surface_power_40kw",
   "encyclopedia": "fsp",
 }
 ```
+
+Resources may set `"groundSourced": true` (regolith): reaction inputs of such resources are excavated freely at the consuming building with a declared mining source.
 
 ## Tech
 
@@ -182,6 +192,6 @@ See MODES.md §2.1 (authoritative example). Schema adds `failureOverrides: {even
 1. Mass balance per reaction (±1e-6).
 2. Every building/tech/event id referenced exists.
 3. Every `value` with status `sourced` has non-empty `source`.
-4. Power priority tiers ∈ {0,1,2,3}; tier 0 reserved for life-support class. Buildings with `powerKw < 0` must declare a tier; `storageKwh` requires `storageRoundTripEff`.
+4. Power priority tiers ∈ {0,1,2,3}; tier 0 reserved for life-support class. Buildings with `powerKw < 0` must declare a tier; `storageKwh` requires `storageRoundTripEff`; every hosted reaction id needs a `reactionKgPerDay` rate.
 5. No tech cycles; phase of unlocks ≥ phase of tech.
 6. Scenario presets load + 100-tick smoke run in CI.

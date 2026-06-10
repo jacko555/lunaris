@@ -1,1 +1,59 @@
-[]
+[
+  {
+    "id": "spe-minor",
+    "category": "environmental",
+    "rates": { "ideal": 4, "realistic": 6 },
+    "warningTicks": [12, 48],
+    "conditions": { "minPhase": 1 },
+    "effects": [{ "type": "radiation-dose", "mSv": [10, 50] }],
+    "responses": ["shelter-order"],
+    "alertTemplate": "Minor solar particle event inbound (ETA {eta} h) — 10-50 mSv unsheltered. Order crew to shielded volumes.",
+    "source": "EVENTS.md environmental table",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "spe-major",
+    "category": "environmental",
+    "rates": { "ideal": 0.3, "realistic": 0.5 },
+    "warningTicks": [12, 48],
+    "conditions": { "minPhase": 1 },
+    "effects": [{ "type": "radiation-dose", "mSv": [100, 500] }],
+    "responses": ["shelter-order"],
+    "alertTemplate": "MAJOR solar particle event inbound (ETA {eta} h) — 100-500 mSv unsheltered, Carrington-class. Everyone into the storm shelter (>=10 g/cm2) NOW.",
+    "source": "EVENTS.md environmental table; NASA dose limit framework",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "micrometeorite",
+    "category": "environmental",
+    "rates": { "ideal": 0.5, "realistic": 1 },
+    "conditions": {},
+    "effects": [{ "type": "building-damage", "conditionLoss": [0.01, 0.1] }],
+    "responses": [],
+    "alertTemplate": "Micrometeorite strike",
+    "source": "EVENTS.md environmental table; no atmosphere, full flux",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "moonquake",
+    "category": "environmental",
+    "rates": { "ideal": 0.2, "realistic": 0.3 },
+    "conditions": {},
+    "effects": [{ "type": "structural-stress" }],
+    "responses": [],
+    "alertTemplate": "Shallow moonquake",
+    "source": "EVENTS.md environmental table; Apollo seismic network",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "fission-scram",
+    "category": "technical",
+    "rates": { "ideal": 0.1, "realistic": 0.2 },
+    "conditions": { "minPhase": 2 },
+    "effects": [{ "type": "power-outage", "ticks": [24, 72] }],
+    "responses": [],
+    "alertTemplate": "Fission scram",
+    "source": "EVENTS.md technical table; the night-timing nightmare",
+    "as_of": "2026-06"
+  }
+]

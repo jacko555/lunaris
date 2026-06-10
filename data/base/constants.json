@@ -640,5 +640,191 @@
     "as_of": "2026-06",
     "status": "needs_source",
     "notes": "Scaled by the fraction of crew beyond available housing (SDD section 9 morale inputs)"
+  },
+  {
+    "id": "construction_hours_per_tonne",
+    "value": 8,
+    "unit": "h/tonne",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Assembly time per tonne of building mass (12 t habitat ~4 days); gameplay model parameter"
+  },
+  {
+    "id": "dust_solar_degradation_per_eva_day",
+    "value": 0.005,
+    "unit": "fraction per EVA-crew-day",
+    "source": "EVENTS.md dust accumulation: solar -0.5% per EVA-heavy day",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dust_landing_spike",
+    "value": 0.05,
+    "unit": "fraction per unpaved landing",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Ballistic plume deposition on solar surfaces per nearby touchdown; gameplay model parameter"
+  },
+  {
+    "id": "dust_pad_mitigation",
+    "value": 0.9,
+    "unit": "fraction removed",
+    "source": "EVENTS.md: landing pads -90% dust events from landings",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "dust_cleaning_per_day",
+    "value": 0.01,
+    "unit": "fraction/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Crew maintenance dust removal rate; gameplay model parameter"
+  },
+  {
+    "id": "repair_parts_kg_per_point",
+    "value": 200,
+    "unit": "kg spare parts per 1.0 condition",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Maintenance material intensity (ECONOMY.md spares sink); gameplay model parameter"
+  },
+  {
+    "id": "repair_points_per_day",
+    "value": 0.1,
+    "unit": "condition/day colony-wide",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Maintenance crew throughput cap; gameplay model parameter"
+  },
+  {
+    "id": "science_per_scientist_day",
+    "value": 2,
+    "unit": "science points per skill point per day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Crew science output (TECH-TREE.md); gameplay model parameter"
+  },
+  {
+    "id": "crew_ops_usd_per_day",
+    "value": 100000,
+    "unit": "USD/crew/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Ground support, comms, training pipeline per astronaut on surface; gameplay model parameter"
+  },
+  {
+    "id": "lox_price_usd_per_kg",
+    "value": 2000,
+    "unit": "USD/kg",
+    "source": "Propellant-depot price point well under import parity ($100k/kg heavy-lift), per ECONOMY.md make-vs-buy logic",
+    "as_of": "2026-06",
+    "status": "speculative",
+    "notes": "No lunar propellant market exists; scenario knob"
+  },
+  {
+    "id": "lox_demand_kg_per_day",
+    "value": 50,
+    "unit": "kg/day",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "speculative",
+    "notes": "Visiting-mission demand absorbed by the depot; elastic market arrives with the Phase-5 economy"
+  },
+  {
+    "id": "night_landing_penalty",
+    "value": 0.05,
+    "unit": "added failure probability",
+    "source": "SDD section 8: night arrivals at unlit pads +5% landing risk without nav aids",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "sortie_stay_days",
+    "value": 6.5,
+    "unit": "days",
+    "source": "PHASES.md Phase 1: crewed lander 6.5-day surface stay default",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "probe_payload_kg",
+    "value": 100,
+    "unit": "kg",
+    "source": "CLPS-class robotic payload (TASKS.md M5 vehicle classes)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "sortie_payload_kg",
+    "value": 5000,
+    "unit": "kg",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Crewed sortie effective cargo-equivalent mass for costing; gameplay model parameter"
+  },
+  {
+    "id": "vehicle_clps",
+    "value": {
+      "payloadKg": 100,
+      "usdPerKg": 250000,
+      "failureIdeal": 0.05,
+      "failureRealistic": 0.5,
+      "transitDays": 4
+    },
+    "unit": "composite",
+    "source": "TASKS.md M5 / EVENTS.md: CLPS-class 100 kg, $250k/kg tier, 50% historical early failure (1 full success in first 4)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "vehicle_mid",
+    "value": {
+      "payloadKg": 1500,
+      "usdPerKg": 150000,
+      "failureIdeal": 0.03,
+      "failureRealistic": 0.1,
+      "transitDays": 4
+    },
+    "unit": "composite",
+    "source": "TASKS.md M5 mid-class 1-2 t lander tier",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "vehicle_heavy",
+    "value": {
+      "payloadKg": 12000,
+      "usdPerKg": 100000,
+      "failureIdeal": 0.02,
+      "failureRealistic": 0.05,
+      "transitDays": 4
+    },
+    "unit": "composite",
+    "source": "TASKS.md M5 heavy 10-15 t class; SDD launch_failure_p_heavy",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "vehicle_starship",
+    "value": {
+      "payloadKg": 100000,
+      "usdPerKg": 10000,
+      "failureIdeal": 0.02,
+      "failureRealistic": 0.05,
+      "transitDays": 4
+    },
+    "unit": "composite",
+    "source": "TASKS.md M5 Starship-class 100 t with refueling-chain prerequisite; $/kg is an undemonstrated company target",
+    "as_of": "2026-06",
+    "status": "speculative"
   }
 ]

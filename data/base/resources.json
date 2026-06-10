@@ -106,5 +106,90 @@
     "encyclopedia": "enc-medkits",
     "source": "ECONOMY.md consumables; clinic and emergency medical supplies",
     "as_of": "2026-06"
+  },
+  {
+    "id": "regolith",
+    "name": "Regolith",
+    "phase": 3,
+    "storageClass": "bulk",
+    "groundSourced": true,
+    "densityKgM3": 1500,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-regolith",
+    "source": "SDD regolith_density_loose; free bulk feedstock everywhere underfoot",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "water-ice",
+    "name": "Water Ice (raw)",
+    "phase": 3,
+    "storageClass": "bulk",
+    "densityKgM3": 920,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-water-ice",
+    "source": "LCROSS Cabeus 5.6 +/- 2.9 wt% in PSR regolith; mined, not imported",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "lox",
+    "name": "Liquid Oxygen",
+    "phase": 3,
+    "storageClass": "cryogenic",
+    "densityKgM3": 1141,
+    "boiloffPerDay": 0.001,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-lox",
+    "source": "ECONOMY.md propellant chain; boiloff 0.1%/day per storage rules",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "metal-slag",
+    "name": "Metal Slag",
+    "phase": 3,
+    "storageClass": "bulk",
+    "densityKgM3": 3000,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-metal-slag",
+    "source": "MRE cathode product: mixed Fe/Si/Al/Ti melt awaiting refining",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "tailings",
+    "name": "Spent Regolith",
+    "phase": 3,
+    "storageClass": "bulk",
+    "densityKgM3": 1600,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-tailings",
+    "source": "MRE process residue (the non-O2, non-metal balance of the melt)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "printed-structure",
+    "name": "Printed Structure",
+    "phase": 3,
+    "storageClass": "ambient",
+    "densityKgM3": 2000,
+    "boiloffPerDay": 0,
+    "importCostPerKg": null,
+    "encyclopedia": "enc-printed-structure",
+    "source": "ECONOMY.md construction chain: sintered/printed regolith elements",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "spare-parts",
+    "name": "Spare Parts",
+    "phase": 2,
+    "storageClass": "ambient",
+    "densityKgM3": 2000,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-spare-parts",
+    "source": "ECONOMY.md maintenance sink; imported until the Workshop (Phase 4)",
+    "as_of": "2026-06"
   }
 ]

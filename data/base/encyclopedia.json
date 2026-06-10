@@ -182,5 +182,141 @@
     "realWorld": "Flown on ISS from 2010; the methane was vented there, stored here.",
     "sources": ["ISS Sabatier", "SDD section 6"],
     "as_of": "2026-06"
+  },
+  {
+    "id": "enc-regolith",
+    "title": "Regolith",
+    "body": "The Moon's crushed-glass topsoil: 45% oxygen by mass, locked in oxides. Free for the scooping, brutal on seals and lungs, and the feedstock for oxygen, metals, and printed structures alike.",
+    "realWorld": "Loose bulk density ~1,500 kg/m³; sharp and electrostatically clingy because nothing has ever weathered it.",
+    "sources": ["SDD regolith constants", "Apollo soil mechanics"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-water-ice",
+    "title": "Water Ice",
+    "body": "Billions of tonnes of comet-delivered water, cold-trapped in craters that haven't seen the Sun in two billion years. The reason every agency on Earth points at the lunar south pole.",
+    "realWorld": "LCROSS measured 5.6 ± 2.9 wt% ice in Cabeus crater regolith (Colaprete et al. 2010).",
+    "sources": ["NASA LCROSS", "Colaprete et al. 2010"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-lox",
+    "title": "Liquid Oxygen",
+    "body": "Cryogenic oxidizer — roughly 80% of a rocket's propellant mass. Made locally from ice or regolith, it turns the colony from a cost center into a gas station at the top of Earth's gravity well.",
+    "realWorld": "All-in production chain ~11.3 kWh/kg; 0.1%/day boiloff in surface tanks.",
+    "sources": ["SDD lox_energy_allin", "ECONOMY.md propellant chain"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-metal-slag",
+    "title": "Metal Slag",
+    "body": "The molten cathode product of regolith electrolysis: iron, silicon, aluminium, and titanium waiting for a refinery to tell them apart.",
+    "realWorld": "MRE ferrosilicon route rated most mass-efficient in NASA/MIT trade studies.",
+    "sources": ["MIT/Schreiner MRE studies"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-tailings",
+    "title": "Spent Regolith",
+    "body": "What's left of the melt after the oxygen and metals are gone. Pile it on the berms.",
+    "realWorld": "Process residue accounting for the mass balance of molten regolith electrolysis.",
+    "sources": ["SDD section 7 MRE mass balance"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-printed-structure",
+    "title": "Printed Structure",
+    "body": "Sintered regolith elements straight out of the printer: habitat shells, pad tiles, berm blocks. Every kilogram printed is a kilogram that didn't ride a rocket — the 60-80% build-cost discount that makes Phase 3 economics work.",
+    "realWorld": "ESA/Foster+Partners D-Shape printed a 1.5 t block from simulant; ICON's Olympus melts regolith with lasers; Chang'e-8 will test it on the Moon.",
+    "sources": ["ESA D-Shape", "ICON Olympus", "Chang'e-8 manifest"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-spare-parts",
+    "title": "Spare Parts",
+    "body": "Bearings, seals, filters, boards. Machines wear out fast in vacuum and dust, and until the workshop comes online every replacement part is imported mass.",
+    "realWorld": "Maintenance demand is the quiet killer of long-duration outposts — ECLSS spares dominated ISS logistics planning.",
+    "sources": ["ECONOMY.md maintenance sink", "EVENTS.md equipment failure"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-field-lab",
+    "title": "Field Science Lab",
+    "body": "Instrument suite for geology, seismology, and dust studies. Science points fund the research tree — and the research tree is how you stop importing everything.",
+    "realWorld": "Apollo ALSEP packages ran for years after the crews left.",
+    "sources": ["Apollo ALSEP", "TECH-TREE.md"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-ice-harvester",
+    "title": "Ice Harvester",
+    "body": "A cold-rated excavator that works in permanent shadow at 40 K, eating icy regolith by the tonne. The first machine in the chain that ends with rocket propellant.",
+    "realWorld": "Interlune's full-scale excavator prototype (2025) ingests 100 t of regolith per hour — this is its distant, polar-hardened cousin.",
+    "sources": ["Interlune/Vermeer 2025", "SDD ice mining"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-volatile-oven",
+    "title": "Volatile Oven",
+    "body": "Bakes icy regolith until the water lets go, at 1.5 kWh per recovered kilogram. The dry tailings go back out the hopper.",
+    "realWorld": "Thermal volatile extraction per NASA ISRU pilot-plant concepts.",
+    "sources": ["SDD section 7 ice extraction"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-electrolyzer",
+    "title": "Electrolyzer (industrial)",
+    "body": "Splits water into 89% oxygen and 11% hydrogen by mass at ~5 kWh/kg. Upstream of everything: breathable air, fuel cells, Sabatier feedstock, and rocket propellant.",
+    "realWorld": "Scaled PEM stack; the same chemistry as the ISS Oxygen Generation Assembly.",
+    "sources": ["SDD electrolysis_energy", "ISS OGA heritage"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-cryo-plant",
+    "title": "Cryo Plant",
+    "body": "Compresses and chills oxygen gas into liquid at 90 K. The 11.3 kWh/kg all-in chain cost is why propellant export demands megawatt-class power — the sim will teach you this before the spreadsheet does.",
+    "realWorld": "LOX liquefaction chain modeling per NASA propellant-production studies (SDD §11 validation target).",
+    "sources": ["SDD lox_energy_allin", "SDD section 11"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-mre-plant",
+    "title": "MRE Plant",
+    "body": "Molten Regolith Electrolysis: melt the ground at 1,600 °C and run current through it — oxygen bubbles off the anode, metal pools at the cathode. No ice required; the highlands themselves are the ore.",
+    "realWorld": "MIT/Schreiner sizing: a 400 kg, 14 kW plant makes ~1 t O₂/yr; a 1.6 t plant makes ~10 t/yr. About 280 kg of O₂ per 1,000 kg of regolith processed.",
+    "sources": ["MIT/Schreiner MRE sizing", "SDD mre constants"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-regolith-printer",
+    "title": "Regolith Printer",
+    "body": "Additive construction at 2 kWh/kg: regolith in, structural elements out. Berms, pads, and eventually habitat shells — built from the Moon, for the Moon.",
+    "realWorld": "ICON Olympus (NASA award) and ESA's D-Shape demos; China tests construction printing on Chang'e-8.",
+    "sources": ["ICON Olympus", "ESA D-Shape", "Chang'e-8"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-regolith-berm",
+    "title": "Regolith Berm",
+    "body": "Twenty tonnes of bulldozed Moon piled against a wall. Adds ~6 g/cm² of areal density to adjacent structures — cheap, dumb, and the best radiation deal on the surface.",
+    "realWorld": "Regolith shielding: >4 g/cm² tames a major SPE; berms and burial are the standard concepts.",
+    "sources": ["SDD section 4 shielding", "BUILDINGS.md regolith works"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-landing-pad",
+    "title": "Landing Pad",
+    "body": "Sintered tiles that keep descent plumes from sandblasting the base. Cuts landing dust by 90% — your solar arrays will notice.",
+    "realWorld": "Unmitigated plumes eject regolith at km/s; Apollo 12 sandblasted Surveyor 3 from 160 m away.",
+    "sources": ["EVENTS.md dust", "Apollo 12/Surveyor 3"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-propellant-depot",
+    "title": "Propellant Depot Pad",
+    "body": "A refueling apron where visiting landers buy locally made LOX. The first export revenue the colony ever earns — and the seed of the cislunar economy thesis.",
+    "realWorld": "Lunar propellant depots are the recurring business case for ice mining: fuel sold at the top of the gravity well.",
+    "sources": ["ECONOMY.md make-vs-buy", "PHASES.md Phase 3"],
+    "as_of": "2026-06"
   }
 ]

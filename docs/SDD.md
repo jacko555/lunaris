@@ -138,6 +138,8 @@ Failure cascade order (legibility rule): power loss → scrubber stops → CO₂
 
 Mass balance is exact in data; the schema requires inputs Σmass = outputs Σmass (± declared vented loss).
 
+**Implemented notes (M4):** throughput comes from the hosting building's `reactionKgPerDay` (primary-output kg/day), throttled by duty = power × condition × staffing (unstaffed floor 0.5 → 0.8 with automation_robotics) and gated by reaction `minTempK`. Ice mining is a building `mining` capability whose yield splits by the tile's true ice fraction; MRE plant throughput follows the MIT/Schreiner plant sizing rather than the theoretical 33 kWh/kg (which would overstate small-plant output). The "≥50% local O₂+water" metric counts mining and ISRU-reaction output only — recirculation (water recycler, OGA, Sabatier, electrolysis conversions) is excluded so an ISS-style recycler cannot satisfy an ISRU milestone.
+
 ---
 
 ## 8. Logistics & Orbital Model
@@ -148,6 +150,8 @@ No full orbital sim in v1 — a parameterized abstraction grounded in real delta
 - Launch windows: departures allowed any tick (Earth→Moon is forgiving) but arrivals during local night at unlit pads add landing risk +5% without nav beacons (tech).
 - Starship-class missions require `orbital_refueling` tech and have a setup latency (tanker chain) of 30 days first use.
 - Crew rotation missions: 4–6 seats; crew >180 days without rotation accrue morale/health penalties until Phase 4 norms.
+
+**Implemented notes (M5):** vehicle classes live in constants (`vehicle_clps/mid/heavy/starship`: payload cap, $/kg, ideal/realistic failure p, transit days); Starship requires orbital_refueling; night arrivals add `night_landing_penalty` without night_landing_nav; realistic CLPS failure caps at 0.15 with precision_landing (PHASES.md P0). Probe and sortie missions are abstracted (success → landings/sorties counters, science grants); crewed-fatality subtleties and rotation arrive with later milestones.
 
 ---
 
