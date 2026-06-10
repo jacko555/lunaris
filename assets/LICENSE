@@ -1,0 +1,16 @@
+# LUNARIS Asset License
+
+Everything in this `assets/` directory (art, audio, music, fonts created for
+the project) is licensed under the Creative Commons
+Attribution-ShareAlike 4.0 International license (CC BY-SA 4.0), unless a
+file or subdirectory contains its own LICENSE/README stating otherwise.
+
+Full license text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+Attribution: "LUNARIS contributors" with a link to the project repository.
+
+Why assets are licensed separately from code (which is MIT — see /LICENSE):
+this is the OpenTTD / 0 A.D. code/asset split. It keeps the engine maximally
+reusable while ensuring the project's creative identity stays share-alike.
+Third-party assets may only be added if their license is CC BY-SA-compatible
+and is recorded in an adjacent ATTRIBUTION file.
