@@ -147,7 +147,13 @@ describe("M2 scenario golden hash", () => {
    * environment/power/thermal behavior, the base pack, or the map move this
    * hash — explain the cause in the commit message (CLAUDE.md rule 6).
    */
-  const EXPECTED_HASH = "c6f78a33";
+  /**
+   * History: c6f78a33 (M2 original) → 4f36011a at M3, because the game def
+   * now registers the crew and resupply component stores, which appear
+   * (empty) in the canonical snapshot. No behavioral change to this
+   * scenario — verified by identical grid/thermal trajectories.
+   */
+  const EXPECTED_HASH = "4f36011a";
 
   it("fission outpost reproduces the golden hash after two lunar cycles", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);

@@ -34,12 +34,12 @@ describe("data/base content pack", () => {
     expect(() => loadBasePack()).not.toThrow();
   });
 
-  it("carries the full SDD §1 constants table plus the §5 thermal model set", () => {
+  it("carries the full SDD §1 constants table plus the model-parameter sets", () => {
     const pack = loadBasePack();
     // 45 = SDD master table minus micrometeorite_flux (site-dependent,
-    // lives in the EVENTS hazard tables); +8 thermal/power model constants
-    // added with Milestone 2 (SDD §5).
-    expect(pack.constants.length).toBe(53);
+    // lives in the EVENTS hazard tables); +8 thermal/power constants (M2,
+    // SDD §5); +20 crew/ECLSS/radiation/health constants (M3, SDD §4/§6/§9).
+    expect(pack.constants.length).toBe(73);
   });
 
   it("spot-checks sourced values against the SDD", () => {
@@ -58,36 +58,61 @@ describe("data/base content pack", () => {
     const pack = loadBasePack();
     const speculative = pack.constants.filter((c) => c.status === "speculative").map((c) => c.id);
     expect(speculative).toEqual(["cost_per_kg_surface"]);
-    // Thermal model parameters await engineering citations (CLAUDE.md rule 5).
+    // Model parameters awaiting engineering citations (CLAUDE.md rule 5).
     const unsourced = pack.constants
       .filter((c) => c.status === "needs_source")
       .map((c) => c.id)
       .sort();
     expect(unsourced).toEqual([
       "building_specific_heat",
+      "clinic_heal_per_day",
+      "clinic_medkit_per_patient_day",
+      "co2_danger_kg_per_person",
+      "co2_health_per_hour",
+      "co2_warning_kg_per_person",
+      "crowding_morale_per_day",
+      "dehydration_health_per_day",
       "heater_max_kw",
+      "hypoxia_health_per_hour",
+      "morale_baseline",
+      "morale_recovery_per_day",
+      "o2_reserve_target_days",
+      "radiation_sickness_health_per_day",
+      "starvation_health_per_day",
+      "starvation_morale_per_day",
       "temp_internal_target",
       "thermal_damage_rate_per_hour",
       "thermal_leak_kw_per_k_per_tonne",
     ]);
   });
 
-  it("ships the M2 tier-2 building set, resources, encyclopedia, and map", () => {
+  it("ships the tier 0–2 building set, resources, encyclopedia, and map", () => {
     const pack = loadBasePack();
     expect(pack.buildings.map((b) => b.id)).toEqual([
       "battery-bank",
+      "clinic",
+      "comms-tower",
+      "eclss-core",
+      "exercise-module",
       "fission-surface-power",
       "foundation-habitat",
       "radiator-wing",
       "regen-fuel-cell",
       "rtg-keepalive",
+      "sabatier-unit",
       "solar-array-10kw",
+      "storm-shelter",
+      "water-gas-storage",
     ]);
     expect(pack.building("fission-surface-power").powerKw).toBe(40);
     expect(pack.building("battery-bank").storageKwh).toBe(200);
     expect(pack.building("regen-fuel-cell").storageRoundTripEff).toBe(0.55);
+    expect(pack.building("foundation-habitat").services.housing).toBe(4);
+    expect(pack.building("storm-shelter").shieldingGcm2).toBe(10);
+    expect(pack.building("eclss-core").eclss?.scrubberKgCo2Day).toBe(8);
     expect(pack.resource("machine-components").importCostPerKg).toBe(100000);
-    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(8);
+    expect(pack.resource("food").id).toBe("food");
+    expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(23);
     expect(pack.maps).toHaveLength(1);
   });
 

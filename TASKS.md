@@ -50,13 +50,13 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 3 — Crew & ECLSS (Phase 2 vertical)
 
-- [ ] [core] Crew entities: health, radiation dose (mSv accumulator), morale, role, location, EVA state
-- [ ] [core] ECLSS system: per-person-day O₂ 0.84 kg / water 3.54 kg / food 0.62 kg; CO₂ 1.0 kg out; habitat atmosphere store; CO₂ scrubber; water recycling loop with closure % parameter (default 93%, upgradable to 98%); Sabatier processor optional (CO₂+4H₂→CH₄+2H₂O)
-- [ ] [core] Radiation system: chronic dose 0.5 mSv/day surface, reduced by shielding g/cm² per building; SPE event applies large dose unless crew in shelter (≥10 g/cm²); enforce 250 mSv/30-day rule → health damage beyond
-- [ ] [core] Health drift: bone/muscle decay in 1/6 g mitigated by exercise equipment hours; medical events consume medkits/clinic capacity
-- [ ] [core] Consumable storage + Earth resupply v0: scheduled cargo lander delivers manifests; cost from $/kg parameter
-- [ ] [data] Buildings v0 (from docs/BUILDINGS.md tier 0–2): hab module, storm shelter, solar array, battery, fission unit, radiator, storage, comms tower, exercise module, clinic
-- [ ] [web] Crew roster panel; building inspector (inputs/outputs/state); alert queue with cause text
+- [x] [core] Crew entities: health, radiation dose (mSv accumulator), morale, role, location, EVA state
+- [x] [core] ECLSS system: per-person-day O₂ 0.84 kg / water 3.54 kg / food 0.62 kg; CO₂ 1.0 kg out; habitat atmosphere store; CO₂ scrubber; water recycling loop with closure % parameter (default 93%, upgradable to 98%); Sabatier processor optional (CO₂+4H₂→CH₄+2H₂O)
+- [x] [core] Radiation system: chronic dose 0.5 mSv/day surface, reduced by shielding g/cm² per building; SPE event applies large dose unless crew in shelter (≥10 g/cm²); enforce 250 mSv/30-day rule → health damage beyond
+- [x] [core] Health drift: bone/muscle decay in 1/6 g mitigated by exercise equipment hours; medical events consume medkits/clinic capacity
+- [x] [core] Consumable storage + Earth resupply v0: scheduled cargo lander delivers manifests; cost from $/kg parameter
+- [x] [data] Buildings v0 (from docs/BUILDINGS.md tier 0–2): hab module, storm shelter, solar array, battery, fission unit, radiator, storage, comms tower, exercise module, clinic
+- [x] [web] Crew roster panel; building inspector (inputs/outputs/state); alert queue with cause text
 
 **Accept:** 6-crew outpost survives 3 lunar cycles with scheduled resupply; killing resupply causes legible cascade (food→morale→health) within expected tick counts (unit-tested).
 
