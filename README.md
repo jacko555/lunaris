@@ -2,7 +2,7 @@
 
 ### A hard-realism simulation & game of humanity's colonization of the Moon
 
-**Play in your browser. Free. Open source.**
+**Play in your browser, free: https://jacko555.github.io/lunaris/ — v1.0 is out: both modes, all six eras, the full tech tree, and a policy AI you can take command from at any tick.**
 
 LUNARIS models lunar settlement the way it could actually happen — real physics (1/6 g, the 29.5-day lunar day, real radiation doses), real chemistry (molten regolith electrolysis, ice-to-propellant, Sabatier loops), and the real 2026 space program (Artemis Moon Base, CLPS landers, Starship, Blue Moon, China's ILRS).
 
