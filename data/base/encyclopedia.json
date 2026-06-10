@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "id": "enc-foundation-habitat",
+    "title": "Foundation Habitat",
+    "body": "The first permanent crew quarters of a lunar outpost: a rigid pressurized module housing four, with integral 5 g/cm² shielding mass and the base's core life-support volume.",
+    "realWorld": "NASA's Foundation Surface Habitat concept and Italy's ASI Multi-Purpose Habitat, slated for the Moon Base Phase 3 architecture announced March 2026.",
+    "sources": ["NASA Moon Base Phase 3 (nasa.gov/moonbase, 2026)", "ASI MPH program"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-solar-array",
+    "title": "Deployed Solar Array",
+    "body": "Roll-out photovoltaic wings sized at ~100 W/kg. Near the south-pole ridge sites, ~90% illumination makes solar the workhorse — until the long eclipse windows and the lunar night demand storage or nuclear backup. Dust accumulation degrades output over time.",
+    "realWorld": "ISS Roll-Out Solar Array (ROSA) heritage, the deployable class baselined for Artemis surface power.",
+    "sources": ["NASA ROSA flight heritage", "SDD solar_specific_power"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-battery-bank",
+    "title": "Battery Bank",
+    "body": "Lithium-ion storage at ~200 Wh/kg with ~90% round-trip efficiency. Bridges short eclipses and day-side load spikes; hopeless for the 354-hour lunar night, where the required mass becomes prohibitive.",
+    "realWorld": "Li-ion space-rated battery class, as flown on ISS power channel upgrades.",
+    "sources": ["SDD battery_specific_energy (150-300 Wh/kg class)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-regen-fuel-cell",
+    "title": "Regenerative Fuel Cell",
+    "body": "Electrolyzes water with surplus day power, then runs the H2/O2 back through a fuel cell at night. Only ~55% efficient round trip, but its ~600 Wh/kg system energy density makes it the pre-fission answer to the lunar night.",
+    "realWorld": "NASA regenerative fuel cell development for lunar night survival.",
+    "sources": ["SDD rfc_specific_energy (400-1000 Wh/kg class)"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-fission-surface-power",
+    "title": "Fission Surface Power",
+    "body": "A 40 kWe fission reactor rated for ten years of continuous output, indifferent to the day/night cycle. The keystone of any permanent outpost: it turns the lunar night from an existential threat into a power-budget line item. Requires a keep-out zone for radiation.",
+    "realWorld": "NASA's Fission Surface Power RFP: 40 kWe for >= 10 years, <= 6,000 kg, within a 4 m x 6 m stowed envelope; Kilopower/KRUSTY (2018) demonstrated the technology at ~1 kWe.",
+    "sources": ["NASA FSP RFP", "NASA Kilopower/KRUSTY 2018"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-rtg",
+    "title": "RTG Keep-Alive Unit",
+    "body": "A radioisotope generator producing a few hundred watts regardless of sunlight. Too small to run a base, but enough to keep critical electronics and heaters alive through the night — the difference between a dormant outpost and a dead one.",
+    "realWorld": "Radioisotope power systems heritage from Apollo ALSEP through Mars rovers; NASA Moon Base Phase 1 lists RTG/RHU night-survival units.",
+    "sources": ["NASA radioisotope power systems", "NASA Moon Base Phase 1"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-radiator-wing",
+    "title": "Radiator Wing",
+    "body": "Deployable panels that reject the base's waste heat to space. With no atmosphere, radiation is the only way to dump heat — and against the 400 K daytime surface it is hard work; the same panels reject ~1.6x more against the 100 K night sky.",
+    "realWorld": "ISS Heat Rejection System deployable radiator wings.",
+    "sources": ["ISS HRS heritage", "SDD thermal model"],
+    "as_of": "2026-06"
+  },
+  {
+    "id": "enc-machine-components",
+    "title": "Machine Components",
+    "body": "Precision parts, electronics, fittings, and mechanisms — everything a lunar base cannot yet make for itself. Every kilogram rides a rocket from Earth, which is why import mass is the currency of early colonization.",
+    "realWorld": "Represents the imported dry mass of all early-phase hardware; cost dominated by $/kg-to-surface launch tiers.",
+    "sources": ["ECONOMY.md import cost tiers"],
+    "as_of": "2026-06"
+  }
+]

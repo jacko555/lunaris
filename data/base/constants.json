@@ -386,5 +386,74 @@
     "as_of": "2026-06",
     "status": "speculative",
     "notes": "Legacy and CLPS tiers are grounded in program history; the Starship-class tier is an undemonstrated target, hence speculative status for the composite"
+  },
+  {
+    "id": "temp_freeze",
+    "value": 273,
+    "unit": "K",
+    "source": "Water freezing point; SDD section 5 freeze threshold (water systems offline, then damage)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "temp_overheat",
+    "value": 310,
+    "unit": "K",
+    "source": "SDD section 5 overheat threshold (~37 C equipment limit: efficiency loss, then damage)",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "radiator_night_multiplier",
+    "value": 1.6,
+    "unit": "factor",
+    "source": "SDD section 5 / BUILDINGS.md: radiator effectiveness against the ~100 K night sky vs day conditions",
+    "as_of": "2026-06",
+    "status": "sourced"
+  },
+  {
+    "id": "temp_internal_target",
+    "value": 295,
+    "unit": "K",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Habitat/equipment thermal setpoint (~22 C); gameplay model parameter pending an engineering citation"
+  },
+  {
+    "id": "thermal_leak_kw_per_k_per_tonne",
+    "value": 0.00083,
+    "unit": "kW/K per tonne of building mass",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Building envelope conductance scaled by mass (12 t habitat -> 0.01 kW/K); gameplay model parameter, insulation tech will modify"
+  },
+  {
+    "id": "building_specific_heat",
+    "value": 1.0,
+    "unit": "kJ/(kg*K)",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Typical specific heat of mixed structure/equipment mass; thermal mass = massKg x this / 3600 in kWh/K"
+  },
+  {
+    "id": "heater_max_kw",
+    "value": 5,
+    "unit": "kW",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Cap on per-building electrical heating (Tier-1 power draw); gameplay model parameter"
+  },
+  {
+    "id": "thermal_damage_rate_per_hour",
+    "value": 0.002,
+    "unit": "condition/h",
+    "source": "",
+    "as_of": "2026-06",
+    "status": "needs_source",
+    "notes": "Condition loss per hour outside the freeze/overheat band (~21 days from full to destroyed); gameplay model parameter"
   }
 ]

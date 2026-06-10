@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "machine-components",
+    "name": "Machine Components",
+    "phase": 2,
+    "storageClass": "ambient",
+    "densityKgM3": 2500,
+    "boiloffPerDay": 0,
+    "importCostPerKg": 100000,
+    "encyclopedia": "enc-machine-components",
+    "source": "ECONOMY.md manufactured goods; import cost heavy-lift tier default",
+    "as_of": "2026-06"
+  }
+]
