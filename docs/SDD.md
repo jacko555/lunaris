@@ -33,7 +33,7 @@ Time base: **1 tick = 1 game-hour.** Internally SI units.
 | eclss_water_recovery    | 0.93                                                  | 0.90–0.98                | fraction          | ISS 90→98% (BPA upgrade = tech)                             |
 | mre_o2_yield            | 0.28                                                  | 0.25–0.30                | kg O₂/kg regolith | recoverable fraction                                        |
 | mre_energy_per_kgO2     | 33                                                    | 26–420                   | kWh/kg            | huge literature range; default mid-low                      |
-| mre_plant_smal          | {mass: 400 kg, power: 14 kW, rate: 1000 kg O₂/yr}     | —                        | —                 | MIT/Schreiner sizing                                        |
+| mre_plant_small         | {mass: 400 kg, power: 14 kW, rate: 1000 kg O₂/yr}     | —                        | —                 | MIT/Schreiner sizing                                        |
 | mre_plant_large         | {mass: 1593 kg, power: 56.5 kW, rate: 10000 kg O₂/yr} | —                        | —                 | same                                                        |
 | ilmenite_threshold      | 0.075                                                 | —                        | mass frac         | H₂-reduction competitive ≥7.5% ilmenite (mare)              |
 | lox_energy_allin        | 11.3                                                  | 9–15                     | kWh/kg            | mining→electrolysis→cryo chain                              |

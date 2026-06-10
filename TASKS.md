@@ -22,14 +22,14 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 1 — Deterministic ECS Core (the heart)
 
-- [ ] [core] ECS: `World` (entities, components, systems registry, RNG, tick counter), typed component stores
-- [ ] [core] Fixed-timestep loop: `world.tick()` = 1 game-hour; pure function of (world state, queued commands)
-- [ ] [core] Command queue: all external inputs (player or AI) enter as serializable commands; record input log
-- [ ] [core] Save/load: serialize world → versioned JSON; load reproduces identical state hash
-- [ ] [core] World hash function (stable stringify + FNV/xxhash) for determinism tests
-- [ ] [core] Data loader: parse/validate JSON content packs against docs/DATA-SCHEMA.md (use zod); base pack in `data/base/`
-- [ ] [tests] Golden test: fixed seed + scripted commands, 1,000 ticks → expected hash; runs in CI
-- [ ] [tests] Property test: mass conservation — sum of all resource mass changes per tick equals declared sources/sinks
+- [x] [core] ECS: `World` (entities, components, systems registry, RNG, tick counter), typed component stores
+- [x] [core] Fixed-timestep loop: `world.tick()` = 1 game-hour; pure function of (world state, queued commands)
+- [x] [core] Command queue: all external inputs (player or AI) enter as serializable commands; record input log
+- [x] [core] Save/load: serialize world → versioned JSON; load reproduces identical state hash
+- [x] [core] World hash function (stable stringify + FNV/xxhash) for determinism tests
+- [x] [core] Data loader: parse/validate JSON content packs against docs/DATA-SCHEMA.md (use zod); base pack in `data/base/`
+- [x] [tests] Golden test: fixed seed + scripted commands, 1,000 ticks → expected hash; runs in CI
+- [x] [tests] Property test: mass conservation — sum of all resource mass changes per tick equals declared sources/sinks
 
 **Accept:** determinism test green across Node versions; save→load→hash identical.
 
