@@ -811,8 +811,60 @@
         font-size: 11px;
         color: var(--amber);
       }
-      #gameover[hidden] {
+      #gameover[hidden],
+      #runreport[hidden] {
         display: none;
+      }
+      #runreport {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 8, 12, 0.93);
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #runreport-card {
+        max-width: 560px;
+        border: 1px solid var(--amber);
+        border-radius: 12px;
+        padding: 26px 36px;
+        background: var(--panel);
+      }
+      #runreport-card h1 {
+        color: var(--amber);
+        letter-spacing: 0.3em;
+        font-weight: 300;
+        font-size: 20px;
+        text-align: center;
+      }
+      #runreport-card button {
+        margin: 14px 6px 0 0;
+      }
+      .rr-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      .rr-table th {
+        color: var(--dim);
+        font-weight: 400;
+        text-align: right;
+        border-bottom: 1px solid var(--line);
+        padding: 2px 6px;
+      }
+      .rr-table th:first-child {
+        text-align: left;
+      }
+      .rr-table td {
+        text-align: right;
+        padding: 2px 6px;
+        border-bottom: 1px solid #141a28;
+      }
+      .rr-table td:first-child {
+        text-align: left;
+        color: var(--dim);
       }
       #gameover {
         position: fixed;
@@ -985,7 +1037,7 @@
         background: #120e0c;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-Rl-6wvow.js"></script>
+    <script type="module" crossorigin src="./assets/index-DJEEfXf7.js"></script>
   </head>
   <body>
     <div id="ops">
@@ -1093,6 +1145,10 @@
             <h3>Supply Planner</h3>
             <div id="supply-panel"></div>
           </div>
+          <div id="detail-crew" hidden>
+            <h3>Crew Member</h3>
+            <div id="crew-detail"><em style="color: var(--dim)">Select a crew member</em></div>
+          </div>
           <div id="detail-flows" hidden>
             <h3>Resource Flows</h3>
             <div id="flows-panel"></div>
@@ -1148,6 +1204,14 @@
         <p class="start-keys">
           Space pause · 1-4 speed · M/R/T/I/L/C/P/O screens · B build · Esc cancel placement
         </p>
+      </div>
+    </div>
+    <div id="runreport" hidden>
+      <div id="runreport-card">
+        <h1>RUN COMPLETE</h1>
+        <div id="runreport-body"></div>
+        <button id="runreport-continue">Keep Watching</button>
+        <button id="runreport-menu">Mission Select</button>
       </div>
     </div>
     <div id="gameover" hidden>
