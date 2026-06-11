@@ -76,6 +76,7 @@ export {
   RIVAL_COMPONENT,
   RESEARCH_COMPONENT,
   RESUPPLY_COMPONENT,
+  ROVER_COMPONENT,
   SITE_COMPONENT,
   STATS_COMPONENT,
   STORAGE_COMPONENT,
@@ -96,12 +97,15 @@ export type {
   ResearchComponent,
   ResupplyComponent,
   RivalComponent,
+  RoverComponent,
   SiteComponent,
   StatsComponent,
   StorageComponent,
   ThermalComponent,
 } from "./game/components.js";
 export { MAX_ALERTS, pushAlert } from "./game/alerts.js";
+export { createRoverSystem, roverSpec } from "./systems/rover.js";
+export type { RoverSpec, RoverSystemIds } from "./systems/rover.js";
 export {
   R_CH4,
   R_CO2,
@@ -137,8 +141,11 @@ export {
   CMD_ASSIGN_CREW,
   CMD_CANCEL_BUILD,
   CMD_CANCEL_RESUPPLY,
+  CMD_LAUNCH_EXPEDITION,
   CMD_LAUNCH_PROBE,
   CMD_LAUNCH_SORTIE,
+  CMD_ORDER_ROVER,
+  CMD_RECALL_ROVER,
   CMD_PLACE_BUILDING,
   CMD_QUEUE_BUILD,
   CMD_REMOVE_BUILDING,

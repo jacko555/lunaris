@@ -5,6 +5,7 @@ import {
   ENV_ENTITY,
   ENVIRONMENT_COMPONENT,
   PENDING_HAZARD_COMPONENT,
+  ROVER_COMPONENT,
   SITE_COMPONENT,
   THERMAL_COMPONENT,
   tileAt,
@@ -14,6 +15,7 @@ import {
   type EnvironmentComponent,
   type LunarMap,
   type PendingHazardComponent,
+  type RoverComponent,
   type SiteComponent,
   type ThermalComponent,
   type World,
@@ -571,6 +573,32 @@ export class MapRenderer {
         sprite.destroy();
         this.spritePool.delete(entity);
       }
+    }
+
+    // Rovers: diamond markers with battery pips; dashed traverse line
+    // while outbound/returning; red when stranded.
+    for (const [, rover] of world.store<RoverComponent>(ROVER_COMPONENT).entries()) {
+      const rx = (rover.x + 0.5) * TILE_PX;
+      const ry = (rover.y + 0.5) * TILE_PX;
+      if (rover.state === 1 || rover.state === 3) {
+        const txp = (rover.targetX + 0.5) * TILE_PX;
+        const typ = (rover.targetY + 0.5) * TILE_PX;
+        const segs = 12;
+        for (let i = 0; i < segs; i += 2) {
+          this.buildingLayer
+            .moveTo(rx + ((txp - rx) * i) / segs, ry + ((typ - ry) * i) / segs)
+            .lineTo(rx + ((txp - rx) * (i + 1)) / segs, ry + ((typ - ry) * (i + 1)) / segs)
+            .stroke({ color: 0xf2c94c, width: 1, alpha: 0.8 });
+        }
+      }
+      const color = rover.state === 4 ? 0xeb5757 : rover.state === 2 ? 0x56ccf2 : 0xf2c94c;
+      this.buildingLayer
+        .moveTo(rx, ry - 4)
+        .lineTo(rx + 4, ry)
+        .lineTo(rx, ry + 4)
+        .lineTo(rx - 4, ry)
+        .fill(color);
+      this.buildingLayer.circle(rx, ry, 1.4).fill(0x0b0d12);
     }
 
     // Construction sites: dashed-feel outline filling up with progress.

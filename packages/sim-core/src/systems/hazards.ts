@@ -157,7 +157,14 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
         }
       } else if (type === "flavor") {
         // Narrative-only deck entries (Accords disputes, the autonomy arc).
-        pushAlert(world, ids.alertsEntity, "info", event.id, event.alertTemplate ?? event.id, causedBy);
+        pushAlert(
+          world,
+          ids.alertsEntity,
+          "info",
+          event.id,
+          event.alertTemplate ?? event.id,
+          causedBy,
+        );
       } else if (type === "power-outage") {
         const ticksRange = (effect["ticks"] as [number, number] | undefined) ?? [24, 72];
         const ticks = world.rng.nextInt(ticksRange[0], ticksRange[1]);

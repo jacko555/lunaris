@@ -15,7 +15,13 @@ export function pushAlert(
 ): number {
   const alerts = world.store<AlertsComponent>(ALERTS_COMPONENT).require(alertsEntity);
   const seq = alerts.seq++;
-  const entry: import("./components.js").AlertEntry = { tick: world.tickCount, seq, severity, code, message };
+  const entry: import("./components.js").AlertEntry = {
+    tick: world.tickCount,
+    seq,
+    severity,
+    code,
+    message,
+  };
   if (causedBy !== undefined) {
     entry.causedBy = causedBy; // omitted when absent so old saves hash identically
   }

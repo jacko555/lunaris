@@ -98,9 +98,13 @@ export function createRoverSystem(pack: ContentPack, map: LunarMap, ids: RoverSy
         }
 
         if (rover.state === 2) {
-          // Surveying: idle draw, then sample + roll the expedition hazard.
+          // Surveying: idle draw, but never below the return reserve — the
+          // instruments brown out before the rover spends its ride home.
+          const homeKm =
+            Math.sqrt((rover.homeX - rover.x) ** 2 + (rover.homeY - rover.y) ** 2) * tileKm;
+          const reserveKwh = homeKm * spec.drainKwhPerKm * 1.15;
           rover.surveyHoursLeft -= 1;
-          rover.batteryKwh = Math.max(0, rover.batteryKwh - 0.2);
+          rover.batteryKwh = Math.max(reserveKwh, rover.batteryKwh - 0.2);
           if (rover.surveyHoursLeft > 0) {
             continue;
           }

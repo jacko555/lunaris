@@ -124,10 +124,10 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 ## Milestone 8 — "Mission Ops" visual overhaul (docs/ASSET-PLAN.md)
 
 - [ ] [art] Generate P1 asset set via Codex/gpt-image-2 (anchor → buildings → vehicles → terrain) — in progress (user running Codex)
-- [ ] [tools] strip-chroma.mjs (#FF00FF → alpha, despill, trim, @1x/@2x) + contact-sheet.mjs
-- [ ] [web] Renderer v2: zoom/pan camera, sprite compositing with glyph fallback, procedural connection network, terrain plate support
-- [ ] [web] Observer dual-run compare: shadow world (same seed, flipped failure tables), overlaid chart series
-- [ ] [web] Research screen v2: branch-column × phase-row grid (tech.json branch/trl2026), tech card art when generated
+- [x] [tools] strip-chroma.mjs (#FF00FF → alpha, despill, trim, @1x/@2x) + contact-sheet.mjs — hue-based key after the cast-shadow halo
+- [x] [web] Renderer v2: zoom/pan camera, sprite compositing with glyph fallback, procedural connection network, terrain plate support
+- [x] [web] Observer dual-run compare: shadow world (same seed, flipped failure tables), overlaid chart series — runs in a Web Worker (TAD §2 first step)
+- [x] [web] Research screen v2: branch-column grid + phase-gates ribbon (tech card art lands with assets)
 - [ ] [web] Crew portraits, event/phase chronicle cards, habitat cutaway screen (P2 assets)
 - [ ] [art] \_\_night variants + night terrain plate; emissive crossfade pass
 

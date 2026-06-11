@@ -110,6 +110,12 @@ export class Hud {
       const tick = document.createElement("span");
       tick.className = "t";
       tick.textContent = `t${entry.tick}`;
+      if (entry.causedBy !== undefined) {
+        // T12 cause chain: indent under the forecast that predicted it.
+        row.style.paddingLeft = "18px";
+        tick.textContent = `↳ t${entry.tick}`;
+        row.title = `caused by alert #${entry.causedBy}`;
+      }
       row.append(tick, document.createTextNode(entry.message));
       this.alertLog.prepend(row);
       while (this.alertLog.children.length > 60) {

@@ -3,6 +3,7 @@ import {
   BUILDING_COMPONENT,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
+  CMD_LAUNCH_EXPEDITION,
   CMD_PLACE_BUILDING,
   CMD_QUEUE_BUILD,
   CMD_SCHEDULE_RESUPPLY,
@@ -60,6 +61,7 @@ import {
 import { MapRenderer } from "./renderer.js";
 import {
   drawClockDial,
+  renderExploration,
   renderIndustry,
   renderLogistics,
   renderNextEvent,
@@ -67,6 +69,7 @@ import {
   renderTopbar,
 } from "./screens.js";
 import { SimHost, type SimSpeed } from "./sim-host.js";
+import { storage } from "./storage.js";
 import { renderTutorial } from "./tutorial.js";
 
 const BASE_DOCS = {
@@ -206,13 +209,12 @@ async function boot(): Promise<void> {
     mode: "game" as "game" | "sim",
     startYear: 2026,
     buffers: new Map<string, SeriesBuffer>(OBSERVER_SERIES.map((s) => [s.key, new SeriesBuffer()])),
-    // T11 dual-run compare: a shadow world with the same seed and the
-    // OTHER failure table, ticked in lockstep — deterministic core makes
-    // "ideal vs realistic, same history otherwise" an honest overlay.
-    shadow: null as World | null,
-    shadowBuffers: new Map<string, SeriesBuffer>(
-      OBSERVER_SERIES.map((s) => [s.key, new SeriesBuffer()]),
-    ),
+    // T11 dual-run compare: a shadow world (same seed, flipped failure
+    // tables) runs in a Web Worker — pure compute, six numbers per game-day
+    // back. Modded packs skip the compare (the worker simulates base only).
+    shadowWorker: null as Worker | null,
+    shadowSeries: new Map<string, number[]>(OBSERVER_SERIES.map((s) => [s.key, []])),
+    packIsBase: true,
   };
   app.map = loadMap(app.pack.maps[0] as (typeof app.pack.maps)[number]);
   app.gameDef = createGameDef(app.pack, app.map);
@@ -223,11 +225,12 @@ async function boot(): Promise<void> {
   app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
 
-  const ui: UiState & { pediaFilter: string } = {
+  const ui: UiState & { pediaFilter: string; planRover: number | null } = {
     tab: "roster",
     selectedBuild: null,
     flowResource: "water",
     pediaFilter: "",
+    planRover: null as number | null,
   };
 
   // ── tabs ──
@@ -249,6 +252,7 @@ async function boot(): Promise<void> {
     ["research", "🧪", "RESEARCH", "t"],
     ["industry", "🏭", "INDUSTRY", "i"],
     ["logistics", "🚀", "LOGISTICS", "l"],
+    ["exploration", "🛰", "EXPLORE", "x"],
     ["colony", "🏛", "COLONY", "c"],
     ["pedia", "📖", "PEDIA", "p"],
     ["observer", "📊", "OBSERVER", "o"],
@@ -295,6 +299,12 @@ async function boot(): Promise<void> {
     }
     const { x: tx, y: ty } = app.renderer.tileAtClient(event.clientX, event.clientY);
     if (tx < 0 || ty < 0 || tx >= app.map.width || ty >= app.map.height) {
+      return;
+    }
+    if (ui.planRover !== null) {
+      app.host.world.enqueueCommand(CMD_LAUNCH_EXPEDITION, { rover: ui.planRover, x: tx, y: ty });
+      ui.planRover = null;
+      setScreen("exploration");
       return;
     }
     if (ui.selectedBuild !== null) {
@@ -407,6 +417,7 @@ async function boot(): Promise<void> {
       const modPack = loadContentPack((doc["id"] as string | undefined) ?? "mod", doc, {
         partial: true,
       });
+      app.packIsBase = false;
       app.pack = mergePacks(loadContentPack("base", BASE_DOCS), modPack);
       app.map = loadMap(app.pack.maps[0] as (typeof app.pack.maps)[number]);
       app.gameDef = createGameDef(app.pack, app.map);
@@ -469,7 +480,8 @@ async function boot(): Promise<void> {
   }
   const startGame = (): void => {
     app.mode = "game";
-    app.shadow = null;
+    app.shadowWorker?.terminate();
+    app.shadowWorker = null;
     app.host.replaceWorld(makeTutorialWorld(app.pack, app.map, app.gameDef));
     app.host.autopauseCodes = new Set();
     app.hud.resync(app.host.world);
@@ -499,14 +511,31 @@ async function boot(): Promise<void> {
     const shadowConfig = scenarioToConfig(scenario);
     const shadowTables = failureTables === "realistic" ? "ideal" : "realistic";
     shadowConfig["failureTables"] = shadowTables;
-    app.shadow = createWorld(app.gameDef, { seed, config: shadowConfig });
-    $("#compare-legend").textContent = `— ${failureTables} · ┄ ${shadowTables} (same seed)`;
+    app.shadowWorker?.terminate();
+    app.shadowWorker = null;
+    for (const arr of app.shadowSeries.values()) {
+      arr.length = 0;
+    }
+    if (app.packIsBase) {
+      const worker = new Worker(new URL("./shadow-worker.ts", import.meta.url), {
+        type: "module",
+      });
+      worker.onmessage = (event: MessageEvent) => {
+        const data = event.data as { rows: { key: string; value: number }[] };
+        for (const row of data.rows) {
+          app.shadowSeries.get(row.key)?.push(row.value);
+        }
+      };
+      worker.postMessage({ type: "init", seed, config: shadowConfig });
+      app.shadowWorker = worker;
+    }
+    $("#compare-legend").textContent = app.packIsBase
+      ? `— ${failureTables} · ┄ ${shadowTables} (same seed, worker)`
+      : "compare unavailable on modded packs";
     for (const buffer of app.buffers.values()) {
       buffer.reset();
     }
-    for (const buffer of app.shadowBuffers.values()) {
-      buffer.reset();
-    }
+
     takeCommand.classList.remove("ai-off");
     takeCommand.textContent = "🧑‍🚀 Take Command";
     observerRail.style.display = "";
@@ -525,6 +554,7 @@ async function boot(): Promise<void> {
     }
     if (event.key === "Escape") {
       ui.selectedBuild = null;
+      ui.planRover = null;
     } else if (event.key === " ") {
       event.preventDefault();
       setSpeed(app.host.speed === 0 ? 10 : 0);
@@ -560,6 +590,7 @@ async function boot(): Promise<void> {
   const tutorialRoot = $("#tutorial");
   const resbar = $("#resbar");
   let frameCount = 0;
+  let lastAutosaveTick = 0;
   const frame = (nowMs: number): void => {
     app.host.pump(nowMs);
     app.host.checkAutopause();
@@ -578,16 +609,8 @@ async function boot(): Promise<void> {
     for (const series of OBSERVER_SERIES) {
       (app.buffers.get(series.key) as SeriesBuffer).push(world, series);
     }
-    if (app.shadow !== null) {
-      // Lockstep, bounded per frame so a long synchronous catch-up on the
-      // main world cannot freeze the render loop.
-      let budget = 200;
-      while (app.shadow.tickCount < world.tickCount && budget-- > 0) {
-        app.shadow.tick();
-      }
-      for (const series of OBSERVER_SERIES) {
-        (app.shadowBuffers.get(series.key) as SeriesBuffer).push(app.shadow, series);
-      }
+    if (app.shadowWorker !== null && frameCount % 30 === 0) {
+      app.shadowWorker.postMessage({ type: "advance", toTick: world.tickCount });
     }
     if (frameCount % 15 === 0) {
       if (app.mode === "game") {
@@ -625,8 +648,13 @@ async function boot(): Promise<void> {
         for (const series of OBSERVER_SERIES) {
           const buffer = app.buffers.get(series.key) as SeriesBuffer;
           const canvas = canvases.get(series.key) as HTMLCanvasElement;
-          const shadowBuffer = app.shadowBuffers.get(series.key) as SeriesBuffer;
-          drawSparkline(canvas, buffer.values, series.color, app.shadow ? shadowBuffer.values : []);
+          const shadowValues = app.shadowSeries.get(series.key) as number[];
+          drawSparkline(
+            canvas,
+            buffer.values,
+            series.color,
+            app.shadowWorker !== null ? shadowValues : [],
+          );
           const valueEl = canvas.previousElementSibling?.querySelector(".chart-value");
           if (valueEl !== null && valueEl !== undefined && buffer.values.length > 0) {
             valueEl.textContent = ` ${series.format(buffer.values[buffer.values.length - 1] as number)}`;
@@ -634,6 +662,22 @@ async function boot(): Promise<void> {
         }
         renderTimeline($("#timeline"), world, app.startYear);
       }
+      // Autosave each game-day (storage adapter: localStorage only in the
+      // deployed build; in-memory elsewhere per CLAUDE.md).
+      if (world.tickCount - lastAutosaveTick >= 24) {
+        lastAutosaveTick = world.tickCount;
+        storage.save(
+          "autosave",
+          {
+            mode: app.mode,
+            startYear: app.startYear,
+            tick: world.tickCount,
+            savedLabel: app.mode + " · day " + Math.floor(world.tickCount / 24),
+          },
+          saveWorld(world),
+        );
+      }
+
       // Mission Ops chrome: top-bar stats, clock dial, next-event card.
       renderTopbar(world);
       drawClockDial($("#clock-dial") as HTMLCanvasElement, world, TPLD);
@@ -660,6 +704,11 @@ async function boot(): Promise<void> {
       } else if (ui.tab === "logistics") {
         renderLogistics($("#logistics"), world, app.pack);
         renderSupplyPanel(panels["supply"] as HTMLElement, world, app.pack, -1);
+      } else if (ui.tab === "exploration") {
+        renderExploration($("#exploration"), world, app.pack, ui.planRover, (rover) => {
+          ui.planRover = rover;
+          setScreen("map");
+        });
       } else if (ui.tab === "colony") {
         renderColonyPanel(panels["colony"] as HTMLElement, world);
       } else if (ui.tab === "pedia" && frameCount % 60 === 0) {

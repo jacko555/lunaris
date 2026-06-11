@@ -1,5 +1,10 @@
 import {
   BUILDING_COMPONENT,
+  CMD_ORDER_ROVER,
+  CMD_RECALL_ROVER,
+  ROVER_COMPONENT,
+  roverSpec,
+  type RoverComponent,
   COLONY_ENTITY,
   CREW_COMPONENT,
   ECONOMY_COMPONENT,
@@ -319,4 +324,75 @@ export function renderNextEvent(root: HTMLElement, world: World, tpld: number): 
     };
   }
   root.innerHTML = `NEXT EVENT<strong>${best.label} in ${formatEta(best.inTicks)}</strong>`;
+}
+
+// ── exploration: rover fleet, expedition planner, traverse states ──
+
+const ROVER_STATES = ["IDLE — charging", "OUTBOUND", "SURVEYING", "RETURNING", "⚠ STRANDED"];
+
+export function renderExploration(
+  root: HTMLElement,
+  world: World,
+  pack: ContentPack,
+  planTarget: number | null,
+  onPlan: (rover: number) => void,
+): void {
+  let html = "";
+  const fleet = [...world.store<RoverComponent>(ROVER_COMPONENT).entries()];
+  html += `<div class="panel-hint">Rovers survey tiles for science; icy PSR ground returns an ice core and characterizes the deposit (Phase 0 criterion). Watch the battery — stranded rovers stay stranded.</div>`;
+  html += `<div class="ind-grid" style="margin-top:10px">`;
+  for (const kind of ["scout", "prospector", "sampler"]) {
+    let spec;
+    try {
+      spec = roverSpec(pack, kind);
+    } catch {
+      continue;
+    }
+    html += `<div class="ind-card">
+      <div class="ic-name"><span>${kind.toUpperCase()}</span><span class="ic-duty">$${(spec.costUsd / 1e6).toFixed(0)}M</span></div>
+      <div class="io-row"><span class="panel-hint" style="display:inline">${spec.speedKmh} km/h · ${spec.batteryKwh} kWh (~${((spec.batteryKwh / spec.drainKwhPerKm) * 0.45).toFixed(0)} km round trip) · survey ${spec.surveyHours} h · ${spec.cargoKg} kg hold</span></div>
+      <button data-order-rover="${kind}">Order ${kind}</button>
+    </div>`;
+  }
+  html += `</div><h4 style="color:var(--amber);margin-top:14px">FLEET — ${fleet.length} unit(s)</h4>`;
+  if (fleet.length === 0) {
+    html += `<div class="panel-hint">No rovers yet — order one above (it rides the next CLPS-class lander).</div>`;
+  }
+  for (const [entity, rover] of fleet) {
+    const spec = roverSpec(pack, rover.kind);
+    const battery = (rover.batteryKwh / spec.batteryKwh) * 100;
+    const planning = planTarget === entity;
+    html += `<div class="gantt-row" style="grid-template-columns: 170px 1fr 230px">
+      <span>EXPLORER-${entity}<br/><span class="panel-hint" style="display:inline">${rover.kind} · (${rover.x.toFixed(0)}, ${rover.y.toFixed(0)})</span></span>
+      <span>
+        <span class="${rover.state === 4 ? "io-in" : "io-out"}">${ROVER_STATES[rover.state]}</span>
+        <div class="bar"><div class="hp" style="width:${battery.toFixed(0)}%;background:${battery < 25 ? "var(--crit)" : "var(--good)"}"></div></div>
+        <div class="bar-label"><span>battery ${battery.toFixed(0)}%</span><span>cond ${(rover.condition * 100).toFixed(0)}% · surveys ${rover.surveysDone}</span></div>
+      </span>
+      <span style="text-align:right">
+        ${rover.state === 0 ? `<button data-plan-rover="${entity}" class="${planning ? "active" : ""}">${planning ? "Click the map…" : "🎯 Plan expedition"}</button>` : ""}
+        ${rover.state === 1 || rover.state === 2 ? `<button data-recall-rover="${entity}">Recall</button>` : ""}
+      </span>
+    </div>`;
+  }
+  root.innerHTML = html;
+  for (const button of root.querySelectorAll("[data-order-rover]")) {
+    button.addEventListener("click", () => {
+      world.enqueueCommand(CMD_ORDER_ROVER, {
+        kind: button.getAttribute("data-order-rover") as string,
+      });
+    });
+  }
+  for (const button of root.querySelectorAll("[data-plan-rover]")) {
+    button.addEventListener("click", () => {
+      onPlan(Number(button.getAttribute("data-plan-rover")));
+    });
+  }
+  for (const button of root.querySelectorAll("[data-recall-rover]")) {
+    button.addEventListener("click", () => {
+      world.enqueueCommand(CMD_RECALL_ROVER, {
+        rover: Number(button.getAttribute("data-recall-rover")),
+      });
+    });
+  }
 }
