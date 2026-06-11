@@ -85,6 +85,13 @@ const BASE_DOCS = {
   scenarios: scenariosDoc,
 };
 
+// Start-screen key art (P1) — layered under a dark gradient when present.
+const KEYART_URLS = import.meta.glob("../../../assets/gen/terrain/keyart__start.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
 const SEED = 20260610;
 const CREW_NAMES = ["Reid", "Glover", "Koch", "Hansen"];
 
@@ -227,6 +234,12 @@ async function boot(): Promise<void> {
   const TPLD = app.pack.number("day_synodic") * 24;
   app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
+
+  const keyart = Object.values(KEYART_URLS)[0];
+  if (keyart !== undefined) {
+    $("#start-screen").style.background =
+      `linear-gradient(rgba(4,6,10,0.82), rgba(4,6,10,0.93)), url(${JSON.stringify(keyart)}) center/cover no-repeat`;
+  }
 
   const ui: UiState & {
     pediaFilter: string;

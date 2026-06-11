@@ -282,7 +282,7 @@ function drawGlyph(
 // ── Mission Ops sprite pipeline (ASSET-PLAN §1): assets are optional — the
 // glob is empty until Codex output lands, and every defId without a sprite
 // falls back to its vector glyph so the game always runs asset-less.
-const SPRITE_URLS = import.meta.glob("../../../assets/gen/buildings/iso/*__base@1x.png", {
+const SPRITE_URLS = import.meta.glob("../../../assets/gen/buildings/iso/*@1x.png", {
   eager: true,
   query: "?url",
   import: "default",
@@ -292,14 +292,33 @@ const TERRAIN_URLS = import.meta.glob("../../../assets/gen/terrain/baseplate__*.
   query: "?url",
   import: "default",
 }) as Record<string, string>;
+const VEHICLE_URLS = import.meta.glob("../../../assets/gen/vehicles/*__iso@1x.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
 
-function spriteUrl(defId: string): string | null {
-  for (const [path, url] of Object.entries(SPRITE_URLS)) {
-    if (path.endsWith(`/${defId}__base@1x.png`)) {
+function urlEndingWith(urls: Record<string, string>, suffix: string): string | null {
+  for (const [path, url] of Object.entries(urls)) {
+    if (path.endsWith(suffix)) {
       return url;
     }
   }
   return null;
+}
+
+function spriteUrl(defId: string): string | null {
+  return urlEndingWith(SPRITE_URLS, `/${defId}__base@1x.png`);
+}
+
+/** Construction scaffold by footprint size class (site__S/M/L). */
+function siteUrl(maxDim: number): string | null {
+  const cls = maxDim <= 1 ? "S" : maxDim === 2 ? "M" : "L";
+  return urlEndingWith(SPRITE_URLS, `/site__${cls}@1x.png`);
+}
+
+function roverUrl(kind: string): string | null {
+  return urlEndingWith(VEHICLE_URLS, `/rover-${kind}__iso@1x.png`);
 }
 
 export class MapRenderer {
@@ -312,9 +331,10 @@ export class MapRenderer {
   private spriteLayer = new Container();
   private nightTint = new Graphics();
   private ready = false;
-  /** defId → loaded texture, or null when missing / not yet loaded. */
+  /** url-keyed loaded textures (null = missing / not yet loaded). */
   private textures = new Map<string, Texture | null>();
   private spritePool = new Map<number, Sprite>();
+  private nightPlate: Sprite | null = null;
   /** True while (or just after) the pointer dragged the camera. */
   wasDrag = false;
 
@@ -333,16 +353,53 @@ export class MapRenderer {
     });
     parent.appendChild(this.app.canvas);
 
-    // Terrain: pre-rendered plate when generated, vector tiles otherwise.
-    const dayPlate = Object.entries(TERRAIN_URLS).find(([p]) =>
-      p.endsWith("baseplate__day.png"),
-    )?.[1];
-    if (dayPlate !== undefined) {
+    // Terrain: pre-rendered plate for the site it was painted for, with the
+    // DATA TRUTH composited on top (the art's crater edge is decoration —
+    // the real PSR/ridge tiles must stay legible for mining and placement).
+    // Other maps keep the procedural hillshade tiles.
+    const dayPlate =
+      this.map.id === "shackleton_rim" ? urlEndingWith(TERRAIN_URLS, "baseplate__day.png") : null;
+    if (dayPlate !== null) {
       const tex = await Assets.load<Texture>(dayPlate);
       const plate = new Sprite(tex);
       plate.width = this.map.width * TILE_PX;
       plate.height = this.map.height * TILE_PX;
       this.world.addChild(plate);
+      const nightUrl = urlEndingWith(TERRAIN_URLS, "baseplate__night.png");
+      if (nightUrl !== null) {
+        const nightTex = await Assets.load<Texture>(nightUrl);
+        this.nightPlate = new Sprite(nightTex);
+        this.nightPlate.width = plate.width;
+        this.nightPlate.height = plate.height;
+        this.nightPlate.alpha = 0;
+        this.world.addChild(this.nightPlate);
+      }
+      const overlay = new Graphics();
+      for (let y = 0; y < this.map.height; y++) {
+        for (let x = 0; x < this.map.width; x++) {
+          const tile = tileAt(this.map, x, y);
+          if (tile.illumClass === "C") {
+            const ice = Math.min(1, tile.iceFrac / 0.085);
+            overlay
+              .rect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX)
+              .fill({ color: 0x05080f, alpha: 0.82 });
+            if (ice > 0 && tileNoise(y, x) > 3) {
+              overlay
+                .rect(x * TILE_PX + 3, y * TILE_PX + 3, 3, 3)
+                .fill({ color: 0x6fc6e8, alpha: 0.5 * ice });
+            }
+          } else if (tile.illumClass === "A") {
+            overlay
+              .rect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX)
+              .fill({ color: 0xffd98a, alpha: 0.28 });
+          } else if (tile.slopeDeg > 10) {
+            overlay
+              .rect(x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX)
+              .fill({ color: 0x000000, alpha: 0.18 });
+          }
+        }
+      }
+      this.world.addChild(overlay);
     } else {
       const tileLayer = new Graphics();
       for (let y = 0; y < this.map.height; y++) {
@@ -433,19 +490,53 @@ export class MapRenderer {
     return { x: Math.floor(wx / TILE_PX), y: Math.floor(wy / TILE_PX) };
   }
 
-  /** Resolve (and lazily load) the sprite texture for a building def. */
-  private textureFor(defId: string): Texture | null {
-    if (this.textures.has(defId)) {
-      return this.textures.get(defId) as Texture | null;
+  /** Lazily load any sprite texture by url (buildings, sites, rovers). */
+  private textureForUrl(url: string | null): Texture | null {
+    if (url === null) {
+      return null;
     }
-    const url = spriteUrl(defId);
-    this.textures.set(defId, null);
-    if (url !== null) {
-      void Assets.load<Texture>(url).then((tex) => {
-        this.textures.set(defId, tex);
-      });
+    if (this.textures.has(url)) {
+      return this.textures.get(url) as Texture | null;
     }
+    this.textures.set(url, null);
+    void Assets.load<Texture>(url).then((tex) => {
+      this.textures.set(url, tex);
+    });
     return null;
+  }
+
+  private textureFor(defId: string): Texture | null {
+    return this.textureForUrl(spriteUrl(defId));
+  }
+
+  /** Pooled bottom-anchored sprite for an entity; returns false when the
+   * texture isn't available (caller falls back to vector). */
+  private placeSprite(
+    entity: number,
+    texture: Texture | null,
+    centerX: number,
+    bottomY: number,
+    widthPx: number,
+    alpha: number,
+    tint = 0xffffff,
+  ): boolean {
+    if (texture === null) {
+      return false;
+    }
+    let sprite = this.spritePool.get(entity);
+    if (sprite === undefined || sprite.texture !== texture) {
+      sprite?.destroy();
+      sprite = new Sprite(texture);
+      sprite.anchor.set(0.5, 1);
+      this.spritePool.set(entity, sprite);
+      this.spriteLayer.addChild(sprite);
+    }
+    sprite.width = widthPx;
+    sprite.height = (texture.height / texture.width) * widthPx;
+    sprite.position.set(centerX, bottomY);
+    sprite.alpha = alpha;
+    sprite.tint = tint;
+    return true;
   }
 
   draw(world: World): void {
@@ -530,23 +621,19 @@ export class MapRenderer {
       const wpx = w * TILE_PX;
       const hpx = h * TILE_PX;
       const color = BUILDING_COLORS[building.defId] ?? 0xffffff;
-      const texture = this.textureFor(building.defId);
-      if (texture !== null) {
-        // Sprite path: bottom-anchored on the footprint, free to overflow
-        // upward (3/4-view art is taller than its ground plan).
+      // Sprite path: bottom-anchored on the footprint, free to overflow
+      // upward (3/4-view art is taller than its ground plan).
+      if (
+        this.placeSprite(
+          entity,
+          this.textureFor(building.defId),
+          px + wpx / 2,
+          py + hpx,
+          wpx * 1.15,
+          0.6 + 0.4 * building.condition,
+        )
+      ) {
         liveEntities.add(entity);
-        let sprite = this.spritePool.get(entity);
-        if (sprite === undefined || sprite.texture !== texture) {
-          sprite?.destroy();
-          sprite = new Sprite(texture);
-          sprite.anchor.set(0.5, 1);
-          this.spritePool.set(entity, sprite);
-          this.spriteLayer.addChild(sprite);
-        }
-        sprite.width = wpx * 1.15;
-        sprite.height = (texture.height / texture.width) * wpx * 1.15;
-        sprite.position.set(px + wpx / 2, py + hpx);
-        sprite.alpha = 0.6 + 0.4 * building.condition;
       } else {
         drawGlyph(
           this.buildingLayer,
@@ -589,17 +676,9 @@ export class MapRenderer {
       }
     }
 
-    // Reclaim sprites whose buildings are gone (or lost their texture).
-    for (const [entity, sprite] of this.spritePool) {
-      if (!liveEntities.has(entity)) {
-        sprite.destroy();
-        this.spritePool.delete(entity);
-      }
-    }
-
-    // Rovers: diamond markers with battery pips; dashed traverse line
-    // while outbound/returning; red when stranded.
-    for (const [, rover] of world.store<RoverComponent>(ROVER_COMPONENT).entries()) {
+    // Rovers: iso sprites when generated (state-tinted), vector diamonds
+    // otherwise; dashed traverse line while outbound/returning.
+    for (const [entity, rover] of world.store<RoverComponent>(ROVER_COMPONENT).entries()) {
       const rx = (rover.x + 0.5) * TILE_PX;
       const ry = (rover.y + 0.5) * TILE_PX;
       if (rover.state === 1 || rover.state === 3) {
@@ -613,46 +692,90 @@ export class MapRenderer {
             .stroke({ color: 0xf2c94c, width: 1, alpha: 0.8 });
         }
       }
-      const color = rover.state === 4 ? 0xeb5757 : rover.state === 2 ? 0x56ccf2 : 0xf2c94c;
-      this.buildingLayer
-        .moveTo(rx, ry - 4)
-        .lineTo(rx + 4, ry)
-        .lineTo(rx, ry + 4)
-        .lineTo(rx - 4, ry)
-        .fill(color);
-      this.buildingLayer.circle(rx, ry, 1.4).fill(0x0b0d12);
+      const tint = rover.state === 4 ? 0xff8080 : 0xffffff;
+      if (
+        this.placeSprite(
+          entity,
+          this.textureForUrl(roverUrl(rover.kind)),
+          rx,
+          ry + TILE_PX * 0.5,
+          TILE_PX * 1.6,
+          rover.state === 4 ? 0.8 : 1,
+          tint,
+        )
+      ) {
+        liveEntities.add(entity);
+      } else {
+        const color = rover.state === 4 ? 0xeb5757 : rover.state === 2 ? 0x56ccf2 : 0xf2c94c;
+        this.buildingLayer
+          .moveTo(rx, ry - 4)
+          .lineTo(rx + 4, ry)
+          .lineTo(rx, ry + 4)
+          .lineTo(rx - 4, ry)
+          .fill(color);
+        this.buildingLayer.circle(rx, ry, 1.4).fill(0x0b0d12);
+      }
     }
 
-    // Construction sites: dashed-feel outline filling up with progress.
+    // Construction sites: scaffold sprite (size-classed) with the progress
+    // fill on top; dashed-feel vector outline as the asset-less fallback.
     const sites = world.store<SiteComponent>(SITE_COMPONENT);
-    for (const [, site] of sites.entries()) {
+    for (const [entity, site] of sites.entries()) {
       const def = this.pack.building(site.defId);
       const [w, h] = def.footprint;
       const px = site.x * TILE_PX;
       const py = site.y * TILE_PX;
       const progress = Math.min(1, site.progressHours / site.totalHours);
-      this.buildingLayer
-        .rect(px + 1, py + 1, w * TILE_PX - 2, h * TILE_PX - 2)
-        .stroke({ color: 0x6c9ef8, width: 1 });
+      if (
+        this.placeSprite(
+          entity,
+          this.textureForUrl(siteUrl(Math.max(w, h))),
+          px + (w * TILE_PX) / 2,
+          py + h * TILE_PX,
+          w * TILE_PX * 1.05,
+          0.55 + 0.4 * progress,
+        )
+      ) {
+        liveEntities.add(entity);
+      } else {
+        this.buildingLayer
+          .rect(px + 1, py + 1, w * TILE_PX - 2, h * TILE_PX - 2)
+          .stroke({ color: 0x6c9ef8, width: 1 });
+      }
       if (progress > 0) {
         this.buildingLayer
-          .rect(
-            px + 2,
-            py + 2 + (h * TILE_PX - 4) * (1 - progress),
-            w * TILE_PX - 4,
-            (h * TILE_PX - 4) * progress,
-          )
-          .fill({ color: 0x6c9ef8, alpha: 0.4 });
+          .rect(px + 1, py + h * TILE_PX + 1, w * TILE_PX - 2, 2)
+          .fill({ color: 0x6c9ef8, alpha: 0.3 });
+        this.buildingLayer
+          .rect(px + 1, py + h * TILE_PX + 1, (w * TILE_PX - 2) * progress, 2)
+          .fill({ color: 0x6c9ef8, alpha: 0.95 });
       }
+    }
+
+    // Reclaim sprites whose entities are gone (buildings, sites, rovers).
+    for (const [entity, sprite] of this.spritePool) {
+      if (!liveEntities.has(entity)) {
+        sprite.destroy();
+        this.spritePool.delete(entity);
+      }
+    }
+
+    // Night plate crossfade (smoothed so sunset reads as a transition).
+    if (this.nightPlate !== null) {
+      const target = env.litB === 0 ? 1 : 0;
+      this.nightPlate.alpha += (target - this.nightPlate.alpha) * 0.08;
     }
 
     // Day/night tint follows class-B illumination; the eternal-light ridge
     // (class A) keeps a faint glow during its lit night hours.
     this.nightTint.clear();
     if (env.litB === 0) {
-      this.nightTint
-        .rect(0, 0, this.map.width * TILE_PX, this.map.height * TILE_PX)
-        .fill({ color: 0x020308, alpha: 0.55 });
+      if (this.nightPlate === null) {
+        // No pre-rendered night plate: flat-darken the procedural tiles.
+        this.nightTint
+          .rect(0, 0, this.map.width * TILE_PX, this.map.height * TILE_PX)
+          .fill({ color: 0x020308, alpha: 0.55 });
+      }
       if (env.litA === 1) {
         for (let y = 0; y < this.map.height; y++) {
           for (let x = 0; x < this.map.width; x++) {

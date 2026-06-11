@@ -219,6 +219,27 @@ Lucide/Phosphor, MIT). gpt-image-2 raster icons at that size read as mud. (P2 ta
 
 P1 = T1–T4 (the map stops being rectangles). P2 = T5–T7 (the mockup screens). P3 = T8–T10.
 
+## Status (2026-06-11)
+
+**P1 COMPLETE and integrated**: all 39 building sprites, 3 construction
+sites, 4 terrain plates (day + night + explore + key art), 9 vehicles ×2
+views — generated, chroma-stripped, rendering in-game. Terrain plates are
+composited UNDER a data-truth overlay (real PSR/ridge/slope tiles tinted
+on top) and apply to shackleton_rim only; de_gerlache keeps procedural
+hillshade until a per-map plate exists (name it
+`baseplate__<mapId>__day.png` when generating).
+
+**Remaining queue for Codex, in value order:**
+
+1. P2 portraits (16) — the crew detail panel has portrait slots live
+2. P2 event cards (11) + phase cards (7) — chronicle/banner art slots
+3. tech cards (34) — research detail panel
+4. `__night` building variants (39) — the night plate is in; emissive
+   windows are the missing half
+5. cutaway shell + 10 rooms — needs its screen built first
+6. `baseplate__de_gerlache_rim__day/night` — second-site plates
+7. moon-disc + SVG icon pass (P3)
+
 ---
 
 ## 8. Addendum — mockup set v2 (build day/night, research tree, observer dashboard)

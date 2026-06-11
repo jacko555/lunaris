@@ -123,7 +123,7 @@ Legend: `[core]` sim-core · `[web]` web client · `[data]` JSON content · `[in
 
 ## Milestone 8 — "Mission Ops" visual overhaul (docs/ASSET-PLAN.md)
 
-- [ ] [art] Generate P1 asset set via Codex/gpt-image-2 (anchor → buildings → vehicles → terrain) — in progress (user running Codex)
+- [x] [art] Generate P1 asset set via Codex/gpt-image-2 — COMPLETE: 39 buildings, 3 sites, 4 terrain plates, 9 vehicles ×2 views, all integrated
 - [x] [tools] strip-chroma.mjs (#FF00FF → alpha, despill, trim, @1x/@2x) + contact-sheet.mjs — hue-based key after the cast-shadow halo
 - [x] [web] Renderer v2: zoom/pan camera, sprite compositing with glyph fallback, procedural connection network, terrain plate support
 - [x] [web] Observer dual-run compare: shadow world (same seed, flipped failure tables), overlaid chart series — runs in a Web Worker (TAD §2 first step)

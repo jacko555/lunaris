@@ -40,6 +40,22 @@ const PHASE_NAMES = [
 
 const $ = (sel: string): HTMLElement => document.querySelector(sel) as HTMLElement;
 
+// Side-view vehicle renders (P1 assets) — decorative, with text fallback.
+const VEHICLE_SIDE_URLS = import.meta.glob("../../../assets/gen/vehicles/*__side@1x.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function vehicleImg(id: string, heightPx: number): string {
+  for (const [path, url] of Object.entries(VEHICLE_SIDE_URLS)) {
+    if (path.endsWith(`/${id}__side@1x.png`)) {
+      return `<img src="${url}" style="height:${heightPx}px;width:auto;display:block;margin:0 auto 4px" alt=""/>`;
+    }
+  }
+  return "";
+}
+
 // ── top bar: funds/population with per-day deltas, phase pips ──
 
 const dayStats = { day: -1, funds: 0, pop: 0, fundsDelta: 0, popDelta: 0 };
@@ -199,11 +215,11 @@ export function renderLogistics(root: HTMLElement, world: World, pack: ContentPa
   }
   // Route overview: fixed cislunar geometry; per-leg numbers are the SDD's.
   html += `<div class="route-strip">
-    <div class="route-node"><strong>EARTH LEO</strong>departure</div>
+    <div class="route-node">${vehicleImg("leo-station", 46)}<strong>EARTH LEO</strong>departure</div>
     <div class="route-arrow">Δv 3.15 km/s →<br/>TLI · 3 d</div>
-    <div class="route-node"><strong>LUNAR ORBIT</strong>100 km</div>
+    <div class="route-node">${vehicleImg("transit-stage", 46)}<strong>LUNAR ORBIT</strong>100 km</div>
     <div class="route-arrow">Δv 0.70 km/s →<br/>LOI</div>
-    <div class="route-node"><strong>DESCENT</strong>powered</div>
+    <div class="route-node">${vehicleImg("lander-heavy", 46)}<strong>DESCENT</strong>powered</div>
     <div class="route-arrow">Δv 1.90 km/s →<br/>terminal</div>
     <div class="route-node"><strong>SHACKLETON</strong>surface ops</div>
   </div>`;
@@ -211,7 +227,8 @@ export function renderLogistics(root: HTMLElement, world: World, pack: ContentPa
   for (const id of ["clps", "mid", "heavy", "starship"]) {
     try {
       const v = vehicleClass(pack, id);
-      html += `<tr><td>${id.toUpperCase()}</td><td>${(v.payloadKg / 1000).toFixed(1)} t</td><td>$${v.usdPerKg.toLocaleString()}</td><td>${v.transitDays} d</td><td>${(v.failureIdeal * 100).toFixed(0)}% / ${(v.failureRealistic * 100).toFixed(0)}%</td></tr>`;
+      const art = vehicleImg(id === "starship" ? "starship-hls" : `lander-${id}`, 34);
+      html += `<tr><td style="display:flex;gap:8px;align-items:center">${art.replace("margin:0 auto 4px", "margin:0")}${id.toUpperCase()}</td><td>${(v.payloadKg / 1000).toFixed(1)} t</td><td>$${v.usdPerKg.toLocaleString()}</td><td>${v.transitDays} d</td><td>${(v.failureIdeal * 100).toFixed(0)}% / ${(v.failureRealistic * 100).toFixed(0)}%</td></tr>`;
     } catch {
       // vehicle not in this pack (mods)
     }
@@ -349,6 +366,7 @@ export function renderExploration(
       continue;
     }
     html += `<div class="ind-card">
+      ${vehicleImg(`rover-${kind}`, 56)}
       <div class="ic-name"><span>${kind.toUpperCase()}</span><span class="ic-duty">$${(spec.costUsd / 1e6).toFixed(0)}M</span></div>
       <div class="io-row"><span class="panel-hint" style="display:inline">${spec.speedKmh} km/h · ${spec.batteryKwh} kWh (~${((spec.batteryKwh / spec.drainKwhPerKm) * 0.45).toFixed(0)} km round trip) · survey ${spec.surveyHours} h · ${spec.cargoKg} kg hold</span></div>
       <button data-order-rover="${kind}">Order ${kind}</button>
