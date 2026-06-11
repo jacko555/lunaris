@@ -204,23 +204,19 @@
         color: var(--dim);
         text-transform: uppercase;
       }
+      /* The map bleeds edge-to-edge in the workspace (no box). */
       #screen-map {
-        height: 100%;
+        height: calc(100% + 28px);
+        margin: -14px;
         display: flex;
       }
       #map-wrap {
         position: relative;
-        border: 1px solid var(--line);
-        border-radius: 10px;
+        flex: 1;
         overflow: hidden;
-        margin: auto;
-        max-width: 100%;
-        max-height: 100%;
       }
       #map-wrap canvas {
         display: block;
-        width: min(78vh, 100%);
-        height: auto;
       }
       #detail {
         background: var(--panel);
@@ -1037,7 +1033,7 @@
         background: #120e0c;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-DkJ02shR.js"></script>
+    <script type="module" crossorigin src="./assets/index-BsXV0vTZ.js"></script>
   </head>
   <body>
     <div id="ops">
