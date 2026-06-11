@@ -440,6 +440,25 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
               ],
               ["foundation-habitat", Math.ceil(Math.max(4, living + 2) / 4)],
               ["radiator-wing", Math.max(2, Math.ceil(heatKw / 12))],
+              // Storage ride-through (a live Phase-3 base was observed at
+              // 0/0 kWh stored): ~4 hours of installed demand in batteries
+              // for scram/outage gaps, plus one RFC when unlocked.
+              [
+                "battery-bank",
+                knows("battery-bank")
+                  ? Math.min(
+                      8,
+                      Math.max(
+                        1,
+                        Math.ceil(
+                          (demandKw * 4) /
+                            Math.max(1, pack.building("battery-bank").storageKwh ?? 100),
+                        ),
+                      ),
+                    )
+                  : 0,
+              ],
+              ["regen-fuel-cell", unlocked("regen_fuel_cells") ? 1 : 0],
               ["eclss-core", 1 + Math.ceil(Math.max(1, living / 6))],
               ["storm-shelter", 1],
               ["water-gas-storage", 1],
@@ -520,14 +539,24 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
                 }
                 policy.lastCrewTick = world.tickCount;
               } else if (cargoInFlight < 3) {
+                // Priority-clamped to one heavy lander (same rule as the
+                // needs pass — an oversized manifest is rejected wholesale).
+                let remaining = vehicleClass(pack, "heavy").payloadKg;
+                const manifest: { resource: string; kg: number }[] = [];
+                const push = (resource: string, kg: number): void => {
+                  const clamped = Math.min(Math.ceil(kg), Math.floor(remaining));
+                  if (clamped > 0) {
+                    manifest.push({ resource, kg: clamped });
+                    remaining -= clamped;
+                  }
+                };
+                push(R_FOOD, expected * 0.62 * 120);
+                push(R_O2, expected * 0.84 * 60);
+                push("medkits", 10);
+                push(R_SPARE_PARTS, 400);
+                push(R_WATER, expected * 7.04 * 40);
                 world.enqueueCommand("cmd-schedule-resupply", {
-                  manifest: [
-                    { resource: R_FOOD, kg: Math.ceil(expected * 0.62 * 120) },
-                    { resource: R_WATER, kg: Math.ceil(expected * 7.04 * 40) },
-                    { resource: R_O2, kg: Math.ceil(expected * 0.84 * 60) },
-                    { resource: "medkits", kg: 10 },
-                    { resource: R_SPARE_PARTS, kg: 400 },
-                  ],
+                  manifest,
                   arrivalTick: 0,
                   targetEntity: habs[0] as number,
                   vehicle: "heavy",
