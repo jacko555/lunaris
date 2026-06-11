@@ -232,11 +232,11 @@ async function boot(): Promise<void> {
   app.renderer = new MapRenderer(app.map, app.pack);
   await app.renderer.init($("#map-wrap"));
   app.host = new SimHost(makeTutorialWorld(app.pack, app.map, app.gameDef));
-  requestAnimationFrame(() => {
-    // After the first resizeTo pass so minZoom sees the real viewport.
+  setTimeout(() => {
+    // After resizeTo has measured the real viewport (first frames lie).
     const home = findBuildSite(app.map, 12, 8);
     app.renderer.frame(home.x + 6, home.y + 4);
-  });
+  }, 200);
   const TPLD = app.pack.number("day_synodic") * 24;
   app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
@@ -557,6 +557,10 @@ async function boot(): Promise<void> {
       }
       observerRail.style.display = "none";
       setScreen("map");
+      {
+        const home = findBuildSite(app.map, 12, 8);
+        app.renderer.frame(home.x + 6, home.y + 4);
+      }
       $("#tutorial").hidden = false;
       ($("#build-box") as HTMLDetailsElement).open = true;
       $("#start-screen").hidden = true;
