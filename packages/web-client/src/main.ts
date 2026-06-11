@@ -350,9 +350,27 @@ async function boot(): Promise<void> {
         }
       }
       app.hud.select(found);
+      app.renderer.selected = found; // W4 selection ring
     });
   };
   bindMapInteraction();
+
+  // W3 overlay toggle chips (state lives on the renderer instance).
+  const renderOverlayChips = (): void => {
+    const chips = $("#overlay-chips");
+    chips.replaceChildren();
+    for (const key of ["illum", "network", "radius", "badges"] as const) {
+      const button = document.createElement("button");
+      button.textContent = key.toUpperCase();
+      button.classList.toggle("active", app.renderer.overlays[key]);
+      button.addEventListener("click", () => {
+        app.renderer.overlays[key] = !app.renderer.overlays[key];
+        renderOverlayChips();
+      });
+      chips.appendChild(button);
+    }
+  };
+  renderOverlayChips();
 
   // Roster clicks select a crew member for the detail aside.
   $("#roster").addEventListener("click", (event) => {

@@ -22,6 +22,7 @@
         --accent: #6c9ef8;
         --amber: #f2a65a;
         --mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+        --sans: "Inter", "Segoe UI", system-ui, sans-serif;
       }
       * {
         box-sizing: border-box;
@@ -32,8 +33,29 @@
         height: 100%;
         background: var(--bg);
         color: var(--text);
-        font-family: var(--mono);
+        /* W2 typography: sans for prose/labels, mono strictly for telemetry. */
+        font-family: var(--sans);
         font-size: 13px;
+      }
+      .chip,
+      .bcard-chips,
+      .kv span:last-child,
+      .chart-value,
+      .top-stat .big,
+      #power-line,
+      #storage-line,
+      #clock .big,
+      .veh-table td,
+      .gantt-row span:last-child,
+      .bar-label,
+      .tl-row span:first-child,
+      #next-event strong {
+        font-family: var(--mono);
+      }
+      button,
+      select,
+      input {
+        font-family: var(--sans);
       }
       label,
       h3,
@@ -214,6 +236,20 @@
         position: relative;
         flex: 1;
         overflow: hidden;
+      }
+      #overlay-chips {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 6;
+        display: flex;
+        gap: 4px;
+      }
+      #overlay-chips button {
+        font-size: 10px;
+        padding: 3px 8px;
+        letter-spacing: 0.08em;
+        background: rgba(14, 18, 25, 0.85);
       }
       #map-wrap canvas {
         display: block;
@@ -431,6 +467,61 @@
         color: var(--dim);
         font-size: 11px;
         padding: 2px 0 4px 14px;
+      }
+      .bgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .bcard {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel2);
+        padding: 6px 4px 5px;
+        text-align: center;
+        cursor: pointer;
+      }
+      .bcard:hover {
+        border-color: var(--accent);
+      }
+      .bcard.selected {
+        border-color: var(--amber);
+        background: #221a10;
+      }
+      .bcard.locked {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .bcard img {
+        width: 64px;
+        height: 46px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+      }
+      .bcard-dot {
+        font-size: 26px;
+        line-height: 46px;
+        color: var(--dim);
+      }
+      .bcard-nm {
+        font-size: 10px;
+        line-height: 1.2;
+        margin-top: 3px;
+        min-height: 24px;
+      }
+      .bcard-chips {
+        font-size: 9px;
+        color: var(--dim);
+        font-family: var(--mono);
+      }
+      .bcard-lock {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        font-size: 10px;
       }
       .build-card {
         border: 1px solid var(--line);
@@ -1079,7 +1170,10 @@
         <nav id="rail"></nav>
         <main id="workspace">
           <section id="screen-map">
-            <div id="map-wrap"><div id="tutorial"></div></div>
+            <div id="map-wrap">
+              <div id="tutorial"></div>
+              <div id="overlay-chips"></div>
+            </div>
           </section>
           <section id="screen-crew" hidden>
             <h3>Crew Roster</h3>

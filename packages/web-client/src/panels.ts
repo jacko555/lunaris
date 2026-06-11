@@ -10,6 +10,7 @@ import {
   STATS_COMPONENT,
   effectiveTechCost,
   hardPrereqsMet,
+  type Building,
   type ContentPack,
   type EconomyComponent,
   type PhaseComponent,
@@ -38,6 +39,54 @@ const usd = (v: number): string =>
 
 // ── Build menu ──
 
+// Sprite thumbnails for the build grid (optional; glyph dot fallback).
+const THUMB_URLS = import.meta.glob("../../../assets/gen/buildings/iso/*__base@1x.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function thumbUrl(defId: string): string | null {
+  for (const [path, url] of Object.entries(THUMB_URLS)) {
+    if (path.endsWith(`/${defId}__base@1x.png`)) {
+      return url;
+    }
+  }
+  return null;
+}
+
+const BUILD_CATEGORIES = [
+  "POWER",
+  "HABITAT",
+  "LIFE SUPPORT",
+  "ISRU & INDUSTRY",
+  "SCIENCE",
+  "LOGISTICS",
+  "STRUCTURES",
+];
+
+function buildCategory(def: Building): string {
+  if (def.powerKw > 0 || (def.storageKwh ?? 0) > 0 || def.radiatorShared) {
+    return "POWER";
+  }
+  if (def.eclss !== undefined) {
+    return "LIFE SUPPORT";
+  }
+  if (Object.keys(def.services).length > 0) {
+    return "HABITAT";
+  }
+  if (def.mining !== undefined || def.reactions.length > 0 || def.farm !== undefined) {
+    return "ISRU & INDUSTRY";
+  }
+  if (def.sciencePerDay > 0) {
+    return "SCIENCE";
+  }
+  if (def.landingPad || def.propellantDepot || def.commsRelay || def.massDriver) {
+    return "LOGISTICS";
+  }
+  return "STRUCTURES";
+}
+
 export function renderBuildMenu(
   root: HTMLElement,
   world: World,
@@ -46,43 +95,62 @@ export function renderBuildMenu(
   onSelect: (defId: string | null) => void,
 ): void {
   const research = world.store<ResearchComponent>(RESEARCH_COMPONENT).require(COLONY_ENTITY);
-  const cards: HTMLElement[] = [];
-  const sorted = [...pack.buildings].sort((a, b) => a.tier - b.tier || (a.id < b.id ? -1 : 1));
-  for (const def of sorted) {
-    const locked = def.techRequired !== null && !research.unlocked.includes(def.techRequired);
-    const card = document.createElement("div");
-    card.className = `build-card${ui.selectedBuild === def.id ? " selected" : ""}${locked ? " locked" : ""}`;
-    const cost =
-      def.buildCost.local.length > 0
-        ? `local: ${def.buildCost.local.map((e) => `${e.kg} kg ${e.resource}`).join(", ")}`
-        : `import: ${def.buildCost.imported.map((e) => `${e.kg} kg ${e.resource}`).join(", ")}`;
-    const chemistry = def.reactions
-      .map((rid) => {
-        const r = pack.reaction(rid);
-        const inputs = r.inputs.map((e) => `${e.kg} ${e.resource}`).join(" + ");
-        const outputs = r.outputs.map((e) => `${e.kg} ${e.resource}`).join(" + ");
-        return `${inputs} → ${outputs} (${r.energyKwhPerKgPrimary} kWh/kg)`;
-      })
-      .join("\n");
-    card.title = `${def.analogue}\n${chemistry}${def.mining ? `\nMines ${def.mining.kgPerDay} kg/day (ice yield = tile concentration)` : ""}`;
-    card.innerHTML = `
-      <div class="bc-name">${def.name} <span class="bc-tier">T${def.tier}</span></div>
-      <div class="bc-stats">${def.powerKw >= 0 ? "+" : ""}${def.powerKw} kW · ${(def.massKg / 1000).toFixed(1)} t</div>
-      <div class="bc-cost">${cost}</div>
-      ${locked ? `<div class="bc-lock">🔒 ${def.techRequired}</div>` : ""}`;
-    if (!locked) {
-      card.addEventListener("click", () => {
-        onSelect(ui.selectedBuild === def.id ? null : def.id);
-      });
-    }
-    cards.push(card);
-  }
   const hint = document.createElement("div");
   hint.className = "panel-hint";
   hint.textContent = ui.selectedBuild
-    ? `Placing '${ui.selectedBuild}' — click a map tile to queue construction (Esc to cancel)`
-    : "Select a building, then click the map to queue it. Hover cards for the real chemistry.";
-  root.replaceChildren(hint, ...cards);
+    ? `Placing '${ui.selectedBuild}' — click a map tile (Esc cancels)`
+    : "Pick a building, then click the map. Hover for cost + chemistry.";
+  const sections: HTMLElement[] = [hint];
+
+  const byCategory = new Map<string, Building[]>();
+  for (const def of [...pack.buildings].sort((a, b) => a.tier - b.tier || (a.id < b.id ? -1 : 1))) {
+    const cat = buildCategory(def);
+    byCategory.set(cat, [...(byCategory.get(cat) ?? []), def]);
+  }
+
+  for (const category of BUILD_CATEGORIES) {
+    const defs = byCategory.get(category);
+    if (defs === undefined) {
+      continue;
+    }
+    const header = document.createElement("h4");
+    header.textContent = category;
+    sections.push(header);
+    const grid = document.createElement("div");
+    grid.className = "bgrid";
+    for (const def of defs) {
+      const locked = def.techRequired !== null && !research.unlocked.includes(def.techRequired);
+      const card = document.createElement("div");
+      card.className = `bcard${ui.selectedBuild === def.id ? " selected" : ""}${locked ? " locked" : ""}`;
+      const cost =
+        def.buildCost.local.length > 0
+          ? `local: ${def.buildCost.local.map((e) => `${e.kg} kg ${e.resource}`).join(", ")}`
+          : `import: ${def.buildCost.imported.map((e) => `${e.kg} kg ${e.resource}`).join(", ")}`;
+      const chemistry = def.reactions
+        .map((rid) => {
+          const r = pack.reaction(rid);
+          const inputs = r.inputs.map((e) => `${e.kg} ${e.resource}`).join(" + ");
+          const outputs = r.outputs.map((e) => `${e.kg} ${e.resource}`).join(" + ");
+          return `${inputs} → ${outputs} (${r.energyKwhPerKgPrimary} kWh/kg)`;
+        })
+        .join("\n");
+      card.title = `${def.name} — ${def.analogue}\n${cost}\n${chemistry}${def.mining ? `\nMines ${def.mining.kgPerDay} kg/day (ice yield = tile concentration)` : ""}${locked ? `\n🔒 requires ${def.techRequired}` : ""}`;
+      const thumb = thumbUrl(def.id);
+      card.innerHTML = `
+        ${thumb !== null ? `<img src="${thumb}" alt=""/>` : `<div class="bcard-dot">▣</div>`}
+        <div class="bcard-nm">${def.name}</div>
+        <div class="bcard-chips">T${def.tier} · ${def.powerKw >= 0 ? "+" : ""}${def.powerKw}kW · ${(def.massKg / 1000).toFixed(1)}t</div>
+        ${locked ? `<div class="bcard-lock">🔒</div>` : ""}`;
+      if (!locked) {
+        card.addEventListener("click", () => {
+          onSelect(ui.selectedBuild === def.id ? null : def.id);
+        });
+      }
+      grid.appendChild(card);
+    }
+    sections.push(grid);
+  }
+  root.replaceChildren(...sections);
 }
 
 // ── Tech tree ──

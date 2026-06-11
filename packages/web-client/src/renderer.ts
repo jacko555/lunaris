@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import {
   BUILDING_COMPONENT,
   DUST_COMPONENT,
@@ -335,6 +335,12 @@ export class MapRenderer {
   private textures = new Map<string, Texture | null>();
   private spritePool = new Map<number, Sprite>();
   private nightPlate: Sprite | null = null;
+  private dataOverlay: Graphics | null = null;
+  private badgePool = new Map<number, Text>();
+  /** Map overlay toggles (W3) — read live each frame. */
+  overlays = { illum: true, network: true, radius: false, badges: true };
+  /** Currently inspected building (selection ring). */
+  selected: number | null = null;
   /** True while (or just after) the pointer dragged the camera. */
   wasDrag = false;
 
@@ -400,6 +406,7 @@ export class MapRenderer {
           }
         }
       }
+      this.dataOverlay = overlay;
       this.world.addChild(overlay);
     } else {
       const tileLayer = new Graphics();
@@ -605,9 +612,14 @@ export class MapRenderer {
         y: (building.y + h / 2) * TILE_PX,
       });
     }
-    if (centers.length > 1) {
+    this.networkLayer.visible = this.overlays.network;
+    if (this.dataOverlay !== null) {
+      this.dataOverlay.visible = this.overlays.illum;
+    }
+    if (centers.length > 1 && this.overlays.network) {
       const inTree = new Set<number>([0]);
       const lineColor = env.litB === 1 ? 0x8a93a6 : 0xf2a65a;
+      const edges: [number, number, number, number][] = [];
       while (inTree.size < centers.length) {
         let best: [number, number, number] = [-1, -1, Infinity];
         for (const a of inTree) {
@@ -633,7 +645,18 @@ export class MapRenderer {
           .moveTo(pa.x, pa.y)
           .lineTo(pb.x, pb.y)
           .stroke({ color: lineColor, width: 1.2, alpha: env.litB === 1 ? 0.5 : 0.9 });
+        edges.push([pa.x, pa.y, pb.x, pb.y]);
         inTree.add(best[1]);
+      }
+      // W5 flow dots: render-only animation (wall clock never touches sim).
+      const phase = (performance.now() / 2400) % 1;
+      const dotColor = env.litB === 1 ? 0x56ccf2 : 0xf2a65a;
+      for (const [x1, y1, x2, y2] of edges.slice(0, 100)) {
+        for (const offset of [phase, (phase + 0.5) % 1]) {
+          this.networkLayer
+            .circle(x1 + (x2 - x1) * offset, y1 + (y2 - y1) * offset, 1.3)
+            .fill({ color: dotColor, alpha: 0.9 });
+        }
       }
     }
 
@@ -698,6 +721,43 @@ export class MapRenderer {
       const dust = dusts.get(entity);
       if (dust !== undefined && dust.frac > 0.15) {
         this.buildingLayer.rect(px + 1, py + 1, 4, 4).fill(0xd2b48c);
+      }
+      // W4 selection ring (amber ellipse at the footprint base).
+      if (this.selected === entity) {
+        this.buildingLayer
+          .ellipse(px + wpx / 2, py + hpx - 1, wpx * 0.68, hpx * 0.3)
+          .stroke({ color: 0xf2a65a, width: 1.6, alpha: 0.95 });
+      }
+      // W4 numbered badges (build-order index), zoomed-in only.
+      if (this.overlays.badges && this.world.scale.x >= 3 && buildings.size <= 60) {
+        let badge = this.badgePool.get(entity);
+        if (badge === undefined) {
+          const order = buildings.entities().indexOf(entity) + 1;
+          badge = new Text({
+            text: String(order).padStart(2, "0"),
+            style: { fontFamily: "monospace", fontSize: 4, fill: 0xd8dee9 },
+          });
+          badge.anchor.set(0.5, 1);
+          this.badgePool.set(entity, badge);
+          this.spriteLayer.addChild(badge);
+        }
+        badge.visible = true;
+        badge.position.set(px + wpx / 2, py - 1);
+      } else {
+        const badge = this.badgePool.get(entity);
+        if (badge !== undefined) {
+          badge.visible = false;
+        }
+      }
+      // W3 radius overlay: comms + shielding auras.
+      if (this.overlays.radius && (def.commsRelay || def.shieldingAura)) {
+        this.buildingLayer
+          .circle(px + wpx / 2, py + hpx / 2, (def.commsRelay ? 14 : 2.5) * TILE_PX)
+          .stroke({
+            color: def.commsRelay ? 0x56ccf2 : 0x9ca3af,
+            width: 1,
+            alpha: 0.5,
+          });
       }
     }
 
@@ -777,11 +837,17 @@ export class MapRenderer {
       }
     }
 
-    // Reclaim sprites whose entities are gone (buildings, sites, rovers).
+    // Reclaim sprites/badges whose entities are gone.
     for (const [entity, sprite] of this.spritePool) {
       if (!liveEntities.has(entity)) {
         sprite.destroy();
         this.spritePool.delete(entity);
+      }
+    }
+    for (const [entity, badge] of this.badgePool) {
+      if (!buildings.has(entity)) {
+        badge.destroy();
+        this.badgePool.delete(entity);
       }
     }
 
