@@ -345,9 +345,10 @@ export class MapRenderer {
   }
 
   async init(parent: HTMLElement): Promise<void> {
+    // Fill the workspace ("no weird box"): the canvas tracks its container
+    // and the camera keeps the map covering the viewport at minimum zoom.
     await this.app.init({
-      width: this.map.width * TILE_PX,
-      height: this.map.height * TILE_PX,
+      resizeTo: parent,
       background: 0x05070b,
       antialias: true,
     });
@@ -420,16 +421,35 @@ export class MapRenderer {
     this.ready = true;
   }
 
+  /** Smallest zoom that keeps the map covering the whole viewport. */
+  private minZoom(): number {
+    const mapPx = this.map.width * TILE_PX;
+    return Math.max(this.app.renderer.width, this.app.renderer.height) / mapPx;
+  }
+
+  /** Center the camera on a tile at the given zoom (default framing). */
+  frame(tileX: number, tileY: number, zoom?: number): void {
+    const s = Math.max(this.minZoom(), zoom ?? this.minZoom() * 2.4);
+    this.world.scale.set(s);
+    this.world.x = this.app.renderer.width / 2 - (tileX + 0.5) * TILE_PX * s;
+    this.world.y = this.app.renderer.height / 2 - (tileY + 0.5) * TILE_PX * s;
+    this.clampPan();
+  }
+
+  private clampPan(): void {
+    const mapPx = this.map.width * TILE_PX;
+    const s = Math.max(this.world.scale.x, this.minZoom());
+    this.world.scale.set(s);
+    this.world.x = Math.min(0, Math.max(this.app.renderer.width - mapPx * s, this.world.x));
+    this.world.y = Math.min(0, Math.max(this.app.renderer.height - mapPx * s, this.world.y));
+  }
+
   /** Wheel zoom (cursor-centered) + drag pan; sets wasDrag for click logic. */
   private installCamera(): void {
     const canvas = this.app.canvas;
-    const minZoom = 1;
-    const maxZoom = 6;
+    const maxZoom = 8;
     const clampPan = (): void => {
-      const w = this.map.width * TILE_PX;
-      const s = this.world.scale.x;
-      this.world.x = Math.min(0, Math.max(this.app.renderer.width - w * s, this.world.x));
-      this.world.y = Math.min(0, Math.max(this.app.renderer.height - w * s, this.world.y));
+      this.clampPan();
     };
     canvas.addEventListener(
       "wheel",
@@ -439,7 +459,10 @@ export class MapRenderer {
         const cx = ((event.clientX - rect.left) / rect.width) * this.app.renderer.width;
         const cy = ((event.clientY - rect.top) / rect.height) * this.app.renderer.height;
         const old = this.world.scale.x;
-        const next = Math.min(maxZoom, Math.max(minZoom, old * (event.deltaY < 0 ? 1.18 : 0.85)));
+        const next = Math.min(
+          maxZoom,
+          Math.max(this.minZoom(), old * (event.deltaY < 0 ? 1.18 : 0.85)),
+        );
         // Keep the world point under the cursor stationary.
         this.world.x = cx - ((cx - this.world.x) / old) * next;
         this.world.y = cy - ((cy - this.world.y) / old) * next;
@@ -448,6 +471,8 @@ export class MapRenderer {
       },
       { passive: false },
     );
+    // Keep the map covering the viewport when the window resizes.
+    window.addEventListener("resize", () => this.clampPan());
     let dragging = false;
     let lastX = 0;
     let lastY = 0;

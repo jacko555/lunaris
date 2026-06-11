@@ -1,6 +1,7 @@
 import {
   ALERTS_COMPONENT,
   BUILDING_COMPONENT,
+  findPolicyAnchors,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
   CMD_LAUNCH_EXPEDITION,
@@ -231,6 +232,11 @@ async function boot(): Promise<void> {
   app.renderer = new MapRenderer(app.map, app.pack);
   await app.renderer.init($("#map-wrap"));
   app.host = new SimHost(makeTutorialWorld(app.pack, app.map, app.gameDef));
+  requestAnimationFrame(() => {
+    // After the first resizeTo pass so minZoom sees the real viewport.
+    const home = findBuildSite(app.map, 12, 8);
+    app.renderer.frame(home.x + 6, home.y + 4);
+  });
   const TPLD = app.pack.number("day_synodic") * 24;
   app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
@@ -602,6 +608,10 @@ async function boot(): Promise<void> {
       takeCommand.classList.remove("ai-off");
       takeCommand.textContent = "🧑‍🚀 Take Command";
       observerRail.style.display = "";
+      {
+        const anchors = findPolicyAnchors(app.map);
+        app.renderer.frame(anchors.baseX, anchors.baseY);
+      }
       setScreen("observer");
       $("#tutorial").hidden = true;
       $("#start-screen").hidden = true;
