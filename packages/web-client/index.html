@@ -811,6 +811,61 @@
         font-size: 11px;
         color: var(--amber);
       }
+      #gameover[hidden] {
+        display: none;
+      }
+      #gameover {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 4, 4, 0.93);
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #gameover-card {
+        text-align: center;
+        max-width: 480px;
+        border: 1px solid var(--crit);
+        border-radius: 12px;
+        padding: 30px 40px;
+        background: var(--panel);
+      }
+      #gameover-card h1 {
+        color: var(--crit);
+        letter-spacing: 0.3em;
+        font-weight: 300;
+        font-size: 22px;
+      }
+      #gameover-stats {
+        text-align: left;
+        margin: 14px 0 20px;
+      }
+      #phase-banner {
+        position: fixed;
+        top: 18vh;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 55;
+        background: var(--panel);
+        border: 1px solid var(--amber);
+        border-radius: 10px;
+        padding: 14px 36px;
+        text-align: center;
+        box-shadow: 0 8px 40px rgba(242, 166, 90, 0.25);
+      }
+      #phase-banner h2 {
+        color: var(--amber);
+        margin: 0;
+        letter-spacing: 0.25em;
+        font-weight: 400;
+        font-size: 16px;
+      }
+      #phase-banner .sub {
+        color: var(--dim);
+        font-size: 11.5px;
+        margin-top: 4px;
+      }
       /* toasts */
       #toasts {
         position: fixed;
@@ -1094,6 +1149,14 @@
         </p>
       </div>
     </div>
+    <div id="gameover" hidden>
+      <div id="gameover-card">
+        <h1 id="gameover-title">MISSION LOST</h1>
+        <div id="gameover-stats"></div>
+        <button id="gameover-menu">Return to Mission Select</button>
+      </div>
+    </div>
+    <div id="phase-banner" hidden></div>
     <div id="toasts"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

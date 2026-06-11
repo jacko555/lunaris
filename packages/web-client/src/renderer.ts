@@ -72,10 +72,32 @@ function tileNoise(x: number, y: number): number {
   return (((h ^ (h >>> 16)) >>> 0) % 13) - 6; // −6..+6 brightness jitter
 }
 
+/**
+ * DEM-style hillshade from the tile elevation field: Lambert lighting with
+ * the sun at the ART-DIRECTION key position (upper-left, 35° elevation).
+ * Returns 0..1; flat ground ≈ 0.78 so shading reads as relief, not murk.
+ */
+function hillshade(map: LunarMap, x: number, y: number): number {
+  const e = (tx: number, ty: number): number =>
+    tileAt(map, Math.max(0, Math.min(map.width - 1, tx)), Math.max(0, Math.min(map.height - 1, ty)))
+      .elevationM;
+  const cell = 250; // tile_size_m — visual only, not a sim read
+  const dzdx = (e(x + 1, y) - e(x - 1, y)) / (2 * cell);
+  const dzdy = (e(x, y + 1) - e(x, y - 1)) / (2 * cell);
+  // Light vector for azimuth 315° (upper-left), altitude 35°.
+  const lx = -0.579;
+  const ly = -0.579;
+  const lz = 0.574;
+  const norm = Math.sqrt(dzdx * dzdx + dzdy * dzdy + 1);
+  const lambert = (-dzdx * lx - dzdy * ly + lz) / norm;
+  return Math.max(0.25, Math.min(1.15, lambert / 0.574));
+}
+
 function tileColor(map: LunarMap, x: number, y: number): number {
   const tile = tileAt(map, x, y);
   // Elevation drives base brightness; class drives hue; noise breaks the grid.
   const relief = Math.max(0, Math.min(1, (tile.elevationM + 4000) / 4800));
+  const shade = hillshade(map, x, y);
   const noise = tileNoise(x, y);
   if (tile.illumClass === "C") {
     // PSR: near-black with a blue-ice speckle where ice is rich.
@@ -86,14 +108,14 @@ function tileColor(map: LunarMap, x: number, y: number): number {
     const b = 14 + relief * 14 + ice * 26 + speckle;
     return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(Math.min(255, b));
   }
-  const base = 52 + relief * 110 + noise;
+  const base = (52 + relief * 110 + noise) * shade;
   if (tile.illumClass === "A") {
     // Eternal-light ridge: warm and bright (the gold wash).
-    return (Math.round(base + 60) << 16) | (Math.round(base + 42) << 8) | Math.round(base);
+    const clamp = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
+    return (clamp(base + 60) << 16) | (clamp(base + 42) << 8) | clamp(base);
   }
-  const slopeDarken = tile.slopeDeg > 10 ? 14 : 0;
-  const v = Math.round(base - slopeDarken);
-  return (v << 16) | (v << 8) | (v + 8);
+  const v = Math.max(0, Math.min(255, Math.round(base)));
+  return (v << 16) | (v << 8) | Math.min(255, v + 8);
 }
 
 type Glyph =

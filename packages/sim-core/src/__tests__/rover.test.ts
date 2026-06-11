@@ -114,6 +114,16 @@ describe("RoverSystem (M-Rover)", () => {
     expect(alerts.some((a) => a.code === "rover-damage")).toBe(true);
   });
 
+  it("the policy AI prospects the deposit with a rover (observer mode)", () => {
+    const world = makeWorld({ policyEnabled: 1, startPhase: 0 });
+    world.run(24 * 40);
+    const fleet = rovers(world);
+    expect(fleet.length).toBeGreaterThanOrEqual(1);
+    expect((fleet[0] as [number, RoverComponent])[1].surveysDone).toBeGreaterThanOrEqual(1);
+    const phase = world.store<PhaseComponent>("phase").require(COLONY_ENTITY);
+    expect(phase.iceCharacterized).toBe(1);
+  });
+
   it("hazard impact alerts chain back to their forecast warning (T12)", () => {
     const world = makeWorld({ startPhase: 2, failureTables: "realistic" });
     world.tick();

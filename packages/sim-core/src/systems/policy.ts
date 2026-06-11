@@ -12,6 +12,7 @@ import {
   POLICY_COMPONENT,
   RESEARCH_COMPONENT,
   RESUPPLY_COMPONENT,
+  ROVER_COMPONENT,
   SITE_COMPONENT,
   type BuildingComponent,
   type CrewComponent,
@@ -22,6 +23,7 @@ import {
   type PolicyComponent,
   type ResearchComponent,
   type ResupplyComponent,
+  type RoverComponent,
   type SiteComponent,
 } from "../game/components.js";
 import { colonyAmount } from "../game/pool.js";
@@ -33,6 +35,7 @@ import {
   R_WATER,
 } from "../game/resource-ids.js";
 import { vehicleClass } from "./logistics.js";
+import { roverSpec } from "./rover.js";
 import { hardPrereqsMet } from "./research.js";
 
 /**
@@ -360,6 +363,25 @@ export function createPolicySystem(pack: ContentPack, map: LunarMap, ids: Policy
           if (phase.successfulLandings < 2 || phase.iceCharacterized === 0) {
             if (cargoInFlight < 3) {
               world.enqueueCommand("cmd-launch-probe", { x: policy.mineX, y: policy.mineY });
+            }
+          }
+          // Prospector rover: ground truth on the ice deposit (M-Rover).
+          // Ordered once; every idle full-charge unit gets sent to the mine
+          // anchor until the deposit is characterized.
+          const rovers = world.store<RoverComponent>(ROVER_COMPONENT);
+          if (phase.iceCharacterized === 0) {
+            if (rovers.size === 0 && world.store<BuildingComponent>(BUILDING_COMPONENT).size > 0) {
+              world.enqueueCommand("cmd-order-rover", { kind: "prospector" });
+            }
+            for (const [entity, rover] of rovers.entries()) {
+              if (rover.state === 0 && rover.batteryKwh >= roverSpec(pack, rover.kind).batteryKwh) {
+                world.enqueueCommand("cmd-launch-expedition", {
+                  rover: entity,
+                  x: policy.mineX,
+                  y: policy.mineY,
+                });
+                break;
+              }
             }
           }
         } else if (phase.phase === 1) {

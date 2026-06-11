@@ -478,7 +478,12 @@ async function boot(): Promise<void> {
     option.textContent = scenario.name;
     scenarioSelect.appendChild(option);
   }
+  $("#gameover-menu").addEventListener("click", () => {
+    $("#gameover").hidden = true;
+    $("#start-screen").hidden = false;
+  });
   const startGame = (): void => {
+    gameOverShown = false;
     app.mode = "game";
     app.shadowWorker?.terminate();
     app.shadowWorker = null;
@@ -591,6 +596,16 @@ async function boot(): Promise<void> {
   const resbar = $("#resbar");
   let frameCount = 0;
   let lastAutosaveTick = 0;
+  let gameOverShown = false;
+  let lastPhaseSeen = -1;
+  const showPhaseBanner = (phase: number, name: string): void => {
+    const banner = $("#phase-banner");
+    banner.innerHTML = `<h2>PHASE ${phase} — ${name}</h2><div class="sub">milestone logged in the chronicle</div>`;
+    banner.hidden = false;
+    setTimeout(() => {
+      banner.hidden = true;
+    }, 6000);
+  };
   const frame = (nowMs: number): void => {
     app.host.pump(nowMs);
     app.host.checkAutopause();
@@ -676,6 +691,42 @@ async function boot(): Promise<void> {
           },
           saveWorld(world),
         );
+      }
+
+      // Outcome presentation: phase fanfare + the mission-lost screen.
+      const phaseNow = world.store<PhaseComponent>(PHASE_COMPONENT).require(COLONY_ENTITY).phase;
+      if (lastPhaseSeen >= 0 && phaseNow > lastPhaseSeen) {
+        const names = [
+          "ROBOTIC PRECURSORS",
+          "CREWED SORTIES",
+          "OUTPOST",
+          "PERMANENT BASE",
+          "SETTLEMENT",
+          "INDUSTRIAL EXPORT",
+          "LUNAR CITY",
+        ];
+        showPhaseBanner(phaseNow, names[phaseNow] ?? "");
+      }
+      lastPhaseSeen = phaseNow;
+      if (app.mode === "game" && !gameOverShown) {
+        const crews = [...world.store<CrewComponent>(CREW_COMPONENT).entries()];
+        if (crews.length > 0 && crews.every(([, c]) => c.alive !== 1)) {
+          gameOverShown = true;
+          app.host.speed = 0;
+          const alerts = world.store<AlertsComponent>(ALERTS_COMPONENT).require(3).entries;
+          const lastCritical = [...alerts].reverse().find((a) => a.severity === "critical");
+          const milestones = world
+            .store<PhaseComponent>(PHASE_COMPONENT)
+            .require(COLONY_ENTITY).milestones;
+          $("#gameover-stats").innerHTML =
+            `<div class="kv"><span>Survived</span><span>${Math.floor(world.tickCount / 24)} days (${(world.tickCount / TPLD).toFixed(1)} lunar days)</span></div>` +
+            `<div class="kv"><span>Crew lost</span><span>${crews.length}</span></div>` +
+            `<div class="kv"><span>Buildings standing</span><span>${world.store(BUILDING_COMPONENT).size}</span></div>` +
+            `<div class="kv"><span>Milestones</span><span>${milestones.map((m) => m.id).join(", ") || "none"}</span></div>` +
+            `<div class="panel-hint" style="margin-top:10px">${lastCritical !== undefined ? `Final alert: ${lastCritical.message}` : ""}</div>` +
+            `<div class="panel-hint">The Moon does not forgive missing redundancy. Check the chronicle, then fly again.</div>`;
+          $("#gameover").hidden = false;
+        }
       }
 
       // Mission Ops chrome: top-bar stats, clock dial, next-event card.
