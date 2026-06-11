@@ -110,9 +110,14 @@ export function renderTechPanel(root: HTMLElement, world: World, pack: ContentPa
     E: "Science & Operations",
   };
   for (const branch of [...byBranch.keys()].sort()) {
+    // One column per branch (mockup v2 research grid); the container's CSS
+    // grid wraps columns responsively, the side-panel fallback stacks them.
+    const column = document.createElement("div");
+    column.className = "branch-col";
+    rows.push(column);
     const title = document.createElement("h4");
     title.textContent = BRANCH_NAMES[branch] ?? `Branch ${branch}`;
-    rows.push(title);
+    column.appendChild(title);
     const ordered = (byBranch.get(branch) as Tech[])
       .slice()
       .sort((a, b) => a.phase - b.phase || a.costScience - b.costScience || (a.id < b.id ? -1 : 1));
@@ -135,7 +140,7 @@ export function renderTechPanel(root: HTMLElement, world: World, pack: ContentPa
         });
         row.appendChild(button);
       }
-      rows.push(row);
+      column.appendChild(row);
     }
   }
   root.replaceChildren(...rows);

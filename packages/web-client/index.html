@@ -10,15 +10,18 @@
     <title>LUNARIS</title>
     <style>
       :root {
-        --bg: #0b0d12;
-        --panel: #141823;
-        --line: #232a3a;
+        --bg: #07090d;
+        --panel: #0e1219;
+        --panel2: #131826;
+        --line: #1f2738;
         --text: #d8dee9;
         --dim: #7a8499;
         --good: #6fcf97;
         --warn: #f2c94c;
         --crit: #eb5757;
         --accent: #6c9ef8;
+        --amber: #f2a65a;
+        --mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
       }
       * {
         box-sizing: border-box;
@@ -29,55 +32,99 @@
         height: 100%;
         background: var(--bg);
         color: var(--text);
-        font-family: system-ui, sans-serif;
-        font-size: 14px;
+        font-family: var(--mono);
+        font-size: 13px;
       }
-      #app {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 8px;
+      label,
+      h3,
+      h4 {
+        letter-spacing: 0.12em;
       }
+      /* ════ Mission Ops shell ════ */
+      #ops {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        height: 100vh;
+      }
+      /* ── top bar ── */
       #topbar {
-        width: 100%;
-        max-width: 900px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+        gap: 22px;
+        padding: 8px 18px;
         background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 14px;
+        border-bottom: 1px solid var(--line);
       }
-      #title {
-        letter-spacing: 0.3em;
+      #brand #title {
+        letter-spacing: 0.42em;
         font-weight: 300;
-        color: var(--accent);
+        font-size: 19px;
+        color: var(--text);
       }
-      #clock {
-        text-align: center;
-      }
-      #clock .big {
-        font-weight: 600;
-      }
-      #clock .sub,
-      #power .sub {
+      #brand .sub {
         color: var(--dim);
-        font-size: 12px;
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+      }
+      .top-stat {
+        min-width: 110px;
+      }
+      .top-stat label {
+        display: block;
+        color: var(--dim);
+        font-size: 10px;
+      }
+      .top-stat .big {
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .top-stat .sub {
+        color: var(--dim);
+        font-size: 10.5px;
+        white-space: nowrap;
+      }
+      .delta-up {
+        color: var(--good);
+      }
+      .delta-down {
+        color: var(--crit);
+      }
+      #phase-pips {
+        display: flex;
+        gap: 4px;
+        margin-top: 3px;
+      }
+      #phase-pips span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 1px solid var(--dim);
+      }
+      #phase-pips span.on {
+        background: var(--amber);
+        border-color: var(--amber);
+      }
+      #clock-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
+      }
+      #clock-dial {
+        width: 58px;
+        height: 58px;
       }
       #power {
-        min-width: 260px;
+        min-width: 230px;
       }
       #powerbar {
-        height: 8px;
-        background: #20263a;
+        height: 7px;
+        background: #1a2030;
         border-radius: 4px;
         overflow: hidden;
         display: flex;
-        margin-top: 4px;
+        margin-top: 3px;
       }
       #powerbar .gen {
         background: var(--good);
@@ -89,7 +136,7 @@
       }
       #storagebar {
         height: 4px;
-        background: #20263a;
+        background: #1a2030;
         border-radius: 2px;
         overflow: hidden;
         margin-top: 3px;
@@ -98,37 +145,199 @@
         background: var(--accent);
         height: 100%;
       }
-      #main-row {
+      #power-line,
+      #storage-line {
+        font-size: 10.5px;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      /* ── mid row: rail / workspace / detail ── */
+      #midrow {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr) 340px;
+        min-height: 0;
+      }
+      #rail {
+        background: var(--panel);
+        border-right: 1px solid var(--line);
         display: flex;
-        gap: 8px;
-        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 6px;
+      }
+      #rail button {
+        background: none;
+        border: none;
+        border-radius: 8px;
+        color: var(--dim);
+        padding: 8px 2px;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-align: center;
+      }
+      #rail button .ico {
+        display: block;
+        font-size: 17px;
+        margin-bottom: 2px;
+      }
+      #rail button:hover {
+        color: var(--text);
+        background: var(--panel2);
+      }
+      #rail button.active {
+        color: var(--amber);
+        background: var(--panel2);
+      }
+      #workspace {
+        min-width: 0;
+        overflow: auto;
+        padding: 14px;
+      }
+      #workspace section[hidden] {
+        display: none;
+      }
+      #workspace h3 {
+        margin: 2px 0 10px;
+        font-size: 12px;
+        color: var(--dim);
+        text-transform: uppercase;
+      }
+      #screen-map {
+        height: 100%;
+        display: flex;
       }
       #map-wrap {
         position: relative;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
+        margin: auto;
+        max-width: 100%;
+        max-height: 100%;
       }
-      #side-panel {
-        width: 300px;
-        max-height: 640px;
-        overflow-y: auto;
+      #map-wrap canvas {
+        display: block;
+        width: min(78vh, 100%);
+        height: auto;
+      }
+      #detail {
         background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 13px;
+        border-left: 1px solid var(--line);
+        overflow-y: auto;
+        padding: 12px;
+        font-size: 12.5px;
       }
-      #side-panel h3 {
-        margin: 4px 0 6px;
-        font-size: 12px;
-        letter-spacing: 0.1em;
+      #detail h3 {
+        margin: 10px 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
         color: var(--dim);
         text-transform: uppercase;
       }
+      #detail summary {
+        cursor: pointer;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--dim);
+        padding: 4px 0;
+      }
+      /* ── bottom bar ── */
+      #bottombar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 7px 14px;
+        background: var(--panel);
+        border-top: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      #resbar {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-size: 11.5px;
+      }
+      .chip {
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 2px 9px;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .chip strong {
+        color: var(--text);
+      }
+      .chip-i {
+        color: var(--accent);
+        margin-right: 3px;
+      }
+      .chip-pause {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      #alert-ticker {
+        flex: 1;
+        min-width: 160px;
+        font-size: 11.5px;
+        color: var(--dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #alert-ticker.warning {
+        color: var(--warn);
+      }
+      #alert-ticker.critical {
+        color: var(--crit);
+      }
+      #controls {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      #next-event {
+        min-width: 150px;
+        text-align: right;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      #next-event strong {
+        color: var(--text);
+        display: block;
+        font-size: 12px;
+      }
+      button {
+        background: var(--panel2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button.active {
+        background: var(--accent);
+        color: #0b0d12;
+        border-color: var(--accent);
+      }
+      /* ── shared widgets (hud/panels contract) ── */
+      .crew-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 8px;
+      }
       .crew-row {
-        border-bottom: 1px solid var(--line);
-        padding: 5px 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 8px 10px;
       }
       .crew-row .nm {
         display: flex;
@@ -139,10 +348,10 @@
       }
       .bar {
         height: 5px;
-        background: #20263a;
+        background: #1a2030;
         border-radius: 3px;
         overflow: hidden;
-        margin-top: 2px;
+        margin-top: 3px;
       }
       .bar > div {
         height: 100%;
@@ -160,35 +369,32 @@
         display: flex;
         justify-content: space-between;
         color: var(--dim);
-        font-size: 11px;
+        font-size: 10.5px;
         margin-top: 3px;
       }
-      #inspector .kv {
+      .kv {
         display: flex;
         justify-content: space-between;
+        font-size: 12px;
         padding: 1px 0;
+        gap: 8px;
       }
-      #inspector .kv span:first-child {
+      .kv span:first-child {
         color: var(--dim);
       }
-      #alertlog {
-        width: 100%;
-        max-width: 948px;
-        max-height: 140px;
-        overflow-y: auto;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 6px 10px;
-        font-size: 12px;
+      .panel-hint {
+        color: var(--dim);
+        font-size: 11px;
+        margin: 4px 0;
       }
       #alertlog .al {
-        padding: 2px 0;
-        border-bottom: 1px solid #1a2030;
+        padding: 4px 2px;
+        border-bottom: 1px solid #141a28;
+        font-size: 12px;
       }
       #alertlog .al .t {
         color: var(--dim);
-        margin-right: 6px;
+        margin-right: 8px;
       }
       #alertlog .al.warning {
         color: var(--warn);
@@ -196,26 +402,12 @@
       #alertlog .al.critical {
         color: var(--crit);
       }
-      #tabs {
-        display: flex;
-        gap: 4px;
-        margin-bottom: 6px;
-        flex-wrap: wrap;
-      }
-      #tabs button {
-        padding: 3px 8px;
-        font-size: 12px;
-      }
-      #tabs button.active {
-        background: var(--accent);
-        color: #0b0d12;
-      }
       #tutorial {
         position: absolute;
         top: 8px;
         left: 8px;
         width: 250px;
-        background: rgba(20, 24, 35, 0.92);
+        background: rgba(10, 13, 20, 0.93);
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 8px 10px;
@@ -225,7 +417,6 @@
       #tutorial h4 {
         margin: 0 0 6px;
         color: var(--warn);
-        letter-spacing: 0.1em;
       }
       #tutorial.complete h4 {
         color: var(--good);
@@ -251,12 +442,13 @@
         padding: 5px 8px;
         margin: 4px 0;
         cursor: pointer;
+        background: var(--panel2);
       }
       .build-card:hover {
         border-color: var(--accent);
       }
       .build-card.selected {
-        border-color: var(--accent);
+        border-color: var(--amber);
         background: #1a2030;
       }
       .build-card.locked {
@@ -280,34 +472,324 @@
         color: var(--warn);
         font-size: 11px;
       }
-      .panel-hint {
-        color: var(--dim);
+      /* research grid */
+      #tech-panel.grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        align-items: start;
+      }
+      .branch-col h4 {
+        color: var(--amber);
         font-size: 11px;
-        margin: 4px 0;
+        margin: 0 0 6px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 4px;
       }
       .tech-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 6px;
-        padding: 2px 0;
-        border-bottom: 1px solid #1a2030;
-        font-size: 12px;
+        padding: 4px 6px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        margin: 4px 0;
+        font-size: 11.5px;
+        background: var(--panel);
       }
       .tech-row.done {
         color: var(--good);
+        border-color: #234332;
       }
       .tech-row.current {
-        color: var(--accent);
+        color: var(--amber);
+        border-color: var(--amber);
       }
       .tech-row button {
         padding: 1px 6px;
         font-size: 11px;
       }
-      #side-panel h4 {
-        margin: 8px 0 4px;
+      #phase-ribbon {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-top: 18px;
+        padding: 14px 6px 4px;
+        border-top: 1px solid var(--line);
+      }
+      .pr-node {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        color: var(--dim);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+      }
+      .pr-node .dot {
+        width: 22px;
+        height: 22px;
+        margin: 0 auto 6px;
+        border-radius: 50%;
+        border: 2px solid var(--line);
+        background: var(--panel2);
+        line-height: 18px;
+        font-size: 11px;
+      }
+      .pr-node.done {
+        color: var(--good);
+      }
+      .pr-node.done .dot {
+        border-color: var(--good);
+        background: #15291f;
+      }
+      .pr-node.current {
+        color: var(--amber);
+      }
+      .pr-node.current .dot {
+        border-color: var(--amber);
+        box-shadow: 0 0 9px rgba(242, 166, 90, 0.5);
+      }
+      .pr-line {
+        flex: 1;
+        height: 2px;
+        background: var(--line);
+        margin-bottom: 22px;
+      }
+      .pr-line.done {
+        background: var(--good);
+      }
+      /* logistics */
+      .gantt-row {
+        display: grid;
+        grid-template-columns: 200px 1fr 90px;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #141a28;
         font-size: 12px;
+      }
+      .gantt-track {
+        position: relative;
+        height: 10px;
+        background: #131826;
+        border-radius: 5px;
+      }
+      .gantt-bar {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #2c4a86, var(--accent));
+      }
+      .route-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 16px 0;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        flex-wrap: wrap;
+      }
+      .route-node {
+        text-align: center;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .route-node strong {
+        display: block;
+        color: var(--text);
+        font-size: 12px;
+      }
+      .route-arrow {
         color: var(--accent);
+        font-size: 11px;
+        text-align: center;
+        flex: 1;
+        border-bottom: 1px dashed var(--line);
+        padding-bottom: 4px;
+        min-width: 70px;
+      }
+      .veh-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+        margin-top: 10px;
+      }
+      .veh-table th {
+        color: var(--dim);
+        text-align: left;
+        font-weight: 400;
+        border-bottom: 1px solid var(--line);
+        padding: 3px 8px 3px 0;
+      }
+      .veh-table td {
+        padding: 3px 8px 3px 0;
+        border-bottom: 1px solid #141a28;
+      }
+      /* industry */
+      #industry .flow-totals {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .ind-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 10px;
+      }
+      .ind-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 8px 10px;
+        font-size: 11.5px;
+      }
+      .ind-card .ic-name {
+        font-weight: 600;
+        font-size: 12.5px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .ind-card .ic-duty {
+        color: var(--dim);
+        font-weight: 400;
+      }
+      .io-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+      .io-in {
+        color: var(--crit);
+      }
+      .io-out {
+        color: var(--good);
+      }
+      .io-arrow {
+        color: var(--dim);
+      }
+      /* colony / chronicle */
+      #screen-colony .cols {
+        display: grid;
+        grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      #chronicle h3 {
+        margin-top: 0;
+      }
+      /* observer */
+      #charts {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+      }
+      .chart-cell {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 8px;
+      }
+      .chart-label {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+      }
+      .chart-value {
+        color: var(--text);
+        float: right;
+      }
+      .chart-cell canvas {
+        width: 100%;
+        height: 64px;
+        display: block;
+        margin-top: 4px;
+      }
+      #observer-head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      #take-command {
+        padding: 8px 18px;
+        background: var(--amber);
+        color: #0b0d12;
+        font-weight: 600;
+      }
+      #take-command.ai-off {
+        background: var(--warn);
+      }
+      #timeline {
+        margin-top: 14px;
+        max-height: 220px;
+        overflow-y: auto;
+        font-size: 11.5px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 8px 12px;
+      }
+      #timeline h4 {
+        color: var(--amber);
+        margin: 2px 0 6px;
+        font-size: 11px;
+      }
+      .tl-row {
+        display: flex;
+        gap: 10px;
+        color: var(--dim);
+        padding: 1px 0;
+      }
+      .tl-row span:first-child {
+        color: var(--accent);
+        min-width: 46px;
+      }
+      .tl-phase {
+        color: var(--good);
+        font-weight: 600;
+      }
+      /* pedia */
+      .pedia summary {
+        cursor: pointer;
+        padding: 4px 0;
+        font-size: 13px;
+      }
+      .pedia p {
+        font-size: 12px;
+        color: var(--dim);
+        margin: 4px 0;
+        max-width: 760px;
+      }
+      .pedia-real {
+        color: var(--text) !important;
+      }
+      #pedia-panel input {
+        width: min(420px, 100%);
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 8px;
+        margin-bottom: 10px;
+        font-family: var(--mono);
+      }
+      select {
+        background: var(--panel2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 3px;
+        font-family: var(--mono);
+      }
+      #detail select {
+        width: 100%;
+        margin-bottom: 4px;
       }
       .crit {
         color: var(--dim);
@@ -317,65 +799,23 @@
       .crit.ok {
         color: var(--good);
       }
-      .kv {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        padding: 1px 0;
-      }
-      .kv span:first-child {
-        color: var(--dim);
-      }
       .supply-btn {
         display: block;
         width: 100%;
         margin: 4px 0;
         text-align: left;
       }
-      #side-panel select {
-        width: 100%;
-        background: var(--panel);
-        color: var(--text);
-        border: 1px solid var(--line);
-        border-radius: 4px;
-        padding: 3px;
-        margin-bottom: 4px;
+      #detail h4,
+      #screen-colony h4 {
+        margin: 8px 0 4px;
+        font-size: 11px;
+        color: var(--amber);
       }
-      #controls {
-        width: 100%;
-        max-width: 900px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      button {
-        background: var(--panel);
-        color: var(--text);
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        padding: 6px 12px;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      button:hover {
-        border-color: var(--accent);
-      }
-      button.active {
-        background: var(--accent);
-        color: #0b0d12;
-        border-color: var(--accent);
-      }
-      #legend {
-        color: var(--dim);
-        font-size: 12px;
-        max-width: 900px;
-        text-align: center;
-      }
+      /* toasts */
       #toasts {
         position: fixed;
         right: 12px;
-        bottom: 12px;
+        bottom: 54px;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -387,7 +827,7 @@
         border-left: 4px solid var(--dim);
         border-radius: 6px;
         padding: 8px 10px;
-        font-size: 13px;
+        font-size: 12px;
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
       }
       .toast.warning {
@@ -400,21 +840,21 @@
         color: var(--dim);
         font-size: 11px;
       }
-      /* ── M6/M7: start screen, observer, resource bar, night theme ── */
+      /* start screen */
       #start-screen[hidden] {
         display: none;
       }
       #start-screen {
         position: fixed;
         inset: 0;
-        background: rgba(5, 7, 11, 0.94);
+        background: rgba(4, 6, 10, 0.95);
         z-index: 50;
         display: flex;
         align-items: center;
         justify-content: center;
       }
       #start-card {
-        max-width: 720px;
+        max-width: 760px;
         padding: 28px;
         text-align: center;
       }
@@ -441,16 +881,16 @@
       }
       .start-mode h2 {
         margin: 0 0 6px;
-        font-size: 17px;
+        font-size: 16px;
       }
       .start-mode p {
         color: var(--dim);
-        font-size: 12.5px;
+        font-size: 12px;
         min-height: 70px;
       }
       .start-mode label {
         display: block;
-        font-size: 12px;
+        font-size: 11.5px;
         color: var(--dim);
         margin: 6px 0;
       }
@@ -463,6 +903,7 @@
         border-radius: 4px;
         padding: 4px;
         margin-top: 2px;
+        font-family: var(--mono);
       }
       .start-mode button {
         width: 100%;
@@ -477,223 +918,176 @@
         font-size: 11px;
         margin-top: 18px;
       }
-      #resbar {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 0;
-        font-size: 12px;
-        max-width: 948px;
-      }
-      .chip {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 2px 9px;
-        color: var(--dim);
-      }
-      .chip strong {
-        color: var(--text);
-      }
-      .chip-i {
-        color: var(--accent);
-        margin-right: 3px;
-      }
-      .chip-pause {
-        border-color: var(--warn);
-        color: var(--warn);
-      }
-      #observer {
-        width: 240px;
-        flex-shrink: 0;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 10px;
-      }
-      #take-command {
-        width: 100%;
-        padding: 7px;
-        margin-bottom: 8px;
-        background: var(--accent);
-        color: #0b0d12;
-        font-weight: 600;
-      }
-      #take-command.ai-off {
-        background: var(--warn);
-      }
-      .chart-cell {
-        margin-bottom: 8px;
-      }
-      .chart-label {
-        font-size: 11px;
-        letter-spacing: 0.05em;
-      }
-      .chart-value {
-        color: var(--text);
-        float: right;
-      }
-      .chart-cell canvas {
-        width: 100%;
-        height: 48px;
-        background: rgba(11, 13, 18, 0.6);
-        border: 1px solid var(--line);
-        border-radius: 4px;
-        display: block;
-      }
-      #timeline {
-        margin-top: 8px;
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 11.5px;
-      }
-      #timeline h4 {
-        color: var(--accent);
-        margin: 4px 0;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-      }
-      .tl-row {
-        display: flex;
-        gap: 8px;
-        color: var(--dim);
-        padding: 1px 0;
-      }
-      .tl-row span:first-child {
-        color: var(--accent);
-        min-width: 44px;
-      }
-      .tl-phase {
-        color: var(--good);
-        font-weight: 600;
-      }
-      .pedia summary {
-        cursor: pointer;
-        padding: 3px 0;
-        font-size: 13px;
-      }
-      .pedia p {
-        font-size: 12px;
-        color: var(--dim);
-        margin: 4px 0;
-      }
-      .pedia-real {
-        color: var(--text) !important;
-      }
-      #pedia-panel input {
-        width: 100%;
-        background: var(--bg);
-        color: var(--text);
-        border: 1px solid var(--line);
-        border-radius: 4px;
-        padding: 4px;
-        margin-bottom: 6px;
-      }
-      /* "Ops at night" theme (ART-DIRECTION): the UI dims warm-red after sunset. */
+      /* night ops theme */
       body.night {
         --accent: #e8a87c;
+        --amber: #ff9f6e;
       }
       body.night #topbar,
-      body.night #side-panel,
-      body.night #observer {
-        background: #171210;
+      body.night #rail,
+      body.night #detail,
+      body.night #bottombar {
+        background: #120e0c;
       }
     </style>
   </head>
   <body>
-    <div id="app">
-      <div id="topbar">
-        <div id="title">LUNARIS</div>
-        <div id="clock">
-          <div class="big">—</div>
-          <div class="sub">—</div>
+    <div id="ops">
+      <header id="topbar">
+        <div id="brand">
+          <div id="title">LUNARIS</div>
+          <div class="sub">SHACKLETON RIM · 89.7°S 0.0°E</div>
         </div>
-        <div id="power">
-          <div><span id="power-line">—</span></div>
+        <div class="top-stat">
+          <label>FUNDS</label>
+          <div class="big" id="funds-big">—</div>
+          <div class="sub" id="funds-sub"></div>
+        </div>
+        <div class="top-stat">
+          <label>POPULATION</label>
+          <div class="big" id="pop-big">—</div>
+          <div class="sub" id="pop-sub"></div>
+        </div>
+        <div class="top-stat">
+          <label>PHASE</label>
+          <div class="big" id="phase-big">—</div>
+          <div id="phase-pips"></div>
+        </div>
+        <div id="clock-wrap">
+          <canvas id="clock-dial" width="116" height="116"></canvas>
+          <div class="top-stat" id="clock">
+            <label>LUNAR CYCLE</label>
+            <div class="big">—</div>
+            <div class="sub">—</div>
+          </div>
+        </div>
+        <div class="top-stat" id="power">
+          <label>POWER</label>
+          <div id="power-line">—</div>
           <div id="powerbar">
             <div class="gen"></div>
             <div class="unmet"></div>
           </div>
           <div id="storagebar"><div class="stored"></div></div>
-          <div class="sub" id="storage-line">—</div>
+          <div id="storage-line">—</div>
         </div>
-      </div>
-      <div id="start-screen">
-        <div id="start-card">
-          <h1>LUNARIS</h1>
-          <p class="start-tag">
-            A hard-realism lunar colonization simulator. Every number has a citation.
-          </p>
-          <div class="start-modes">
-            <div class="start-mode">
-              <h2>🧑‍🚀 Game</h2>
-              <p>
-                Command the outpost yourself. The First Night tutorial teaches power, heat, air, and
-                ice — in that order, because that is the order the Moon kills you in.
-              </p>
-              <button id="start-game">Play the First Night</button>
+      </header>
+      <div id="midrow">
+        <nav id="rail"></nav>
+        <main id="workspace">
+          <section id="screen-map">
+            <div id="map-wrap"><div id="tutorial"></div></div>
+          </section>
+          <section id="screen-crew" hidden>
+            <h3>Crew Roster</h3>
+            <div id="roster" class="crew-grid"></div>
+          </section>
+          <section id="screen-research" hidden>
+            <h3>Research</h3>
+            <div id="tech-panel" class="grid"></div>
+            <div id="phase-ribbon"></div>
+          </section>
+          <section id="screen-industry" hidden>
+            <h3>Production Chain</h3>
+            <div id="industry"></div>
+          </section>
+          <section id="screen-logistics" hidden>
+            <h3>Logistics</h3>
+            <div id="logistics"></div>
+          </section>
+          <section id="screen-colony" hidden>
+            <div class="cols">
+              <div>
+                <h3>Colony Status</h3>
+                <div id="colony-panel"></div>
+              </div>
+              <div id="chronicle">
+                <h3>Mission Chronicle</h3>
+                <div id="alertlog"></div>
+              </div>
             </div>
-            <div class="start-mode">
-              <h2>🛰 Simulation</h2>
-              <p>
-                Watch a policy AI run a 2026-era program. Intervene whenever you disagree with
-                mission control.
-              </p>
-              <label
-                >Preset
-                <select id="scenario-select"></select
-              ></label>
-              <label
-                >Failures
-                <select id="failure-select">
-                  <option value="realistic">Realistic (history's odds)</option>
-                  <option value="ideal">Ideal (the brochure)</option>
-                </select>
-              </label>
-              <label>Seed <input id="seed-input" type="text" placeholder="preset default" /></label>
-              <button id="start-sim">Run Simulation</button>
+          </section>
+          <section id="screen-pedia" hidden>
+            <h3>Lunarpedia</h3>
+            <div id="pedia-panel"></div>
+          </section>
+          <section id="screen-observer" hidden>
+            <div id="observer-head">
+              <button id="take-command">🧑‍🚀 Take Command</button>
+              <div id="compare-legend" class="panel-hint"></div>
             </div>
+            <div id="charts"></div>
+            <div id="timeline"></div>
+          </section>
+        </main>
+        <aside id="detail">
+          <div id="detail-map">
+            <details id="build-box">
+              <summary>▸ BUILD</summary>
+              <div id="build-panel"></div>
+            </details>
+            <h3>Inspector</h3>
+            <div id="inspector"><em style="color: var(--dim)">Click a building</em></div>
           </div>
-          <p class="start-keys">
-            Space pause · 1-4 speed · R/B/T/C/S/F/P tabs · Esc cancel placement
-          </p>
-        </div>
-      </div>
-      <div id="resbar"></div>
-      <div id="main-row">
-        <div id="map-wrap">
-          <div id="tutorial"></div>
-        </div>
-        <div id="observer" hidden>
-          <button id="take-command">🧑‍🚀 Take Command</button>
-          <div id="compare-legend" class="panel-hint"></div>
-          <div id="charts"></div>
-          <div id="timeline"></div>
-        </div>
-        <div id="side-panel">
-          <div id="tabs"></div>
-          <div id="tab-body">
-            <div id="roster"><em style="color: var(--dim)">No crew on site</em></div>
-            <div id="build-panel" hidden></div>
-            <div id="tech-panel" hidden></div>
-            <div id="colony-panel" hidden></div>
-            <div id="supply-panel" hidden></div>
-            <div id="flows-panel" hidden></div>
-            <div id="pedia-panel" hidden></div>
+          <div id="detail-supply" hidden>
+            <h3>Supply Planner</h3>
+            <div id="supply-panel"></div>
           </div>
-          <h3 style="margin-top: 12px">Inspector</h3>
-          <div id="inspector"><em style="color: var(--dim)">Click a building</em></div>
-        </div>
+          <div id="detail-flows" hidden>
+            <h3>Resource Flows</h3>
+            <div id="flows-panel"></div>
+          </div>
+        </aside>
       </div>
-      <div id="controls"></div>
-      <div id="alertlog"></div>
-      <div id="legend">
-        Shackleton Rim 64×64 — bright ridge = near-eternal light (class A), dark crater = PSR. Click
-        buildings to inspect. Blue outline = frozen, red = overheating, yellow = unpowered.
-      </div>
-      <div id="toasts"></div>
+      <footer id="bottombar">
+        <div id="resbar"></div>
+        <div id="alert-ticker"></div>
+        <div id="controls"></div>
+        <div id="next-event"></div>
+      </footer>
     </div>
+    <div id="start-screen">
+      <div id="start-card">
+        <h1>LUNARIS</h1>
+        <p class="start-tag">
+          A hard-realism lunar colonization simulator. Every number has a citation.
+        </p>
+        <div class="start-modes">
+          <div class="start-mode">
+            <h2>🧑‍🚀 Game</h2>
+            <p>
+              Command the outpost yourself. The First Night tutorial teaches power, heat, air, and
+              ice — in that order, because that is the order the Moon kills you in.
+            </p>
+            <button id="start-game">Play the First Night</button>
+          </div>
+          <div class="start-mode">
+            <h2>🛰 Simulation</h2>
+            <p>
+              Watch a policy AI run a 2026-era program. Intervene whenever you disagree with mission
+              control.
+            </p>
+            <label
+              >Preset
+              <select id="scenario-select"></select
+            ></label>
+            <label
+              >Failures
+              <select id="failure-select">
+                <option value="realistic">Realistic (history's odds)</option>
+                <option value="ideal">Ideal (the brochure)</option>
+              </select>
+            </label>
+            <label>Seed <input id="seed-input" type="text" placeholder="preset default" /></label>
+            <button id="start-sim">Run Simulation</button>
+          </div>
+        </div>
+        <p class="start-keys">
+          Space pause · 1-4 speed · M/R/T/I/L/C/P/O screens · B build · Esc cancel placement
+        </p>
+      </div>
+    </div>
+    <div id="toasts"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

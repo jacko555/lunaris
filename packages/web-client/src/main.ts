@@ -1,4 +1,5 @@
 import {
+  ALERTS_COMPONENT,
   BUILDING_COMPONENT,
   CMD_ADD_CREW,
   CMD_ASSIGN_CREW,
@@ -23,6 +24,7 @@ import {
   scenarioSeed,
   scenarioToConfig,
   tileAt,
+  type AlertsComponent,
   type BuildingComponent,
   type ContentPack,
   type CrewComponent,
@@ -56,6 +58,14 @@ import {
   type UiState,
 } from "./panels.js";
 import { MapRenderer } from "./renderer.js";
+import {
+  drawClockDial,
+  renderIndustry,
+  renderLogistics,
+  renderNextEvent,
+  renderPhaseRibbon,
+  renderTopbar,
+} from "./screens.js";
 import { SimHost, type SimSpeed } from "./sim-host.js";
 import { renderTutorial } from "./tutorial.js";
 
@@ -209,7 +219,8 @@ async function boot(): Promise<void> {
   app.renderer = new MapRenderer(app.map, app.pack);
   await app.renderer.init($("#map-wrap"));
   app.host = new SimHost(makeTutorialWorld(app.pack, app.map, app.gameDef));
-  app.hud = new Hud(app.pack.number("day_synodic") * 24, app.pack);
+  const TPLD = app.pack.number("day_synodic") * 24;
+  app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
 
   const ui: UiState & { pediaFilter: string } = {
@@ -229,35 +240,49 @@ async function boot(): Promise<void> {
     flows: $("#flows-panel"),
     pedia: $("#pedia-panel"),
   };
-  const tabBar = $("#tabs");
-  const tabNames: [string, string, string][] = [
-    ["roster", "Crew", "r"],
-    ["build", "Build", "b"],
-    ["tech", "Tech", "t"],
-    ["colony", "Colony", "c"],
-    ["supply", "Supply", "s"],
-    ["flows", "Flows", "f"],
-    ["pedia", "Pedia", "p"],
+  // ── Mission Ops rail: screens in the workspace, contextual detail aside ──
+  const rail = $("#rail");
+  const SCREENS: [string, string, string, string][] = [
+    // [screen key, icon, label, shortcut]
+    ["map", "🗺", "MAP", "m"],
+    ["crew", "👥", "CREW", "r"],
+    ["research", "🧪", "RESEARCH", "t"],
+    ["industry", "🏭", "INDUSTRY", "i"],
+    ["logistics", "🚀", "LOGISTICS", "l"],
+    ["colony", "🏛", "COLONY", "c"],
+    ["pedia", "📖", "PEDIA", "p"],
+    ["observer", "📊", "OBSERVER", "o"],
   ];
-  const setTab = (tab: string): void => {
-    ui.tab = tab;
-    for (const [name, element] of Object.entries(panels)) {
-      element.hidden = name !== tab;
+  const DETAIL_FOR: Record<string, string> = {
+    map: "detail-map",
+    logistics: "detail-supply",
+    industry: "detail-flows",
+  };
+  const setScreen = (screen: string): void => {
+    ui.tab = screen;
+    for (const [key] of SCREENS) {
+      const section = document.querySelector(`#screen-${key}`) as HTMLElement;
+      section.hidden = key !== screen;
     }
-    for (const button of tabBar.children) {
-      button.classList.toggle("active", button.getAttribute("data-tab") === tab);
+    const detailId = DETAIL_FOR[screen] ?? "detail-map";
+    for (const id of ["detail-map", "detail-supply", "detail-flows"]) {
+      $(`#${id}`).hidden = id !== detailId;
+    }
+    for (const button of rail.children) {
+      button.classList.toggle("active", button.getAttribute("data-screen") === screen);
     }
   };
-  tabBar.replaceChildren();
-  for (const [name, label, key] of tabNames) {
+  rail.replaceChildren();
+  for (const [key, icon, label, shortcut] of SCREENS) {
     const button = document.createElement("button");
-    button.textContent = label;
-    button.title = `Shortcut: ${key.toUpperCase()}`;
-    button.setAttribute("data-tab", name);
-    button.addEventListener("click", () => setTab(name));
-    tabBar.appendChild(button);
+    button.innerHTML = `<span class="ico">${icon}</span>${label}`;
+    button.title = `Shortcut: ${shortcut.toUpperCase()}`;
+    button.setAttribute("data-screen", key);
+    button.addEventListener("click", () => setScreen(key));
+    rail.appendChild(button);
   }
-  setTab("roster");
+  const observerRail = rail.lastElementChild as HTMLElement;
+  setScreen("map");
   handleResearchEvents(panels["tech"] as HTMLElement, () => app.host.world);
   (panels["pedia"] as HTMLElement).addEventListener("lunaris-pedia", (event) => {
     ui.pediaFilter = (event as CustomEvent).detail as string;
@@ -452,8 +477,10 @@ async function boot(): Promise<void> {
     for (const buffer of app.buffers.values()) {
       buffer.reset();
     }
-    $("#observer").hidden = true;
+    observerRail.style.display = "none";
+    setScreen("map");
     $("#tutorial").hidden = false;
+    ($("#build-box") as HTMLDetailsElement).open = true;
     $("#start-screen").hidden = true;
     setSpeed(10);
   };
@@ -482,7 +509,8 @@ async function boot(): Promise<void> {
     }
     takeCommand.classList.remove("ai-off");
     takeCommand.textContent = "🧑‍🚀 Take Command";
-    $("#observer").hidden = false;
+    observerRail.style.display = "";
+    setScreen("observer");
     $("#tutorial").hidden = true;
     $("#start-screen").hidden = true;
     setSpeed(720);
@@ -508,10 +536,13 @@ async function boot(): Promise<void> {
       setSpeed(60);
     } else if (event.key === "4") {
       setSpeed(720);
+    } else if (event.key.toLowerCase() === "b") {
+      setScreen("map");
+      ($("#build-box") as HTMLDetailsElement).open = true;
     } else {
-      const tab = tabNames.find(([, , key]) => key === event.key.toLowerCase());
-      if (tab !== undefined) {
-        setTab(tab[0]);
+      const entry = SCREENS.find(([, , , shortcut]) => shortcut === event.key.toLowerCase());
+      if (entry !== undefined && !(entry[0] === "observer" && app.mode === "game")) {
+        setScreen(entry[0]);
       }
     }
   });
@@ -538,7 +569,9 @@ async function boot(): Promise<void> {
       }
     }
     const world = app.host.world;
-    app.renderer.draw(world);
+    if (ui.tab === "map") {
+      app.renderer.draw(world); // skip Pixi work while another screen is up
+    }
     app.hud.update(world);
     const env = world.store<EnvironmentComponent>(ENVIRONMENT_COMPONENT).require(ENV_ENTITY);
     document.body.classList.toggle("night", env.litB === 0); // ops-at-night theme
@@ -601,20 +634,34 @@ async function boot(): Promise<void> {
         }
         renderTimeline($("#timeline"), world, app.startYear);
       }
-      if (ui.tab === "build") {
+      // Mission Ops chrome: top-bar stats, clock dial, next-event card.
+      renderTopbar(world);
+      drawClockDial($("#clock-dial") as HTMLCanvasElement, world, TPLD);
+      renderNextEvent($("#next-event"), world, TPLD);
+      const lastAlert = world.store<AlertsComponent>(ALERTS_COMPONENT).require(3).entries.at(-1);
+      const ticker = $("#alert-ticker");
+      if (lastAlert !== undefined) {
+        ticker.textContent = `t${lastAlert.tick} · ${lastAlert.message}`;
+        ticker.className = lastAlert.severity;
+      }
+
+      if (ui.tab === "map") {
         renderBuildMenu(panels["build"] as HTMLElement, world, app.pack, ui, (defId) => {
           ui.selectedBuild = defId;
         });
-      } else if (ui.tab === "tech") {
+      } else if (ui.tab === "research") {
         renderTechPanel(panels["tech"] as HTMLElement, world, app.pack);
-      } else if (ui.tab === "colony") {
-        renderColonyPanel(panels["colony"] as HTMLElement, world);
-      } else if (ui.tab === "supply") {
-        renderSupplyPanel(panels["supply"] as HTMLElement, world, app.pack, -1);
-      } else if (ui.tab === "flows") {
+        renderPhaseRibbon($("#phase-ribbon"), world);
+      } else if (ui.tab === "industry") {
+        renderIndustry($("#industry"), world, app.pack);
         renderFlows(panels["flows"] as HTMLElement, world, app.pack, ui, (resource) => {
           ui.flowResource = resource;
         });
+      } else if (ui.tab === "logistics") {
+        renderLogistics($("#logistics"), world, app.pack);
+        renderSupplyPanel(panels["supply"] as HTMLElement, world, app.pack, -1);
+      } else if (ui.tab === "colony") {
+        renderColonyPanel(panels["colony"] as HTMLElement, world);
       } else if (ui.tab === "pedia" && frameCount % 60 === 0) {
         if (!(document.activeElement instanceof HTMLInputElement)) {
           renderLunarpedia(panels["pedia"] as HTMLElement, app.pack, ui.pediaFilter);

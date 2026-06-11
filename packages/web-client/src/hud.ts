@@ -196,9 +196,44 @@ export class Hud {
     if (def.shieldingGcm2 > 0) {
       html += kv("Shielding", `${def.shieldingGcm2} g/cm²`);
     }
+    html += kv("Mass", `${(def.massKg / 1000).toFixed(1)} t`);
+    if (def.priorityTier !== null) {
+      html += kv(
+        "Priority tier",
+        `${def.priorityTier} ${def.priorityTier === 1 ? "(critical)" : ""}`,
+      );
+    }
+    if (def.wearRatePerYear > 0) {
+      html += kv("Wear", `${(def.wearRatePerYear * 100).toFixed(0)}% / year`);
+    }
     const services = Object.entries(def.services);
     if (services.length > 0) {
       html += kv("Services", services.map(([k, v]) => `${k} ${v}`).join(", "));
+    }
+    // I/O per day at current duty (mockup v2 detail panel): reaction
+    // stoichiometry × the building's rated primary-output throughput.
+    const duty = building.poweredFraction * building.condition;
+    const ioLines: string[] = [];
+    if (def.mining !== undefined) {
+      ioLines.push(`+ ${(def.mining.kgPerDay * duty).toFixed(0)} kg/d excavated`);
+    }
+    for (const rid of def.reactions) {
+      const reaction = this.pack.reaction(rid);
+      const rated = (def.reactionKgPerDay[rid] ?? 0) * duty;
+      const primary = reaction.outputs.find((o) => o.resource === reaction.primaryOutput);
+      const batches = primary !== undefined && primary.kg > 0 ? rated / primary.kg : 0;
+      for (const input of reaction.inputs) {
+        ioLines.push(`− ${(input.kg * batches).toFixed(1)} kg/d ${input.resource}`);
+      }
+      for (const output of reaction.outputs) {
+        ioLines.push(`+ ${(output.kg * batches).toFixed(1)} kg/d ${output.resource}`);
+      }
+    }
+    if (ioLines.length > 0) {
+      html += `<div class="kv" style="margin-top:4px"><span>I/O per day</span><span></span></div>`;
+      for (const line of ioLines) {
+        html += `<div class="kv"><span style="color:${line.startsWith("+") ? "var(--good)" : "var(--crit)"}">${line}</span><span></span></div>`;
+      }
     }
     if (store !== undefined && Object.keys(store.amounts).length > 0) {
       html += `<div class="kv" style="margin-top:4px"><span>Stores</span><span></span></div>`;
