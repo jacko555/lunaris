@@ -20,7 +20,10 @@
     "id": "temp_day_max",
     "value": 400,
     "unit": "K",
-    "range": [380, 400],
+    "range": [
+      380,
+      400
+    ],
     "source": "Apollo/LRO Diviner equatorial daytime maximum (~+127 C)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -29,7 +32,10 @@
     "id": "temp_night_min",
     "value": 100,
     "unit": "K",
-    "range": [95, 110],
+    "range": [
+      95,
+      110
+    ],
     "source": "Apollo/LRO Diviner nighttime minimum (~-173 C)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -38,7 +44,10 @@
     "id": "temp_psr",
     "value": 40,
     "unit": "K",
-    "range": [25, 40],
+    "range": [
+      25,
+      40
+    ],
     "source": "LRO Diviner permanently-shadowed-region measurements",
     "as_of": "2026-06",
     "status": "sourced"
@@ -55,7 +64,10 @@
     "id": "illumination_peak_ridge",
     "value": 0.9,
     "unit": "fraction of cycle",
-    "range": [0.85, 0.94],
+    "range": [
+      0.85,
+      0.94
+    ],
     "source": "South-pole 'near-eternal light' ridge illumination studies (Shackleton rim)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -64,7 +76,10 @@
     "id": "dose_surface_chronic",
     "value": 0.5,
     "unit": "mSv/day",
-    "range": [0.4, 0.6],
+    "range": [
+      0.4,
+      0.6
+    ],
     "source": "GCR-dominated unshielded surface dose; LRO/CRaTER and DLR models (~200 mSv/yr)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -105,7 +120,10 @@
     "id": "regolith_density_loose",
     "value": 1500,
     "unit": "kg/m3",
-    "range": [1400, 1600],
+    "range": [
+      1400,
+      1600
+    ],
     "source": "Loose lunar regolith bulk density (Apollo soil mechanics)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -114,7 +132,10 @@
     "id": "regolith_o2_massfrac",
     "value": 0.45,
     "unit": "mass fraction",
-    "range": [0.4, 0.45],
+    "range": [
+      0.4,
+      0.45
+    ],
     "source": "Oxygen bound in regolith oxides, ~45 wt%",
     "as_of": "2026-06",
     "status": "sourced"
@@ -123,7 +144,10 @@
     "id": "ice_concentration_psr",
     "value": 0.056,
     "unit": "mass fraction",
-    "range": [0.027, 0.085],
+    "range": [
+      0.027,
+      0.085
+    ],
     "source": "Colaprete et al. 2010 (NASA/LCROSS, Cabeus): 5.6 +/- 2.9 wt% water ice",
     "as_of": "2026-06",
     "status": "sourced"
@@ -164,7 +188,10 @@
     "id": "crew_metabolic_heat",
     "value": 137,
     "unit": "W/person",
-    "range": [100, 170],
+    "range": [
+      100,
+      170
+    ],
     "source": "NASA ALS average metabolic rate 136.7 W/person",
     "as_of": "2026-06",
     "status": "sourced"
@@ -173,7 +200,10 @@
     "id": "eclss_water_recovery",
     "value": 0.93,
     "unit": "fraction",
-    "range": [0.9, 0.98],
+    "range": [
+      0.9,
+      0.98
+    ],
     "source": "ISS ECLSS water recovery; Brine Processor Assembly pushed 93-94% to ~98%",
     "as_of": "2026-06",
     "status": "sourced"
@@ -182,7 +212,10 @@
     "id": "mre_o2_yield",
     "value": 0.28,
     "unit": "kg O2 / kg regolith",
-    "range": [0.25, 0.3],
+    "range": [
+      0.25,
+      0.3
+    ],
     "source": "Molten regolith electrolysis recoverable O2 (~280 kg per 1,000 kg processed)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -191,7 +224,10 @@
     "id": "mre_energy_per_kgo2",
     "value": 33,
     "unit": "kWh/kg O2",
-    "range": [26, 420],
+    "range": [
+      26,
+      420
+    ],
     "source": "MRE energy estimates; MIT/Schreiner low end, pessimistic reviews to ~420",
     "as_of": "2026-06",
     "status": "sourced",
@@ -233,7 +269,10 @@
     "id": "lox_energy_allin",
     "value": 11.3,
     "unit": "kWh/kg",
-    "range": [9, 15],
+    "range": [
+      9,
+      15
+    ],
     "source": "LOX production all-in chain (mining, electrolysis, cryocooling) at ~2.8 MW for ~2,178 t/yr",
     "as_of": "2026-06",
     "status": "sourced"
@@ -242,7 +281,10 @@
     "id": "electrolysis_energy",
     "value": 5,
     "unit": "kWh/kg H2O",
-    "range": [4.5, 6],
+    "range": [
+      4.5,
+      6
+    ],
     "source": "PEM water electrolysis typical; stoichiometric 8:1 O2:H2 by mass",
     "as_of": "2026-06",
     "status": "sourced"
@@ -274,7 +316,10 @@
     "id": "solar_specific_power",
     "value": 100,
     "unit": "W/kg",
-    "range": [80, 150],
+    "range": [
+      80,
+      150
+    ],
     "source": "Deployed space solar array class",
     "as_of": "2026-06",
     "status": "sourced"
@@ -283,7 +328,10 @@
     "id": "battery_specific_energy",
     "value": 200,
     "unit": "Wh/kg",
-    "range": [150, 300],
+    "range": [
+      150,
+      300
+    ],
     "source": "Li-ion class secondary battery",
     "as_of": "2026-06",
     "status": "sourced"
@@ -292,7 +340,10 @@
     "id": "rfc_specific_energy",
     "value": 600,
     "unit": "Wh/kg",
-    "range": [400, 1000],
+    "range": [
+      400,
+      1000
+    ],
     "source": "Regenerative fuel cell, night-scale energy storage class",
     "as_of": "2026-06",
     "status": "sourced"
@@ -301,7 +352,10 @@
     "id": "crop_area_per_person",
     "value": 45,
     "unit": "m2",
-    "range": [40, 50],
+    "range": [
+      40,
+      50
+    ],
     "source": "NASA crop studies: full caloric diet area per person (high-light crops)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -310,7 +364,10 @@
     "id": "crop_led_power",
     "value": 300,
     "unit": "W/m2",
-    "range": [200, 500],
+    "range": [
+      200,
+      500
+    ],
     "source": "LED grow-light power density; dominant food-production energy cost",
     "as_of": "2026-06",
     "status": "sourced"
@@ -319,7 +376,10 @@
     "id": "dv_tli",
     "value": 3150,
     "unit": "m/s",
-    "range": [3100, 3250],
+    "range": [
+      3100,
+      3250
+    ],
     "source": "LEO to trans-lunar injection delta-v budget",
     "as_of": "2026-06",
     "status": "sourced"
@@ -328,7 +388,10 @@
     "id": "dv_loi",
     "value": 1000,
     "unit": "m/s",
-    "range": [900, 1100],
+    "range": [
+      900,
+      1100
+    ],
     "source": "Lunar orbit insertion delta-v budget",
     "as_of": "2026-06",
     "status": "sourced"
@@ -337,7 +400,10 @@
     "id": "dv_descent",
     "value": 1900,
     "unit": "m/s",
-    "range": [1800, 2000],
+    "range": [
+      1800,
+      2000
+    ],
     "source": "Lunar orbit to surface descent delta-v budget",
     "as_of": "2026-06",
     "status": "sourced"
@@ -362,7 +428,10 @@
     "id": "transit_days",
     "value": 4,
     "unit": "days",
-    "range": [3, 5],
+    "range": [
+      3,
+      5
+    ],
     "source": "Typical Earth-Moon cargo/crew transit time",
     "as_of": "2026-06",
     "status": "sourced"
@@ -371,7 +440,10 @@
     "id": "moonquake_major_rate",
     "value": 0.3,
     "unit": "events/yr",
-    "range": [0.1, 0.5],
+    "range": [
+      0.1,
+      0.5
+    ],
     "source": "Shallow moonquakes felt at base scale (Apollo seismic network)",
     "as_of": "2026-06",
     "status": "sourced"
@@ -391,7 +463,10 @@
     "id": "launch_failure_p_heavy",
     "value": 0.05,
     "unit": "probability per mission",
-    "range": [0.02, 0.08],
+    "range": [
+      0.02,
+      0.08
+    ],
     "source": "Mature heavy-lift launch reliability class",
     "as_of": "2026-06",
     "status": "sourced"
@@ -912,5 +987,79 @@
     "as_of": "2026-06",
     "status": "speculative",
     "notes": "Propellant-export reach once launches need no propellant; gameplay model parameter"
+  },
+  {
+    "id": "tile_size_m",
+    "value": 250,
+    "unit": "m",
+    "source": "Map abstraction: 64x64 grid spanning ~16 km of the Shackleton rim approach (rim diameter ~21 km, Stopar & Meyer LROC 2019)",
+    "as_of": "2026-06",
+    "status": "needs_source"
+  },
+  {
+    "id": "rover_scout",
+    "value": {
+      "costUsd": 40000000,
+      "massKg": 460,
+      "speedKmh": 2,
+      "batteryKwh": 12,
+      "drainKwhPerKm": 0.35,
+      "surveyHours": 12,
+      "cargoKg": 50
+    },
+    "unit": "composite",
+    "source": "LRV-class robotic scout: LRV 0.21 km nominal range/h figures scaled to autonomous ops; battery/drain MGRU study values",
+    "as_of": "2026-06",
+    "status": "needs_source"
+  },
+  {
+    "id": "rover_prospector",
+    "value": {
+      "costUsd": 250000000,
+      "massKg": 430,
+      "speedKmh": 0.5,
+      "batteryKwh": 10,
+      "drainKwhPerKm": 0.5,
+      "surveyHours": 48,
+      "cargoKg": 20
+    },
+    "unit": "composite",
+    "source": "VIPER class: 430 kg, 0.2-0.8 km/h drive, ~ mission cost (NASA VIPER fact sheet 2024; mission cancelled then revived as CLPS payload)",
+    "as_of": "2026-06"
+  },
+  {
+    "id": "rover_sampler",
+    "value": {
+      "costUsd": 180000000,
+      "massKg": 1200,
+      "speedKmh": 1.2,
+      "batteryKwh": 30,
+      "drainKwhPerKm": 0.9,
+      "surveyHours": 24,
+      "cargoKg": 200
+    },
+    "unit": "composite",
+    "source": "MMSEV-derived robotic sample hauler (NASA MMSEV concept mass/power class)",
+    "as_of": "2026-06",
+    "status": "needs_source"
+  },
+  {
+    "id": "survey_science_points",
+    "value": 25,
+    "unit": "points",
+    "source": "Game balance: one survey ~ a week of field-lab output (SDD science model)",
+    "as_of": "2026-06",
+    "status": "speculative"
+  },
+  {
+    "id": "rover_failure_per_expedition",
+    "value": {
+      "ideal": 0.02,
+      "realistic": 0.08
+    },
+    "unit": "probability",
+    "source": "Speculative: per-traverse mishap odds anchored on planetary-rover anomaly history (Spirit embedding, Yutu-2 drive faults)",
+    "as_of": "2026-06",
+    "status": "speculative"
   }
 ]

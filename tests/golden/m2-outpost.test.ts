@@ -162,7 +162,7 @@ describe("M2 scenario golden hash", () => {
    * startPhase/startTechs for tech gating. The outpost still freezes
    * without fission and survives with it (asserted above).
    */
-  const EXPECTED_HASH = "a8a597fd";
+  const EXPECTED_HASH = "6e3e313b";
 
   it("fission outpost reproduces the golden hash after two lunar cycles", () => {
     const report = runOutpost(makeOutpost(true), TWO_LUNAR_DAYS);

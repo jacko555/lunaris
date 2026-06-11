@@ -143,6 +143,7 @@ export function applySpeDose(
   pack: ContentPack,
   ids: RadiationSystemIds,
   unshieldedMSv: number,
+  causedBy?: number,
 ): Map<string, number> {
   const shelterSafe = pack.number("spe_shelter_safe");
   const shelterMin = pack.number("spe_shelter_min");
@@ -179,6 +180,7 @@ export function applySpeDose(
     "critical",
     "spe-hit",
     `Solar particle event delivered up to ${unshieldedMSv} mSv to unsheltered crew — review doses in the roster`,
+    causedBy,
   );
   return delivered;
 }

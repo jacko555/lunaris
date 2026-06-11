@@ -1,4 +1,4 @@
-﻿import { loadContentPack, type ContentPack } from "../schema/content-pack.js";
+import { loadContentPack, type ContentPack } from "../schema/content-pack.js";
 import { encodeTiles, loadMap, type LunarMap, type Tile } from "../map/tiles.js";
 import type { GameMap } from "../schema/items.js";
 
@@ -102,6 +102,57 @@ export const TEST_CONSTANTS = [
       failureIdeal: 0.03,
       failureRealistic: 0.1,
       transitDays: 4,
+    },
+    unit: "composite",
+    source: "test fixture",
+    as_of: AS_OF,
+  },
+  {
+    id: "tile_size_m",
+    value: 250,
+    unit: "m",
+    source: "test fixture",
+    as_of: AS_OF,
+  },
+  {
+    id: "survey_science_points",
+    value: 25,
+    unit: "points",
+    source: "test fixture",
+    as_of: AS_OF,
+  },
+  {
+    id: "rover_failure_per_expedition",
+    value: { ideal: 0, realistic: 1 },
+    unit: "probability",
+    source: "test fixture (deterministic extremes)",
+    as_of: AS_OF,
+  },
+  {
+    id: "rover_scout",
+    value: {
+      costUsd: 40e6,
+      massKg: 460,
+      speedKmh: 2,
+      batteryKwh: 0.5,
+      drainKwhPerKm: 0.35,
+      surveyHours: 2,
+      cargoKg: 50,
+    },
+    unit: "composite",
+    source: "test fixture (tiny battery: strands ~1.4 km out)",
+    as_of: AS_OF,
+  },
+  {
+    id: "rover_prospector",
+    value: {
+      costUsd: 250e6,
+      massKg: 430,
+      speedKmh: 2,
+      batteryKwh: 10,
+      drainKwhPerKm: 0.5,
+      surveyHours: 4,
+      cargoKg: 20,
     },
     unit: "composite",
     source: "test fixture",

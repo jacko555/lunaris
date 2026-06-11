@@ -11,10 +11,17 @@ export function pushAlert(
   severity: "info" | "warning" | "critical",
   code: string,
   message: string,
-): void {
+  causedBy?: number,
+): number {
   const alerts = world.store<AlertsComponent>(ALERTS_COMPONENT).require(alertsEntity);
-  alerts.entries.push({ tick: world.tickCount, seq: alerts.seq++, severity, code, message });
+  const seq = alerts.seq++;
+  const entry: import("./components.js").AlertEntry = { tick: world.tickCount, seq, severity, code, message };
+  if (causedBy !== undefined) {
+    entry.causedBy = causedBy; // omitted when absent so old saves hash identically
+  }
+  alerts.entries.push(entry);
   if (alerts.entries.length > MAX_ALERTS) {
     alerts.entries.splice(0, alerts.entries.length - MAX_ALERTS);
   }
+  return seq;
 }

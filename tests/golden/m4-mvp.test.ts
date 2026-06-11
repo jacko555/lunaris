@@ -180,6 +180,6 @@ describe("M4 acceptance: v0.1 MVP baseline", () => {
   });
 
   it("reproduces the MVP golden hash after 5,000 ticks (CLAUDE.md rule 6)", () => {
-    expect(world.hash()).toBe("a9341726");
+    expect(world.hash()).toBe("08570246");
   });
 });

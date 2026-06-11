@@ -55,6 +55,9 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
   const repairKgPerPoint = pack.number("repair_parts_kg_per_point");
   const repairPointsPerDay = pack.number("repair_points_per_day");
 
+  // causedBy: alert seq of the forecast warning, threaded into every impact
+  // alert this event produces (T12 cause chains in the chronicle).
+  let causedBy: number | undefined;
   const applyEffects = (world: World, event: GameEvent): void => {
     const buildings = world.store<BuildingComponent>(BUILDING_COMPONENT);
     for (const effect of event.effects) {
@@ -62,7 +65,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
       if (type === "radiation-dose") {
         const range = effect["mSv"] as [number, number];
         const dose = range[0] + world.rng.next() * (range[1] - range[0]);
-        applySpeDose(world, pack, { alertsEntity: ids.alertsEntity }, Math.round(dose));
+        applySpeDose(world, pack, { alertsEntity: ids.alertsEntity }, Math.round(dose), causedBy);
       } else if (type === "building-damage") {
         const ids2 = buildings.entities();
         if (ids2.length > 0) {
@@ -77,6 +80,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
             "warning",
             event.id,
             `${pack.building(building.defId).name} damaged (−${(loss * 100).toFixed(0)}% condition) by ${event.id} — repair consumes spare parts`,
+            causedBy,
           );
         }
       } else if (type === "structural-stress") {
@@ -91,6 +95,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
           "warning",
           event.id,
           "Shallow moonquake — structural stress check across the base (minor wear; printed/rigid structures shrug it off)",
+          causedBy,
         );
       } else if (type === "budget-delta") {
         const economy = world.store<EconomyComponent>(ECONOMY_COMPONENT).get(ids.colonyEntity);
@@ -105,6 +110,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
             deltaUsd < 0 ? "warning" : "info",
             event.id,
             `${deltaUsd < 0 ? "Budget cut" : "Budget boost"}: ${(fraction * 100).toFixed(0)}% of the annual appropriation (${(deltaUsd / 1e9).toFixed(2)}B)`,
+            causedBy,
           );
         }
       } else if (type === "mission-delay") {
@@ -124,6 +130,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
             "warning",
             event.id,
             `Launch slip: ${delayed} mission(s) delayed 2-6 weeks — check your consumable runways`,
+            causedBy,
           );
         }
       } else if (type === "eclss-outage") {
@@ -145,11 +152,12 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
             "critical",
             event.id,
             `${pack.building(target.defId).name} component failure — offline ~${ticks} h. ${eclssUnits.length > 1 ? "Backup units carry the load." : "The CO₂ grace window is now your deadline — redundancy next time."}`,
+            causedBy,
           );
         }
       } else if (type === "flavor") {
         // Narrative-only deck entries (Accords disputes, the autonomy arc).
-        pushAlert(world, ids.alertsEntity, "info", event.id, event.alertTemplate ?? event.id);
+        pushAlert(world, ids.alertsEntity, "info", event.id, event.alertTemplate ?? event.id, causedBy);
       } else if (type === "power-outage") {
         const ticksRange = (effect["ticks"] as [number, number] | undefined) ?? [24, 72];
         const ticks = world.rng.nextInt(ticksRange[0], ticksRange[1]);
@@ -164,6 +172,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
           "critical",
           event.id,
           `Fission scram — reactor offline for ${ticks} h. Check storage and shed industry tiers; pray it is daytime.`,
+          causedBy,
         );
       }
     }
@@ -180,7 +189,9 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
       // ── resolve pending hazards ──
       for (const [entity, pending] of pendings.entries()) {
         if (world.tickCount >= pending.impactTick) {
+          causedBy = pending.warnSeq >= 0 ? pending.warnSeq : undefined;
           applyEffects(world, pack.event(pending.eventId));
+          causedBy = undefined;
           world.destroyEntity(entity);
         }
       }
@@ -203,8 +214,7 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
           }
           const lead = world.rng.nextInt(minLead, maxLead);
           const entity = world.createEntity();
-          pendings.set(entity, { eventId: event.id, impactTick: world.tickCount + lead });
-          pushAlert(
+          const warnSeq = pushAlert(
             world,
             ids.alertsEntity,
             "critical",
@@ -214,6 +224,11 @@ export function createHazardSystem(pack: ContentPack, ids: HazardSystemIds): Sys
               String(lead),
             ),
           );
+          pendings.set(entity, {
+            eventId: event.id,
+            impactTick: world.tickCount + lead,
+            warnSeq,
+          });
         } else {
           applyEffects(world, event);
         }

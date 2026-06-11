@@ -40,8 +40,9 @@ describe("data/base content pack", () => {
     // 45 = SDD master table minus micrometeorite_flux (site-dependent,
     // lives in the EVENTS hazard tables); +8 thermal/power constants (M2);
     // +20 crew/ECLSS/radiation/health (M3); +19 construction/dust/repair/
-    // economy/vehicle (M4/M5); +7 population/food/export (M6/M7).
-    expect(pack.constants.length).toBe(99);
+    // economy/vehicle (M4/M5); +7 population/food/export (M6/M7); +6 rover/
+    // expedition (M-Rover).
+    expect(pack.constants.length).toBe(105);
   });
 
   it("spot-checks sourced values against the SDD", () => {
@@ -65,6 +66,8 @@ describe("data/base content pack", () => {
       "lox_demand_kg_per_day",
       "lox_price_usd_per_kg",
       "mass_driver_demand_multiplier",
+      "rover_failure_per_expedition",
+      "survey_science_points",
       "vehicle_starship",
     ]);
     // Model parameters awaiting engineering citations (CLAUDE.md rule 5).
@@ -97,6 +100,8 @@ describe("data/base content pack", () => {
       "radiation_sickness_health_per_day",
       "repair_parts_kg_per_point",
       "repair_points_per_day",
+      "rover_sampler",
+      "rover_scout",
       "science_per_scientist_day",
       "sortie_payload_kg",
       "starvation_health_per_day",
@@ -104,6 +109,7 @@ describe("data/base content pack", () => {
       "temp_internal_target",
       "thermal_damage_rate_per_hour",
       "thermal_leak_kw_per_k_per_tonne",
+      "tile_size_m",
     ]);
   });
 

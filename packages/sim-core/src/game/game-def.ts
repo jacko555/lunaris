@@ -10,6 +10,7 @@ import {
   validatePlacement,
 } from "../systems/construction.js";
 import { createDustSystem } from "../systems/dust.js";
+import { createRoverSystem, roverSpec } from "../systems/rover.js";
 import { createEclssSystem } from "../systems/eclss.js";
 import { createEconomySystem } from "../systems/economy.js";
 import { createEnvironmentSystem } from "../systems/environment.js";
@@ -42,6 +43,7 @@ import {
   RESEARCH_COMPONENT,
   RIVAL_COMPONENT,
   RESUPPLY_COMPONENT,
+  ROVER_COMPONENT,
   SITE_COMPONENT,
   STATS_COMPONENT,
   STORAGE_COMPONENT,
@@ -59,6 +61,7 @@ import {
   type ResearchComponent,
   type RivalComponent,
   type ResupplyComponent,
+  type RoverComponent,
   type SiteComponent,
   type StatsComponent,
   type StorageComponent,
@@ -100,6 +103,9 @@ export const CMD_LAUNCH_PROBE = "cmd-launch-probe";
 export const CMD_LAUNCH_SORTIE = "cmd-launch-sortie";
 export const CMD_TRIGGER_SPE = "cmd-trigger-spe";
 export const CMD_SET_POLICY = "cmd-set-policy";
+export const CMD_ORDER_ROVER = "cmd-order-rover";
+export const CMD_LAUNCH_EXPEDITION = "cmd-launch-expedition";
+export const CMD_RECALL_ROVER = "cmd-recall-rover";
 
 export interface CmdPlaceBuildingPayload {
   defId: string;
@@ -152,6 +158,7 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       world.registerComponent<PendingHazardComponent>(PENDING_HAZARD_COMPONENT);
       const policyStore = world.registerComponent<PolicyComponent>(POLICY_COMPONENT);
       const rivalStore = world.registerComponent<RivalComponent>(RIVAL_COMPONENT);
+      const roverStore = world.registerComponent<RoverComponent>(ROVER_COMPONENT);
 
       const envEntity = world.createEntity();
       const gridEntity = world.createEntity();
@@ -274,6 +281,7 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
       world.registerSystem(createResearchSystem(pack, ids));
       world.registerSystem(createHazardSystem(pack, ids));
       world.registerSystem(createDustSystem(pack, ids));
+      world.registerSystem(createRoverSystem(pack, map, ids));
       world.registerSystem(createPhaseSystem(pack, ids));
       world.registerSystem(createEconomySystem(pack, ids));
       world.registerSystem(createStatsSystem(pack, ids));
@@ -628,6 +636,98 @@ export function createGameDef(pack: ContentPack, map: LunarMap): WorldDef {
           "policy-toggle",
           enabled === 1 ? "Policy AI engaged — observer mode" : "You have command.",
         );
+      });
+
+      // ── rover commands (M-Rover) ──
+
+      world.registerCommandHandler(CMD_ORDER_ROVER, (w, payload) => {
+        const { kind } = payload as { kind: string };
+        let spec;
+        try {
+          spec = roverSpec(pack, kind);
+        } catch {
+          reject(w, "rover-rejected", `Unknown rover class '${kind}'`);
+          return;
+        }
+        const economy = economyStore.require(COLONY_ENTITY);
+        if (economy.balanceUsd < spec.costUsd) {
+          reject(
+            w,
+            "rover-rejected",
+            `Cannot afford a ${kind} rover ($${(spec.costUsd / 1e6).toFixed(0)}M)`,
+          );
+          return;
+        }
+        economy.balanceUsd -= spec.costUsd;
+        economy.totalLaunchSpendUsd += spec.costUsd;
+        // Delivery abstracted into the unit price (it rides a CLPS-class
+        // lander); the rover activates at the base anchor.
+        const anchors = findPolicyAnchors(map);
+        const first = w.store(BUILDING_COMPONENT).entities()[0];
+        const home =
+          first !== undefined
+            ? w.store<BuildingComponent>(BUILDING_COMPONENT).require(first as number)
+            : null;
+        const entity = w.createEntity();
+        roverStore.set(entity, {
+          kind,
+          x: home !== null ? home.x : anchors.baseX,
+          y: home !== null ? home.y : anchors.baseY,
+          homeX: home !== null ? home.x : anchors.baseX,
+          homeY: home !== null ? home.y : anchors.baseY,
+          state: 0,
+          targetX: 0,
+          targetY: 0,
+          batteryKwh: spec.batteryKwh,
+          condition: 1,
+          surveyHoursLeft: 0,
+          cargoIceKg: 0,
+          scienceQueued: 0,
+          surveysDone: 0,
+        });
+        pushAlert(
+          w,
+          ALERTS_ENTITY,
+          "info",
+          "rover-delivered",
+          `${kind} rover ${entity} delivered ($${(spec.costUsd / 1e6).toFixed(0)}M) — plan an expedition from the Exploration screen`,
+        );
+      });
+
+      world.registerCommandHandler(CMD_LAUNCH_EXPEDITION, (w, payload) => {
+        const { rover, x, y } = payload as { rover: number; x: number; y: number };
+        const unit = roverStore.get(rover);
+        if (unit === undefined || unit.state === 4) {
+          reject(w, "expedition-rejected", `Rover ${rover} unavailable`);
+          return;
+        }
+        if (unit.state !== 0) {
+          reject(w, "expedition-rejected", `Rover ${rover} is already on a traverse`);
+          return;
+        }
+        if (x < 0 || y < 0 || x >= map.width || y >= map.height) {
+          reject(w, "expedition-rejected", "Expedition target is off the map");
+          return;
+        }
+        const spec = roverSpec(pack, unit.kind);
+        if (unit.batteryKwh < spec.batteryKwh * 0.5) {
+          reject(w, "expedition-rejected", `Rover ${rover} below 50% charge — let it recharge`);
+          return;
+        }
+        unit.state = 1;
+        unit.targetX = x;
+        unit.targetY = y;
+      });
+
+      world.registerCommandHandler(CMD_RECALL_ROVER, (_w, payload) => {
+        const { rover } = payload as { rover: number };
+        const unit = roverStore.get(rover);
+        if (unit === undefined || unit.state === 4 || unit.state === 0) {
+          return;
+        }
+        unit.state = 3;
+        unit.targetX = unit.homeX;
+        unit.targetY = unit.homeY;
       });
     },
   };

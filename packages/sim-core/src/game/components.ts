@@ -49,6 +49,8 @@ export type AlertEntry = {
   severity: string; // "info" | "warning" | "critical"
   code: string;
   message: string;
+  /** seq of the alert that caused this one (T12 cause chains; optional). */
+  causedBy?: number;
 };
 
 export type AlertsComponent = {
@@ -236,4 +238,27 @@ export type RivalComponent = {
 export type PendingHazardComponent = {
   eventId: string;
   impactTick: number;
+  /** Alert seq of the forecast warning, for impact cause-chaining (-1 none). */
+  warnSeq: number;
+};
+
+export const ROVER_COMPONENT = "rover";
+
+/** A mobile surface explorer (M-Rover). Positions are fractional tiles. */
+export type RoverComponent = {
+  kind: string; // rover constants id suffix: scout | prospector | sampler
+  x: number;
+  y: number;
+  homeX: number;
+  homeY: number;
+  /** 0 idle · 1 outbound · 2 surveying · 3 returning · 4 stranded */
+  state: number;
+  targetX: number;
+  targetY: number;
+  batteryKwh: number;
+  condition: number;
+  surveyHoursLeft: number;
+  cargoIceKg: number;
+  scienceQueued: number;
+  surveysDone: number;
 };

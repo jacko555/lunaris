@@ -208,7 +208,7 @@ describe("M3 scenario golden hash", () => {
    * tech-gated placement via startTechs. The acceptance behaviors above
    * (survival with resupply, food cascade without) still hold.
    */
-  const EXPECTED_HASH = "a46b7c2d";
+  const EXPECTED_HASH = "2ebeb331";
 
   it("crewed outpost reproduces the golden hash after 3 lunar cycles", () => {
     const world = makeCrewedOutpost(true);

@@ -205,6 +205,6 @@ describe("M5 acceptance: full Phase 0 → 3 playthrough", () => {
   });
 
   it("reproduces the playthrough golden hash (CLAUDE.md rule 6)", () => {
-    expect(world.hash()).toBe("aa9a51ee");
+    expect(world.hash()).toBe("7bb170df");
   });
 });
