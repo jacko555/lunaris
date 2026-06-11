@@ -4,3 +4,6 @@ coverage/
 *.local
 .DS_Store
 *.log
+
+# Unrelated local folder (console icon dumps) accidentally placed in the repo dir
+images/
