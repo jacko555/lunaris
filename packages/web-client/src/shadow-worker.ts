@@ -40,8 +40,16 @@ const pack = loadContentPack("base", {
   maps: mapsDoc,
   scenarios: scenariosDoc,
 });
-const map = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
-const gameDef = createGameDef(pack, map);
+const gameDefs = new Map<string, ReturnType<typeof createGameDef>>();
+function gameDefFor(site: string): ReturnType<typeof createGameDef> {
+  let def = gameDefs.get(site);
+  if (def === undefined) {
+    const doc = pack.maps.find((m) => m.id === site) ?? pack.maps[0];
+    def = createGameDef(pack, loadMap(doc as (typeof pack.maps)[number]));
+    gameDefs.set(site, def);
+  }
+  return def;
+}
 
 let world: World | null = null;
 
@@ -52,7 +60,8 @@ type InMsg =
 self.onmessage = (event: MessageEvent<InMsg>) => {
   const msg = event.data;
   if (msg.type === "init") {
-    world = createWorld(gameDef, { seed: msg.seed, config: msg.config as never });
+    const site = (msg.config["site"] as string | undefined) ?? "shackleton_rim";
+    world = createWorld(gameDefFor(site), { seed: msg.seed, config: msg.config as never });
     return;
   }
   if (msg.type === "advance" && world !== null) {

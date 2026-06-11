@@ -39,7 +39,9 @@ describe("mods/demo-mod.json", () => {
     expect(merged.building("solar-array-25kw").powerKw).toBe(25);
     expect(merged.buildings.length).toBe(base.buildings.length + 1);
 
-    const map = loadMap(merged.maps[0] as (typeof merged.maps)[number]);
+    const map = loadMap(
+      merged.maps.find((m) => m.id === "shackleton_rim") as (typeof merged.maps)[number],
+    );
     const world = createWorld(createGameDef(merged, map), {
       seed: 7,
       config: { startPhase: 2, startBudgetUsd: 1e9 },

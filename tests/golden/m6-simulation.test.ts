@@ -42,13 +42,25 @@ const pack = loadContentPack("base", {
   maps: readJson("maps"),
   scenarios: readJson("scenarios"),
 });
-const map: LunarMap = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
-const gameDef = createGameDef(pack, map);
+// Scenarios choose their site (ilrs_race runs at de Gerlache); the pack
+// sorts maps by id, so select by id — never by index.
+const gameDefs = new Map<string, ReturnType<typeof createGameDef>>();
+function gameDefFor(site: string): ReturnType<typeof createGameDef> {
+  let def = gameDefs.get(site);
+  if (def === undefined) {
+    const doc = pack.maps.find((m) => m.id === site) as (typeof pack.maps)[number];
+    const map: LunarMap = loadMap(doc);
+    def = createGameDef(pack, map);
+    gameDefs.set(site, def);
+  }
+  return def;
+}
+const gameDef = gameDefFor("shackleton_rim");
 
 const TWO_YEARS = 2 * 8766;
 
 function runScenario(scenario: Scenario, ticks: number): World {
-  const world = createWorld(gameDef, {
+  const world = createWorld(gameDefFor(scenario.site), {
     seed: scenarioSeed(scenario, 1),
     config: scenarioToConfig(scenario),
   });
@@ -70,7 +82,7 @@ describe("M6 acceptance: simulation mode", () => {
       artemis_baseline: "37383c56",
       ideal_trajectory: "37383c56",
       realistic_trajectory: "4522ceee",
-      ilrs_race: "2485f137",
+      ilrs_race: "5c6690d1",
       commercial_bootstrap: "e7edc256",
     };
     const actual: Record<string, string> = {};

@@ -30,6 +30,8 @@ export function scenarioToConfig(scenario: Scenario, seedOverride?: number): Jso
     policyEnabled: 1,
     policyWeights: weights as JsonObject,
     autopause: [...scenario.autopause],
+    site: scenario.site,
+    horizonTicks: Math.round(scenario.horizonYears * 8766),
   };
   if (scenario.rival !== undefined) {
     config["rivalName"] = scenario.rival.name;

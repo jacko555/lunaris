@@ -42,7 +42,9 @@ const pack = loadContentPack("base", {
   encyclopedia: readJson("encyclopedia"),
   maps: readJson("maps"),
 });
-const map: LunarMap = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
+const map: LunarMap = loadMap(
+  pack.maps.find((m) => m.id === "shackleton_rim") as (typeof pack.maps)[number],
+);
 const gameDef = createGameDef(pack, map);
 
 const SEED = 20260610;

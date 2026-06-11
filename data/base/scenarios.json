@@ -129,7 +129,7 @@
     },
     "startTechs": ["eclss_baseline", "precision_landing"],
     "failureTables": "realistic",
-    "site": "shackleton_rim",
+    "site": "de_gerlache_rim",
     "policyAI": "balanced",
     "autopause": ["phase"],
     "seed": 20301001,

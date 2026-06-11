@@ -396,3 +396,90 @@ export function renderExploration(
     });
   }
 }
+
+// ── crew member detail (mockup 1 right panel; portraits land with P2) ──
+
+const PORTRAIT_URLS = import.meta.glob("../../../assets/gen/crew/portrait__*.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function portraitFor(name: string): string | null {
+  const urls = Object.values(PORTRAIT_URLS);
+  if (urls.length === 0) {
+    return null;
+  }
+  let hash = 0;
+  for (const ch of name) {
+    hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  }
+  return urls[Math.abs(hash) % urls.length] as string;
+}
+
+export function renderCrewDetail(
+  root: HTMLElement,
+  world: World,
+  pack: ContentPack,
+  entity: number,
+  onAssign: (crew: number, location: number) => void,
+): void {
+  const crew = world.store<CrewComponent>(CREW_COMPONENT).get(entity);
+  if (crew === undefined) {
+    root.innerHTML = `<em style="color: var(--dim)">Select a crew member</em>`;
+    return;
+  }
+  const dose30 = crew.dose30d.reduce((s, d) => s + d, 0);
+  const portrait = portraitFor(crew.name);
+  const initials = crew.name
+    .split(/[\s-]/)
+    .map((p) => p[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const buildings = world.store<BuildingComponent>(BUILDING_COMPONENT);
+  const location = buildings.get(crew.location);
+  const locationName =
+    location !== undefined ? pack.building(location.defId).name : crew.eva === 1 ? "EVA" : "—";
+  const bar = (cls: string, value: number, label: string): string =>
+    `<div class="bar"><div class="${cls}" style="width:${Math.min(100, value).toFixed(0)}%"></div></div><div class="bar-label"><span>${label}</span><span>${value.toFixed(0)}</span></div>`;
+  let html = `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+    ${portrait !== null ? `<img src="${portrait}" style="width:64px;height:64px;border-radius:8px;object-fit:cover" alt=""/>` : `<div style="width:64px;height:64px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--amber)">${initials}</div>`}
+    <div><strong>${crew.name}</strong><div class="panel-hint">${crew.alive === 1 ? locationName : "✝ deceased"}</div></div>
+  </div>`;
+  if (crew.alive === 1) {
+    html += bar("hp", crew.health, "HEALTH");
+    html += bar("mo", crew.morale, "MORALE");
+    html += bar("dose", (dose30 / 250) * 100, `30-DAY DOSE ${dose30.toFixed(1)} mSv`);
+    html += `<div class="kv" style="margin-top:8px"><span>Career dose</span><span>${crew.doseCareerMSv.toFixed(0)} mSv</span></div>`;
+    const skills = Object.entries(crew.skills);
+    if (skills.length > 0) {
+      html += `<div class="kv"><span>Skills</span><span>${skills.map(([k, v]) => `${k} L${v}`).join(" · ")}</span></div>`;
+    }
+    html += `<h4 style="color:var(--amber)">REASSIGN</h4>`;
+  }
+  root.innerHTML = html;
+  if (crew.alive !== 1) {
+    return;
+  }
+  const select = document.createElement("select");
+  const placeholder = document.createElement("option");
+  placeholder.textContent = "Move to…";
+  placeholder.value = "";
+  select.appendChild(placeholder);
+  for (const [buildingEntity, building] of buildings.entries()) {
+    const def = pack.building(building.defId);
+    if ((def.services.housing ?? 0) > 0 || (def.services.shelter ?? 0) > 0) {
+      const option = document.createElement("option");
+      option.value = String(buildingEntity);
+      option.textContent = `${def.name} #${buildingEntity}${buildingEntity === crew.location ? " (here)" : ""}`;
+      select.appendChild(option);
+    }
+  }
+  select.addEventListener("change", () => {
+    if (select.value !== "") {
+      onAssign(entity, Number(select.value));
+    }
+  });
+  root.appendChild(select);
+}

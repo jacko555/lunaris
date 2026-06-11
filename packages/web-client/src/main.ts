@@ -61,6 +61,7 @@ import {
 import { MapRenderer } from "./renderer.js";
 import {
   drawClockDial,
+  renderCrewDetail,
   renderExploration,
   renderIndustry,
   renderLogistics,
@@ -216,7 +217,9 @@ async function boot(): Promise<void> {
     shadowSeries: new Map<string, number[]>(OBSERVER_SERIES.map((s) => [s.key, []])),
     packIsBase: true,
   };
-  app.map = loadMap(app.pack.maps[0] as (typeof app.pack.maps)[number]);
+  app.map = loadMap(
+    app.pack.maps.find((m) => m.id === "shackleton_rim") as (typeof app.pack.maps)[number],
+  );
   app.gameDef = createGameDef(app.pack, app.map);
   app.renderer = new MapRenderer(app.map, app.pack);
   await app.renderer.init($("#map-wrap"));
@@ -225,12 +228,17 @@ async function boot(): Promise<void> {
   app.hud = new Hud(TPLD, app.pack);
   app.hud.resync(app.host.world);
 
-  const ui: UiState & { pediaFilter: string; planRover: number | null } = {
+  const ui: UiState & {
+    pediaFilter: string;
+    planRover: number | null;
+    selectedCrew: number | null;
+  } = {
     tab: "roster",
     selectedBuild: null,
     flowResource: "water",
     pediaFilter: "",
     planRover: null as number | null,
+    selectedCrew: null as number | null,
   };
 
   // ── tabs ──
@@ -261,6 +269,7 @@ async function boot(): Promise<void> {
     map: "detail-map",
     logistics: "detail-supply",
     industry: "detail-flows",
+    crew: "detail-crew",
   };
   const setScreen = (screen: string): void => {
     ui.tab = screen;
@@ -269,7 +278,7 @@ async function boot(): Promise<void> {
       section.hidden = key !== screen;
     }
     const detailId = DETAIL_FOR[screen] ?? "detail-map";
-    for (const id of ["detail-map", "detail-supply", "detail-flows"]) {
+    for (const id of ["detail-map", "detail-supply", "detail-flows", "detail-crew"]) {
       $(`#${id}`).hidden = id !== detailId;
     }
     for (const button of rail.children) {
@@ -292,36 +301,65 @@ async function boot(): Promise<void> {
     ui.pediaFilter = (event as CustomEvent).detail as string;
   });
 
-  // ── map interaction ──
-  app.renderer.app.canvas.addEventListener("click", (event) => {
-    if (app.renderer.wasDrag) {
-      return; // camera pan, not a selection
-    }
-    const { x: tx, y: ty } = app.renderer.tileAtClient(event.clientX, event.clientY);
-    if (tx < 0 || ty < 0 || tx >= app.map.width || ty >= app.map.height) {
-      return;
-    }
-    if (ui.planRover !== null) {
-      app.host.world.enqueueCommand(CMD_LAUNCH_EXPEDITION, { rover: ui.planRover, x: tx, y: ty });
-      ui.planRover = null;
-      setScreen("exploration");
-      return;
-    }
-    if (ui.selectedBuild !== null) {
-      app.host.world.enqueueCommand(CMD_QUEUE_BUILD, { defId: ui.selectedBuild, x: tx, y: ty });
-      ui.selectedBuild = null;
-      return;
-    }
-    const buildings = app.host.world.store<BuildingComponent>(BUILDING_COMPONENT);
-    let found: number | null = null;
-    for (const [entity, building] of buildings.entries()) {
-      const [w, h] = app.pack.building(building.defId).footprint;
-      if (tx >= building.x && tx < building.x + w && ty >= building.y && ty < building.y + h) {
-        found = entity;
+  // ── map interaction (rebound after every renderer rebuild) ──
+  const bindMapInteraction = (): void => {
+    app.renderer.app.canvas.addEventListener("click", (event) => {
+      if (app.renderer.wasDrag) {
+        return; // camera pan, not a selection
       }
+      const { x: tx, y: ty } = app.renderer.tileAtClient(event.clientX, event.clientY);
+      if (tx < 0 || ty < 0 || tx >= app.map.width || ty >= app.map.height) {
+        return;
+      }
+      if (ui.planRover !== null) {
+        app.host.world.enqueueCommand(CMD_LAUNCH_EXPEDITION, { rover: ui.planRover, x: tx, y: ty });
+        ui.planRover = null;
+        setScreen("exploration");
+        return;
+      }
+      if (ui.selectedBuild !== null) {
+        app.host.world.enqueueCommand(CMD_QUEUE_BUILD, { defId: ui.selectedBuild, x: tx, y: ty });
+        ui.selectedBuild = null;
+        return;
+      }
+      const buildings = app.host.world.store<BuildingComponent>(BUILDING_COMPONENT);
+      let found: number | null = null;
+      for (const [entity, building] of buildings.entries()) {
+        const [w, h] = app.pack.building(building.defId).footprint;
+        if (tx >= building.x && tx < building.x + w && ty >= building.y && ty < building.y + h) {
+          found = entity;
+        }
+      }
+      app.hud.select(found);
+    });
+  };
+  bindMapInteraction();
+
+  // Roster clicks select a crew member for the detail aside.
+  $("#roster").addEventListener("click", (event) => {
+    const row = (event.target as HTMLElement).closest(".crew-row") as HTMLElement | null;
+    if (row !== null && row.dataset["entity"] !== undefined) {
+      ui.selectedCrew = Number(row.dataset["entity"]);
     }
-    app.hud.select(found);
   });
+
+  /** Swap the active site: rebuild the renderer + game def for a new map. */
+  const setSite = async (mapId: string): Promise<void> => {
+    if (app.map.id === mapId) {
+      return;
+    }
+    const mapDoc = app.pack.maps.find((m) => m.id === mapId);
+    if (mapDoc === undefined) {
+      return; // scenario references a map this pack lacks — keep current
+    }
+    app.map = loadMap(mapDoc);
+    app.gameDef = createGameDef(app.pack, app.map);
+    app.renderer.app.destroy(true, { children: true, texture: false });
+    $("#map-wrap").querySelector("canvas")?.remove();
+    app.renderer = new MapRenderer(app.map, app.pack);
+    await app.renderer.init($("#map-wrap"));
+    bindMapInteraction();
+  };
 
   // ── controls ──
   const controls = $("#controls");
@@ -419,7 +457,9 @@ async function boot(): Promise<void> {
       });
       app.packIsBase = false;
       app.pack = mergePacks(loadContentPack("base", BASE_DOCS), modPack);
-      app.map = loadMap(app.pack.maps[0] as (typeof app.pack.maps)[number]);
+      app.map = loadMap(
+        app.pack.maps.find((m) => m.id === "shackleton_rim") as (typeof app.pack.maps)[number],
+      );
       app.gameDef = createGameDef(app.pack, app.map);
       app.host.replaceWorld(makeTutorialWorld(app.pack, app.map, app.gameDef));
       app.hud.resync(app.host.world);
@@ -483,71 +523,77 @@ async function boot(): Promise<void> {
     $("#start-screen").hidden = false;
   });
   const startGame = (): void => {
-    gameOverShown = false;
-    app.mode = "game";
-    app.shadowWorker?.terminate();
-    app.shadowWorker = null;
-    app.host.replaceWorld(makeTutorialWorld(app.pack, app.map, app.gameDef));
-    app.host.autopauseCodes = new Set();
-    app.hud.resync(app.host.world);
-    app.startYear = 2026;
-    for (const buffer of app.buffers.values()) {
-      buffer.reset();
-    }
-    observerRail.style.display = "none";
-    setScreen("map");
-    $("#tutorial").hidden = false;
-    ($("#build-box") as HTMLDetailsElement).open = true;
-    $("#start-screen").hidden = true;
-    setSpeed(10);
+    void (async () => {
+      await setSite("shackleton_rim");
+      gameOverShown = false;
+      app.mode = "game";
+      app.shadowWorker?.terminate();
+      app.shadowWorker = null;
+      app.host.replaceWorld(makeTutorialWorld(app.pack, app.map, app.gameDef));
+      app.host.autopauseCodes = new Set();
+      app.hud.resync(app.host.world);
+      app.startYear = 2026;
+      for (const buffer of app.buffers.values()) {
+        buffer.reset();
+      }
+      observerRail.style.display = "none";
+      setScreen("map");
+      $("#tutorial").hidden = false;
+      ($("#build-box") as HTMLDetailsElement).open = true;
+      $("#start-screen").hidden = true;
+      setSpeed(10);
+    })();
   };
   const startSim = (): void => {
-    const scenario = app.pack.scenarios.find((s) => s.id === scenarioSelect.value) as Scenario;
-    const failureTables = ($("#failure-select") as HTMLSelectElement).value;
-    const seedRaw = ($("#seed-input") as HTMLInputElement).value.trim();
-    const seed = seedRaw === "" ? scenarioSeed(scenario, SEED) : Number(seedRaw);
-    const config = scenarioToConfig(scenario);
-    config["failureTables"] = failureTables;
-    app.mode = "sim";
-    app.host.replaceWorld(createWorld(app.gameDef, { seed, config }));
-    app.host.autopauseCodes = new Set(scenario.autopause);
-    app.hud.resync(app.host.world);
-    app.startYear = scenario.startYear;
-    const shadowConfig = scenarioToConfig(scenario);
-    const shadowTables = failureTables === "realistic" ? "ideal" : "realistic";
-    shadowConfig["failureTables"] = shadowTables;
-    app.shadowWorker?.terminate();
-    app.shadowWorker = null;
-    for (const arr of app.shadowSeries.values()) {
-      arr.length = 0;
-    }
-    if (app.packIsBase) {
-      const worker = new Worker(new URL("./shadow-worker.ts", import.meta.url), {
-        type: "module",
-      });
-      worker.onmessage = (event: MessageEvent) => {
-        const data = event.data as { rows: { key: string; value: number }[] };
-        for (const row of data.rows) {
-          app.shadowSeries.get(row.key)?.push(row.value);
-        }
-      };
-      worker.postMessage({ type: "init", seed, config: shadowConfig });
-      app.shadowWorker = worker;
-    }
-    $("#compare-legend").textContent = app.packIsBase
-      ? `— ${failureTables} · ┄ ${shadowTables} (same seed, worker)`
-      : "compare unavailable on modded packs";
-    for (const buffer of app.buffers.values()) {
-      buffer.reset();
-    }
+    void (async () => {
+      const scenario = app.pack.scenarios.find((s) => s.id === scenarioSelect.value) as Scenario;
+      await setSite(scenario.site);
+      const failureTables = ($("#failure-select") as HTMLSelectElement).value;
+      const seedRaw = ($("#seed-input") as HTMLInputElement).value.trim();
+      const seed = seedRaw === "" ? scenarioSeed(scenario, SEED) : Number(seedRaw);
+      const config = scenarioToConfig(scenario);
+      config["failureTables"] = failureTables;
+      app.mode = "sim";
+      app.host.replaceWorld(createWorld(app.gameDef, { seed, config }));
+      app.host.autopauseCodes = new Set(scenario.autopause);
+      app.hud.resync(app.host.world);
+      app.startYear = scenario.startYear;
+      const shadowConfig = scenarioToConfig(scenario);
+      const shadowTables = failureTables === "realistic" ? "ideal" : "realistic";
+      shadowConfig["failureTables"] = shadowTables;
+      app.shadowWorker?.terminate();
+      app.shadowWorker = null;
+      for (const arr of app.shadowSeries.values()) {
+        arr.length = 0;
+      }
+      if (app.packIsBase) {
+        const worker = new Worker(new URL("./shadow-worker.ts", import.meta.url), {
+          type: "module",
+        });
+        worker.onmessage = (event: MessageEvent) => {
+          const data = event.data as { rows: { key: string; value: number }[] };
+          for (const row of data.rows) {
+            app.shadowSeries.get(row.key)?.push(row.value);
+          }
+        };
+        worker.postMessage({ type: "init", seed, config: shadowConfig });
+        app.shadowWorker = worker;
+      }
+      $("#compare-legend").textContent = app.packIsBase
+        ? `— ${failureTables} · ┄ ${shadowTables} (same seed, worker)`
+        : "compare unavailable on modded packs";
+      for (const buffer of app.buffers.values()) {
+        buffer.reset();
+      }
 
-    takeCommand.classList.remove("ai-off");
-    takeCommand.textContent = "🧑‍🚀 Take Command";
-    observerRail.style.display = "";
-    setScreen("observer");
-    $("#tutorial").hidden = true;
-    $("#start-screen").hidden = true;
-    setSpeed(720);
+      takeCommand.classList.remove("ai-off");
+      takeCommand.textContent = "🧑‍🚀 Take Command";
+      observerRail.style.display = "";
+      setScreen("observer");
+      $("#tutorial").hidden = true;
+      $("#start-screen").hidden = true;
+      setSpeed(720);
+    })();
   };
   $("#start-game").addEventListener("click", startGame);
   $("#start-sim").addEventListener("click", startSim);
@@ -597,6 +643,7 @@ async function boot(): Promise<void> {
   let frameCount = 0;
   let lastAutosaveTick = 0;
   let gameOverShown = false;
+  let runReportShown = false;
   let lastPhaseSeen = -1;
   const showPhaseBanner = (phase: number, name: string): void => {
     const banner = $("#phase-banner");
@@ -693,6 +740,43 @@ async function boot(): Promise<void> {
         );
       }
 
+      // Run report: the scenario horizon is the finish line (MODES.md) —
+      // pause and grade the program against its shadow run.
+      if (app.mode === "sim" && !runReportShown) {
+        const horizon = (world.config as Record<string, unknown> | null)?.["horizonTicks"] as
+          | number
+          | undefined;
+        if (horizon !== undefined && world.tickCount >= horizon) {
+          runReportShown = true;
+          app.host.speed = 0;
+          const phase = world.store<PhaseComponent>(PHASE_COMPONENT).require(COLONY_ENTITY);
+          const final = (key: string): string => {
+            const series = OBSERVER_SERIES.find((s) => s.key === key);
+            const main = series !== undefined ? series.format(series.sample(world)) : "—";
+            const shadowArr = app.shadowSeries.get(key);
+            const shadowLast =
+              shadowArr !== undefined && shadowArr.length > 0
+                ? (series?.format(shadowArr[shadowArr.length - 1] as number) ?? "—")
+                : "—";
+            return `<td>${main}</td><td>${shadowLast}</td>`;
+          };
+          const rows = OBSERVER_SERIES.map(
+            (s) => `<tr><td>${s.label}</td>${final(s.key)}</tr>`,
+          ).join("");
+          const milestoneLines = phase.milestones
+            .map(
+              (m) =>
+                `<div class="tl-row"><span>${(app.startYear + m.tick / 8766).toFixed(1)}</span><span>${m.id}</span></div>`,
+            )
+            .join("");
+          $("#runreport-body").innerHTML =
+            `<div class="panel-hint">${Math.round((world.tickCount / 8766) * 10) / 10} years simulated · final phase ${phase.phase}</div>` +
+            `<table class="rr-table"><tr><th>metric</th><th>this run</th><th>shadow</th></tr>${rows}</table>` +
+            `<div style="max-height:160px;overflow-y:auto;margin-top:10px">${milestoneLines}</div>`;
+          $("#runreport").hidden = false;
+        }
+      }
+
       // Outcome presentation: phase fanfare + the mission-lost screen.
       const phaseNow = world.store<PhaseComponent>(PHASE_COMPONENT).require(COLONY_ENTITY).phase;
       if (lastPhaseSeen >= 0 && phaseNow > lastPhaseSeen) {
@@ -755,6 +839,10 @@ async function boot(): Promise<void> {
       } else if (ui.tab === "logistics") {
         renderLogistics($("#logistics"), world, app.pack);
         renderSupplyPanel(panels["supply"] as HTMLElement, world, app.pack, -1);
+      } else if (ui.tab === "crew" && ui.selectedCrew !== null) {
+        renderCrewDetail($("#crew-detail"), world, app.pack, ui.selectedCrew, (crew, location) => {
+          app.host.world.enqueueCommand(CMD_ASSIGN_CREW, { crew, location });
+        });
       } else if (ui.tab === "exploration") {
         renderExploration($("#exploration"), world, app.pack, ui.planRover, (rover) => {
           ui.planRover = rover;

@@ -157,12 +157,14 @@ describe("data/base content pack", () => {
     ]);
     expect(pack.resource("regolith").groundSourced).toBe(true);
     expect(pack.encyclopedia.length).toBeGreaterThanOrEqual(56);
-    expect(pack.maps).toHaveLength(1);
+    expect(pack.maps).toHaveLength(2); // shackleton_rim + de_gerlache_rim
   });
 
   it("the Shackleton map decodes to 64×64 with ridge, PSR, and LCROSS-range ice", () => {
     const pack = loadBasePack();
-    const map = loadMap(pack.maps[0] as (typeof pack.maps)[number]);
+    const map = loadMap(
+      pack.maps.find((m) => m.id === "shackleton_rim") as (typeof pack.maps)[number],
+    );
     expect(map.width).toBe(64);
     expect(map.height).toBe(64);
     const counts = { A: 0, B: 0, C: 0 };

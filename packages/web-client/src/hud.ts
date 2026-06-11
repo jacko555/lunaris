@@ -133,9 +133,11 @@ export class Hud {
       return;
     }
     const rows: HTMLElement[] = [];
-    for (const [, crew] of crews.entries()) {
+    for (const [entity, crew] of crews.entries()) {
       const row = document.createElement("div");
       row.className = "crew-row";
+      row.dataset["entity"] = String(entity);
+      row.style.cursor = "pointer";
       const dose30 = crew.dose30d.reduce((sum, d) => sum + d, 0);
       const status =
         crew.alive !== 1
