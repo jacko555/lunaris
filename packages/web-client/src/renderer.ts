@@ -311,6 +311,11 @@ function spriteUrl(defId: string): string | null {
   return urlEndingWith(SPRITE_URLS, `/${defId}__base@1x.png`);
 }
 
+/** P2 night variant (emissive windows); null until generated. */
+function nightSpriteUrl(defId: string): string | null {
+  return urlEndingWith(SPRITE_URLS, `/${defId}__night@1x.png`);
+}
+
 /** Construction scaffold by footprint size class (site__S/M/L). */
 function siteUrl(maxDim: number): string | null {
   const cls = maxDim <= 1 ? "S" : maxDim === 2 ? "M" : "L";
@@ -670,11 +675,14 @@ export class MapRenderer {
       const hpx = h * TILE_PX;
       const color = BUILDING_COLORS[building.defId] ?? 0xffffff;
       // Sprite path: bottom-anchored on the footprint, free to overflow
-      // upward (3/4-view art is taller than its ground plan).
+      // upward (3/4-view art is taller than its ground plan). At night the
+      // emissive __night variant swaps in when it exists (P2 art).
+      const nightTexture =
+        env.litB === 0 ? this.textureForUrl(nightSpriteUrl(building.defId)) : null;
       if (
         this.placeSprite(
           entity,
-          this.textureFor(building.defId),
+          nightTexture ?? this.textureFor(building.defId),
           px + wpx / 2,
           py + hpx,
           wpx * 1.15,

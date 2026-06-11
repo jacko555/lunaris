@@ -2,8 +2,11 @@ import {
   BUILDING_COMPONENT,
   CMD_ORDER_ROVER,
   CMD_RECALL_ROVER,
+  RESEARCH_COMPONENT,
   ROVER_COMPONENT,
+  hardPrereqsMet,
   roverSpec,
+  type ResearchComponent,
   type RoverComponent,
   COLONY_ENTITY,
   CREW_COMPONENT,
@@ -500,4 +503,62 @@ export function renderCrewDetail(
     }
   });
   root.appendChild(select);
+}
+
+// ── tech detail panel (mockup 08 right panel; card art is P2) ──
+
+const TECH_CARD_URLS = import.meta.glob("../../../assets/gen/cards/tech__*.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+export function renderTechDetail(
+  root: HTMLElement,
+  world: World,
+  pack: ContentPack,
+  techId: string,
+  onResearch: (techId: string) => void,
+): void {
+  let tech;
+  try {
+    tech = pack.techNode(techId);
+  } catch {
+    root.innerHTML = `<em style="color: var(--dim)">Select a technology</em>`;
+    return;
+  }
+  const research = world.store<ResearchComponent>(RESEARCH_COMPONENT).require(COLONY_ENTITY);
+  const done = research.unlocked.includes(tech.id);
+  const current = research.current === tech.id;
+  const available = !done && !current && hardPrereqsMet(tech, research.unlocked);
+  let card: string | null = null;
+  for (const [path, url] of Object.entries(TECH_CARD_URLS)) {
+    if (path.endsWith(`/tech__${tech.id}.png`)) {
+      card = url;
+    }
+  }
+  const kv = (k: string, v: string): string =>
+    `<div class="kv"><span>${k}</span><span>${v}</span></div>`;
+  let html = card !== null ? `<img src="${card}" alt=""/>` : "";
+  html += `<strong style="color:var(--amber)">${tech.id}</strong>`;
+  html += kv("Branch", tech.branch);
+  html += kv("Unlock phase", `P${tech.phase}`);
+  html += kv("TRL (2026)", String(tech.trl2026));
+  html += kv("Cost", `${tech.costScience} science`);
+  html += kv("Prereqs", tech.prereqs.join(", ") || "none");
+  html += kv("Unlocks", tech.unlocks.buildings.join(", ") || "capability");
+  html += `<div class="panel-hint" style="margin-top:6px">${tech.source}</div>`;
+  if (done) {
+    html += `<div class="crit ok" style="margin-top:8px">✓ Researched</div>`;
+  } else if (current) {
+    html += `<div class="tech-row current" style="margin-top:8px">In progress — ${research.progress.toFixed(0)} pts</div>`;
+  }
+  root.innerHTML = html;
+  if (available) {
+    const button = document.createElement("button");
+    button.textContent = `Start research (${tech.costScience})`;
+    button.style.marginTop = "8px";
+    button.addEventListener("click", () => onResearch(tech.id));
+    root.appendChild(button);
+  }
 }

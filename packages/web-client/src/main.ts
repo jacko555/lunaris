@@ -63,6 +63,7 @@ import { MapRenderer } from "./renderer.js";
 import {
   drawClockDial,
   renderCrewDetail,
+  renderTechDetail,
   renderExploration,
   renderIndustry,
   renderLogistics,
@@ -92,6 +93,22 @@ const KEYART_URLS = import.meta.glob("../../../assets/gen/terrain/keyart__start.
   query: "?url",
   import: "default",
 }) as Record<string, string>;
+
+// P2 phase-milestone cards (cards/phase__<n>.png) back the phase banner.
+const PHASE_CARD_URLS = import.meta.glob("../../../assets/gen/cards/phase__*.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function phaseCardUrl(phase: number): string | null {
+  for (const [path, url] of Object.entries(PHASE_CARD_URLS)) {
+    if (path.endsWith(`/phase__${phase}.png`)) {
+      return url;
+    }
+  }
+  return null;
+}
 
 const SEED = 20260610;
 const CREW_NAMES = ["Reid", "Glover", "Koch", "Hansen"];
@@ -251,6 +268,7 @@ async function boot(): Promise<void> {
     pediaFilter: string;
     planRover: number | null;
     selectedCrew: number | null;
+    selectedTech: string | null;
   } = {
     tab: "roster",
     selectedBuild: null,
@@ -258,6 +276,7 @@ async function boot(): Promise<void> {
     pediaFilter: "",
     planRover: null as number | null,
     selectedCrew: null as number | null,
+    selectedTech: null as string | null,
   };
 
   // ── tabs ──
@@ -289,6 +308,7 @@ async function boot(): Promise<void> {
     logistics: "detail-supply",
     industry: "detail-flows",
     crew: "detail-crew",
+    research: "detail-tech",
   };
   const setScreen = (screen: string): void => {
     ui.tab = screen;
@@ -297,7 +317,13 @@ async function boot(): Promise<void> {
       section.hidden = key !== screen;
     }
     const detailId = DETAIL_FOR[screen] ?? "detail-map";
-    for (const id of ["detail-map", "detail-supply", "detail-flows", "detail-crew"]) {
+    for (const id of [
+      "detail-map",
+      "detail-supply",
+      "detail-flows",
+      "detail-crew",
+      "detail-tech",
+    ]) {
       $(`#${id}`).hidden = id !== detailId;
     }
     for (const button of rail.children) {
@@ -371,6 +397,14 @@ async function boot(): Promise<void> {
     }
   };
   renderOverlayChips();
+
+  // Tech rows select a technology for the detail aside.
+  $("#tech-panel").addEventListener("click", (event) => {
+    const row = (event.target as HTMLElement).closest(".tech-row") as HTMLElement | null;
+    if (row !== null && row.dataset["tech"] !== undefined) {
+      ui.selectedTech = row.dataset["tech"] as string;
+    }
+  });
 
   // Roster clicks select a crew member for the detail aside.
   $("#roster").addEventListener("click", (event) => {
@@ -692,7 +726,8 @@ async function boot(): Promise<void> {
   let lastPhaseSeen = -1;
   const showPhaseBanner = (phase: number, name: string): void => {
     const banner = $("#phase-banner");
-    banner.innerHTML = `<h2>PHASE ${phase} — ${name}</h2><div class="sub">milestone logged in the chronicle</div>`;
+    const card = phaseCardUrl(phase);
+    banner.innerHTML = `${card !== null ? `<img src="${card}" alt="" style="display:block;width:340px;max-width:60vw;border-radius:8px;margin:0 auto 8px"/>` : ""}<h2>PHASE ${phase} — ${name}</h2><div class="sub">milestone logged in the chronicle</div>`;
     banner.hidden = false;
     setTimeout(() => {
       banner.hidden = true;
@@ -876,6 +911,11 @@ async function boot(): Promise<void> {
       } else if (ui.tab === "research") {
         renderTechPanel(panels["tech"] as HTMLElement, world, app.pack);
         renderPhaseRibbon($("#phase-ribbon"), world);
+        if (ui.selectedTech !== null) {
+          renderTechDetail($("#tech-detail"), world, app.pack, ui.selectedTech, (techId) => {
+            app.host.world.enqueueCommand("cmd-start-research", { techId });
+          });
+        }
       } else if (ui.tab === "industry") {
         renderIndustry($("#industry"), world, app.pack);
         renderFlows(panels["flows"] as HTMLElement, world, app.pack, ui, (resource) => {

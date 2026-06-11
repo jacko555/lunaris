@@ -19,6 +19,24 @@ import {
   type World,
 } from "@lunaris/sim-core";
 
+// P2 chronicle card art (cards/event__<eventId>.png); rows stay text-only
+// until the art lands.
+const CARD_URLS = import.meta.glob("../../../assets/gen/cards/event__*.png", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+function eventCardUrl(alertCode: string): string | null {
+  const eventId = alertCode.replace(/-warning$/, "");
+  for (const [path, url] of Object.entries(CARD_URLS)) {
+    if (path.endsWith(`/event__${eventId}.png`)) {
+      return url;
+    }
+  }
+  return null;
+}
+
 /** HUD: lunar clock, power bars, alert toasts + queue, crew roster, inspector. */
 export class Hud {
   private clockBig = document.querySelector("#clock .big") as HTMLElement;
@@ -115,6 +133,14 @@ export class Hud {
         row.style.paddingLeft = "18px";
         tick.textContent = `↳ t${entry.tick}`;
         row.title = `caused by alert #${entry.causedBy}`;
+      }
+      const card = eventCardUrl(entry.code);
+      if (card !== null) {
+        const img = document.createElement("img");
+        img.src = card;
+        img.className = "al-card";
+        img.alt = "";
+        row.appendChild(img);
       }
       row.append(tick, document.createTextNode(entry.message));
       this.alertLog.prepend(row);

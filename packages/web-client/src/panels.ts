@@ -195,6 +195,8 @@ export function renderTechPanel(root: HTMLElement, world: World, pack: ContentPa
       const available = !done && !current && hardPrereqsMet(tech, research.unlocked);
       const row = document.createElement("div");
       row.className = `tech-row${done ? " done" : ""}${current ? " current" : ""}`;
+      row.dataset["tech"] = tech.id;
+      row.style.cursor = "pointer";
       row.title = `${tech.source}\nTRL ${tech.trl2026} · prereqs: ${tech.prereqs.join(", ") || "none"}\nUnlocks: ${tech.unlocks.buildings.join(", ") || "capability"}`;
       row.innerHTML = `<span>${done ? "✓ " : ""}${tech.id} <span class="bc-tier">P${tech.phase}·TRL${tech.trl2026}</span></span><span>${tech.costScience}</span>`;
       if (available) {
